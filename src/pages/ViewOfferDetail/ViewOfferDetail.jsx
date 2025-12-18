@@ -5,6 +5,7 @@ import ViewOfferDetailTable from "../../components/ViewOfferDetailTable/ViewOffe
 import { useNavigate } from "react-router-dom";
 import { IoMdAdd, IoMdSearch } from "react-icons/io";
 import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 import axios from "axios";
 import styles from "../CompanyListingDetails/CompanyListingDetails.module.css";
 import { IoRefresh } from "react-icons/io5";

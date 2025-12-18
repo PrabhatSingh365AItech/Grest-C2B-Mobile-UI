@@ -8,6 +8,7 @@ import { IoMdSearch } from "react-icons/io";
 import { FaDownload } from "react-icons/fa";
 import axios from "axios";
 import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { BeatLoader } from "react-spinners";

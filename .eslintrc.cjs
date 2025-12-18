@@ -19,5 +19,8 @@ module.exports = {
     'react/prop-types': 'off',
     'no-unused-vars': 'warn',
     'react/no-unescaped-entities': 'off',
+    'no-undef': 'warn',
+    'no-irregular-whitespace': 'warn',
+    'react-hooks/exhaustive-deps': 'warn',
   },
 }
