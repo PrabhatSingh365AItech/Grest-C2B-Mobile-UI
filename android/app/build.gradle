@@ -1,45 +1,163 @@
 apply plugin: 'com.android.application'
 
+def keystorePropertiesFile = rootProject.file("key.properties")
+def keystoreProperties = new Properties()
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
+// Force dependency resolution BEFORE android block to prevent DEX errors
+configurations.all {
+    resolutionStrategy {
+        // Fix Kotlin coroutines DEX compilation issues
+        force 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
+        force 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+        force 'org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3'
+        
+        // Force consistent AndroidX versions for API 34 compatibility
+        force "androidx.core:core:1.12.0"
+        force "androidx.core:core-ktx:1.12.0"
+        force "androidx.appcompat:appcompat:1.6.1"
+        force "androidx.fragment:fragment:1.6.2"
+        force "androidx.activity:activity:1.8.2"
+        force "androidx.webkit:webkit:1.10.0"
+        
+        // Exclude problematic modules
+        exclude group: 'org.jetbrains.kotlinx', module: 'kotlinx-coroutines-debug'
+    }
+}
+
 android {
+    splits {
+        abi {
+            enable false   
+        }
+    }
     namespace "com.grest.ti.app"
     compileSdk rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+    
     defaultConfig {
         applicationId "com.grest.ti.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 29
+        versionName "1.11.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Enable MultiDex for large apps
+        multiDexEnabled true
+        
+        // Universal configurations
+        manifestPlaceholders = [
+            'appAuthRedirectScheme': 'com.grest.ti.app'
+        ]
+        
+        // Support all architectures
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
+        
         aaptOptions {
-             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
-             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            // Files and dirs to omit from the packaged assets dir
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(project.file("grest-app-release.keystore"))
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+    
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            
+            // Additional release optimizations
+            zipAlignEnabled true
+            
+            // Packaging options to avoid conflicts
+            packagingOptions {
+                resources {
+                    excludes += [
+                        'META-INF/DEPENDENCIES',
+                        'META-INF/LICENSE',
+                        'META-INF/LICENSE.txt',
+                        'META-INF/license.txt',
+                        'META-INF/NOTICE',
+                        'META-INF/NOTICE.txt',
+                        'META-INF/notice.txt',
+                        'META-INF/ASL2.0',
+                        'META-INF/*.kotlin_module',
+                        'META-INF/library_release.kotlin_module',
+                        'META-INF/androidx.*',
+                        'META-INF/proguard/*'
+                    ]
+                }
+            }
         }
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
 repositories {
-    flatDir{
+    flatDir {
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
     }
+    google()
+    mavenCentral()
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
-    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
-    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    
+    // Updated AndroidX dependencies for API 34 compatibility
+    implementation "androidx.appcompat:appcompat:1.6.1"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:1.2.0"
+    implementation "androidx.core:core-splashscreen:1.0.1"
+    implementation "androidx.core:core-ktx:1.12.0"
+    implementation "androidx.core:core:1.12.0"
+    implementation "androidx.fragment:fragment:1.6.2"
+    implementation "androidx.activity:activity:1.8.2"
+    implementation "androidx.webkit:webkit:1.10.0"
+    
+    // MultiDex support
+    implementation 'androidx.multidex:multidex:2.0.1'
+    
+    // Capacitor
     implementation project(':capacitor-android')
-    testImplementation "junit:junit:$junitVersion"
-    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
-    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+    
+    // Lifecycle components for modern Android
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-process:2.7.0'
+    
+    // Security
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+    
+    // Test dependencies
+    testImplementation "junit:junit:4.13.2"
+    androidTestImplementation "androidx.test.ext:junit:1.1.5"
+    androidTestImplementation "androidx.test.espresso:espresso-core:3.5.1"
 }
 
 apply from: 'capacitor.build.gradle'

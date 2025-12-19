@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { isAndroid } from '../utils/platformUtils'
 
 export const usePriceForm = () => {
   // Form state
@@ -19,6 +20,11 @@ export const usePriceForm = () => {
   const [imeinumber, setImeiNumber] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isBillRequired, setIsBillRequired] = useState(false)
+  
+  // Bottom sheet state for Android
+  const [showBottomSheet, setShowBottomSheet] = useState(false)
+  const [currentInputRef, setCurrentInputRef] = useState(null)
+  const [selectedOption, setSelectedOption] = useState(null)
 
   // Refs
   const fileInputRef = useRef(null)
@@ -49,11 +55,47 @@ export const usePriceForm = () => {
   }, [])
 
   const handleCameraButtonClick = (ref) => {
-    if (ref && ref.current) {
-      ref.current.click()
-    } else {
-      console.error('Camera button click failed: ref is not valid', ref)
+    if (!ref.current) {
+      return
     }
+    
+    // Show bottom sheet on Android, direct click on other platforms
+    if (isAndroid()) {
+      setCurrentInputRef(ref)
+      setShowBottomSheet(true)
+    } else {
+      ref.current.click()
+    }
+  }
+
+  const handleBottomSheetOptionSelect = (option) => {
+    setSelectedOption(option)
+    setShowBottomSheet(false)
+    
+    // Update the input attributes and trigger click
+    if (currentInputRef && currentInputRef.current) {
+      const input = currentInputRef.current
+      
+      // Set accept attribute based on option
+      input.setAttribute('accept', option.accept)
+      
+      // Set capture attribute if it's camera
+      if (option.capture) {
+        input.setAttribute('capture', option.capture)
+      } else {
+        input.removeAttribute('capture')
+      }
+      
+      // Trigger the file input
+      setTimeout(() => {
+        input.click()
+      }, 100)
+    }
+  }
+
+  const handleBottomSheetClose = () => {
+    setShowBottomSheet(false)
+    setCurrentInputRef(null)
   }
 
   return {
@@ -113,5 +155,10 @@ export const usePriceForm = () => {
 
     // Handlers
     handleCameraButtonClick,
+    
+    // Bottom sheet (Android)
+    showBottomSheet,
+    handleBottomSheetOptionSelect,
+    handleBottomSheetClose
   }
 }

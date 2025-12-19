@@ -1,13 +1,21 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
+    ext {
+        buildToolsVersion = "34.0.0"
+        minSdkVersion = 23
+        compileSdkVersion = 35
+        targetSdkVersion = 35
+        ndkVersion = "25.1.8937393"
+        kotlinVersion = "1.8.22"
+        javaVersion = JavaVersion.VERSION_17
+    }
     
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.7.2'
+        classpath 'com.android.tools.build:gradle:8.5.2'
         classpath 'com.google.gms:google-services:4.4.2'
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -21,6 +29,50 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://www.jitpack.io") }
+    }
+    
+    // Global dependency resolution to prevent conflicts
+    configurations.all {
+        resolutionStrategy {
+            // Force stable versions to prevent DEX compilation errors
+            force 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
+            force 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+            force 'org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3'
+            
+            // Force consistent AndroidX versions for API 34
+            force "androidx.core:core:1.12.0"
+            force "androidx.core:core-ktx:1.12.0"
+            force "androidx.appcompat:appcompat:1.6.1"
+            force "androidx.fragment:fragment:1.6.2"
+            force "androidx.activity:activity:1.8.2"
+            force "androidx.webkit:webkit:1.10.0"
+        }
+    }
+}
+
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            android {
+                compileSdkVersion rootProject.ext.compileSdkVersion
+                defaultConfig {
+                    minSdkVersion rootProject.ext.minSdkVersion
+                    targetSdkVersion rootProject.ext.targetSdkVersion
+                }
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_17
+                    targetCompatibility JavaVersion.VERSION_17
+                }
+            }
+        }
+        if (project.hasProperty('java')) {
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(17)
+                }
+            }
+        }
     }
 }
 

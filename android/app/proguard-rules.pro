@@ -19,3 +19,18 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep Plugin configurations
+-keep class com.capacitorjs.plugins.camera.CameraPluginConfiguration { *; }
+# Additional rules for WebView
+-keep class * extends android.webkit.WebChromeClient { *; }
+-keep class * extends android.webkit.WebViewClient { *; }
+-keep class com.capacitorjs.** { *; }
+-keep class com.getcapacitor.** { *; }
+-keepattributes *Annotation*
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+ 
+ 
+-dontwarn com.getcapacitor.**

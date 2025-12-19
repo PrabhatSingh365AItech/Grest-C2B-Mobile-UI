@@ -1,7 +1,6 @@
 import UIKit
 import Capacitor
 
-// Bundle ID: com.grest.ti.app
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 

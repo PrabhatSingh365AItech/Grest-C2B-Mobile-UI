@@ -472,57 +472,34 @@ const CouponBonusToggle = ({
   </div>
 )
 
-const BonusInput = ({ bonus, setBonus }) => {
-  const inputRef = React.useRef(null)
-
-  const handleFocus = () => {
-    // Scroll input into view on iOS when keyboard appears
-    setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'nearest',
-        })
-      }
-    }, 300) // Wait for keyboard animation
-  }
-
-  return (
-    <div className='flex flex-row items-center justify-between px-2 my-2'>
-      <div className='w-[50%] font-medium text-gray-700 text-sm sm:text-base'>
-        {currentDomain === switchKart && 'SwitchKart'} Bonus Amount :
-      </div>
-      <div
-        ref={inputRef}
-        className='rounded-md bg-[#f6f6f6] py-1 sm:py-2 w-[45%]  border-2 border-primary flex flex-col items-center justify-center'
-      >
-        <input
-          className='bg-transparent outline-none my-auto text-center font-medium text-primary w-full px-1'
-          style={{ fontSize: '16px' }}
-          name='bonus'
-          id='bonus'
-          type='number'
-          inputMode='numeric'
-          placeholder='Enter Bonus Amount'
-          value={bonus}
-          maxLength={6}
-          onFocus={handleFocus}
-          onKeyDown={(e) => {
-            if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
-              e.preventDefault()
-            }
-          }}
-          onChange={(e) => {
-            if (Number(e.target.value) >= 0 && Number(e.target.value) <= 10000) {
-              setBonus(e.target.value)
-            }
-          }}
-        />
-      </div>
+const BonusInput = ({ bonus, setBonus }) => (
+  <div className='flex flex-row items-center justify-between px-2 my-2'>
+    <div className='w-[50%] font-medium text-gray-700 text-sm sm:text-base'>
+      {currentDomain === switchKart && 'SwitchKart'} Bonus Amount :
     </div>
-  )
-}
+    <div className='rounded-md bg-[#f6f6f6] py-1 sm:py-2 w-[45%]  border-2 border-primary flex flex-col items-center justify-center'>
+      <input
+        className='bg-transparent outline-none my-auto text-center font-medium text-primary text-xs sm:text-base w-full px-1'
+        name='bonus'
+        id='bonus'
+        type='number'
+        placeholder='Enter Bonus Amount'
+        value={bonus}
+        maxLength={6}
+        onKeyDown={(e) => {
+          if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
+            e.preventDefault()
+          }
+        }}
+        onChange={(e) => {
+          if (Number(e.target.value) >= 0 && Number(e.target.value) <= 10000) {
+            setBonus(e.target.value)
+          }
+        }}
+      />
+    </div>
+  </div>
+)
 
 const CouponDisplay = ({
   eligibleCoupon,

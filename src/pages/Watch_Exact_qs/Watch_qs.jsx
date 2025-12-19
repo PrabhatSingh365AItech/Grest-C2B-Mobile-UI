@@ -180,7 +180,7 @@ function Watchqs() {
         <img src={banner} alt="banner" />
         <div className="text">
           Help us calculate your device value correctly by answering to the
-          following questions
+          following questions
         </div>
         <button onClick={() => setShowPopup(false)}> Got it</button>
       </div>

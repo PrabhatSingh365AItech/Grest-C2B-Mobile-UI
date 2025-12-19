@@ -1,21 +1,23 @@
 {
   "appId": "com.grest.ti.app",
   "appName": "Grest",
-  "webDir": "build",
+  "webDir": "dist",
   "server": {
-    "androidScheme": "https",
+    "androidScheme": "https", 
+    "iosScheme": "https",
     "allowNavigation": [
       "*.digio.in",
       "*.digitallocker.gov.in",
-      "digitallocker.gov.in",
-      "ext.digio.in"
-    ]
+      "ext.digio.in",
+      "grestc2b://*"
+    ],
+    "cleartext": true,
+    "hostname": "localhost"
   },
   "ios": {
-    "contentInset": "always",
-    "allowsLinkPreview": false,
-    "scrollEnabled": true,
-    "keyboardResize": "native"
+    "contentInset": "never",
+    "allowsLinkPreview": false
+    
   },
   "android": {
     "allowMixedContent": true
@@ -23,6 +25,23 @@
   "plugins": {
     "CapacitorHttp": {
       "enabled": true
+    },
+    "App": {
+      "iosScheme": "grestc2b",
+      "androidScheme": "grestc2b"
+    },
+    "Camera": {
+      "ios": {
+        "sourceType": "prompt"
+      },
+      "android": {
+        "sourceType": "prompt"
+      },
+      "saveToGallery": false,
+      "correctOrientation": true,
+      "allowEditing": false,
+      "resultType": "uri",
+      "quality": 90
     }
   }
 }

@@ -3,21 +3,7 @@
   min-height: 100vh;
   min-height: -webkit-fill-available;
   width: 100%;
-  max-width: 100vw;
   position: relative;
-  padding-bottom: 120px; /* Space for fixed bottom bar */
-  overflow-x: hidden; /* Prevent horizontal scroll */
-  overflow-y: auto;
-}
-
-/* iOS keyboard handling */
-@supports (-webkit-touch-callout: none) {
-  .page_wrap {
-    position: relative;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-  }
 }
 
 @supports (-webkit-touch-callout: none) {

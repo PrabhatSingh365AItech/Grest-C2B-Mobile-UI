@@ -16,7 +16,7 @@ export const usePriceUpload = (formState) => {
     phoneRight,
     phoneTop,
     phoneBottom,
-    signatureFile,  // new signature state
+    signatureFile,  // new signature stateA
     ceirImage,  // new CEIR image state
     aadharNumber,
     imeinumber,

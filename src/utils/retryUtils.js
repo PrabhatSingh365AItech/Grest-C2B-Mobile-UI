@@ -11,7 +11,10 @@ export const getFileMapping = (fileKey, fileStates) => {
     phoneLeft,
     phoneRight,
     phoneTop,
-    phoneBottom
+    phoneBottom,
+    signatureFile,
+    customerPhoto,
+    ceirImage
   } = fileStates
 
   switch (fileKey) {
@@ -33,6 +36,12 @@ export const getFileMapping = (fileKey, fileStates) => {
       return { fileToUpload: phoneTop, fileName: FILE_KEYS.PHONE_TOP }
     case FILE_KEYS.PHONE_BOTTOM:
       return { fileToUpload: phoneBottom, fileName: FILE_KEYS.PHONE_BOTTOM }
+    case FILE_KEYS.SIGNATURE:
+      return { fileToUpload: signatureFile, fileName: FILE_KEYS.SIGNATURE }
+    case FILE_KEYS.CUSTOMER_PHOTO:
+      return { fileToUpload: customerPhoto, fileName: FILE_KEYS.CUSTOMER_PHOTO }
+    case FILE_KEYS.CEIR:
+      return { fileToUpload: ceirImage, fileName: FILE_KEYS.CEIR }
     default:
       return { fileToUpload: null, fileName: null }
   }

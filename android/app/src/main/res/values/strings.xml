@@ -4,4 +4,8 @@
     <string name="title_activity_main">Grest</string>
     <string name="package_name">com.grest.ti.app</string>
     <string name="custom_url_scheme">com.grest.ti.app</string>
+    
+    <!-- Permission explanations for Play Store policy compliance -->
+    <string name="camera_permission_rationale">Camera access is required to take photos of products for trade-in evaluation and to scan IMEI/barcode numbers. This is essential for our device buyback service.</string>
+    <string name="photo_permission_rationale">Photo library access is needed to select and upload product images for trade-in evaluation. This helps you provide images of the device you want to sell.</string>
 </resources>

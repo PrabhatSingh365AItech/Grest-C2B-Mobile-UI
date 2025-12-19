@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { CiBarcode } from 'react-icons/ci'
 import { IMEI_LENGTH } from '../../constants/priceConstants'
 import Scanner from '../Scanner'
@@ -10,7 +10,7 @@ const ImeiField = ({ imeinumber, setImeiNumber, prod }) => {
 
   const validateImeiNumber = (value) => {
     if (value.length !== IMEI_LENGTH) {
-      setError('IMEI number must be exactly 15 digits.')
+      setError('IMEI number must less than or equal to 15 digits.')
       return false
     } else if (!/^\d{15}$/.test(value)) {
       setError('IMEI number must only contain digits.')
@@ -19,12 +19,6 @@ const ImeiField = ({ imeinumber, setImeiNumber, prod }) => {
     setError('')
     return true
   }
-
-  useEffect(() => {
-    if (imeinumber) {
-      validateImeiNumber(imeinumber)
-    }
-  }, [imeinumber])
 
   const handleChange = (e) => {
     const value = e.target.value

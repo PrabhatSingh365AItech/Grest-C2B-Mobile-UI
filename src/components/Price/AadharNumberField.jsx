@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
+import { Capacitor } from '@capacitor/core'
+import { App } from '@capacitor/app'
+import { Browser } from '@capacitor/browser'
 import { AADHAR_LENGTH } from '../../constants/priceConstants'
 import { createDigilockerKYCRequest } from '../../services/digilockerService'
 import {
   loadDigilockerSDK,
   initializeDigilocker,
   submitDigilockerKYC,
+  parseDigilockerCallback,
 } from '../../utils/digilockerSDK'
 
 const AadharNumberField = ({
@@ -32,6 +36,49 @@ const AadharNumberField = ({
         console.error('Failed to load Digilocker SDK:', err)
       })
   }, [])
+
+  useEffect(() => {
+    // Listen for app URL opens (deep links) on mobile
+    if (!Capacitor.isNativePlatform()) {
+      return // Only for mobile apps
+    }
+
+    const handleAppUrlOpen = App.addListener('appUrlOpen', async (data) => {
+      console.log('App opened with URL:', data.url)
+
+      // Check if it's a Digilocker callback
+      if (data.url && data.url.includes('grestc2b://digilocker/callback')) {
+        // Close the system browser
+        await Browser.close()
+        
+        const response = parseDigilockerCallback(data.url)
+        
+        if (response) {
+          setIsVerifying(false)
+
+          // Check for errors
+          if (response.error_code || response.message === 'failed') {
+            const errorMessage = response.message || 'Verification failed. Please try again.'
+            setError(errorMessage)
+            toast.error(errorMessage)
+            console.error('Error in Digilocker process:', response)
+          }
+          // Check for success
+          else if (response.message === 'success' || !response.error_code) {
+            setError('')
+            setIsVerified(true)
+            toast.success('Aadhar verified successfully!')
+            console.log('Verification completed successfully', response)
+          }
+        }
+      }
+    })
+
+    // Cleanup listener on unmount
+    return () => {
+      handleAppUrlOpen.remove()
+    }
+  }, [setIsVerified])
 
   const validateAadharNumber = (value) => {
     if (value.length !== AADHAR_LENGTH) {
@@ -114,6 +161,16 @@ const AadharNumberField = ({
             console.log('Verification success event received')
           } else if (event.event === 'failure') {
             toast.error('Verification failed')
+          } else if (event.event === 'navigate_url' && event.url) {
+            // On mobile, intercept the URL and open in system browser
+            if (Capacitor.isNativePlatform()) {
+              console.log('Opening URL in system browser:', event.url)
+              Browser.open({ 
+                url: event.url,
+                presentationStyle: 'popover',
+                windowName: '_self'
+              })
+            }
           }
         },
       })

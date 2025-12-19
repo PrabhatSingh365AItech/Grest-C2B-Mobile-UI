@@ -4,6 +4,8 @@ import { CiSearch, CiBarcode } from "react-icons/ci";
 import { IoClose } from "react-icons/io5";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import AppFooter from "../../components/AppFooter";
+import { Camera } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 const currentDomain = window.location.origin;
 const DEFAULT_LOGO = "/Grest_Logo.jpg";
 const BUYBACK_LOGO = "/Grest_Logo_2.jpg"; // Use your actual buyback logo
@@ -487,29 +489,17 @@ const fetchDataAPI = async (days, fromDateDup, toDateDup, deviceType) => {
   const userToken = sessionStorage.getItem("authToken");
   let response1;
   let response2;
-
-  // Build query parameters properly - only include fromdate/todate if they have values
-  const buildQueryParams = (baseParams) => {
-    const params = new URLSearchParams(baseParams);
-    if (fromDateDup && fromDateDup !== "") {
-      params.set("fromdate", fromDateDup);
-    }
-    if (toDateDup && toDateDup !== "") {
-      params.set("todate", toDateDup);
-    }
-    return params.toString();
-  };
-
   try {
-    const baseParams1 = { time: days, datareq: deviceType };
-    const baseParams2 = { time: days, datareq: deviceType };
-
     response2 = await axios.get(
-      `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/user/Dashboard/order/saled?${buildQueryParams(baseParams2)}`,
+      `${
+        import.meta.env.VITE_REACT_APP_ENDPOINT
+      }/api/user/Dashboard/order/saled?time=${days}&fromdate=${fromDateDup}&todate=${toDateDup}&datareq=${deviceType}`,
       { headers: { authorization: `${userToken}` } }
     );
     response1 = await axios.get(
-      `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/leadSet/getCount?${buildQueryParams(baseParams1)}`,
+      `${
+        import.meta.env.VITE_REACT_APP_ENDPOINT
+      }/api/leadSet/getCount?time=${days}&fromdate=${fromDateDup}&todate=${toDateDup}&datareq=${deviceType}`,
       { headers: { authorization: `${userToken}` } }
     );
   } catch (error) {
@@ -539,6 +529,29 @@ const SelectDeviceType = () => {
   const [data, setData] = useState(null);
   const [modelsL, setModel] = useState([]);
 
+  // Request camera permissions when component mounts
+  useEffect(() => {
+    const requestCameraPermission = async () => {
+      try {
+        const permission = await Camera.checkPermissions();
+        if (permission.camera !== 'granted') {
+          const request = await Camera.requestPermissions();
+          if (request.camera !== 'granted') {
+            toast.error('Camera permission is required for scanning IMEI');
+          }
+        }
+      } catch (err) {
+        console.error('Error requesting camera permission:', err);
+        // Only show error toast if there's an actual error, not just permission denied
+        if (err.message && !err.message.includes('permission')) {
+         
+        }
+      }
+    };
+
+    requestCameraPermission();
+  }, []);
+
   useEffect(() => {
     if (location.state?.openSearch) {
       setIsSearchBoxOpen(true);
@@ -552,9 +565,7 @@ const SelectDeviceType = () => {
 
   function searchCustom() {
     if (fromDateDup !== "" && toDateDup !== "") {
-      setDays(""); // Clear the predefined time filter to use custom dates
-      setshowFromdate(false); // Close the date picker modal
-      setCustomSearch(!cutomSearch); // Toggle to trigger useEffect
+      setCustomSearch(!cutomSearch);
     } else {
       toast.error("Enter both date field");
     }
@@ -625,25 +636,15 @@ const SelectDeviceType = () => {
 
   useEffect(() => {
     fetchData();
-  }, [days, cutomSearch, deviceType, fromDateDup, toDateDup]);
+  }, [days, cutomSearch, deviceType]);
 
   useEffect(() => {
     const fetchtop = async () => {
       try {
-        // Build query parameters properly - only include fromdate/todate if they have values
-        const params = new URLSearchParams({
-          time: days || "",
-          deviceType: deviceType
-        });
-        if (fromDateDup && fromDateDup !== "") {
-          params.set("fromdate", fromDateDup);
-        }
-        if (toDateDup && toDateDup !== "") {
-          params.set("todate", toDateDup);
-        }
-
         const response = await axios.get(
-          `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/user/Dashboard/get/top/sellingModels?${params.toString()}`,
+          `${
+            import.meta.env.VITE_REACT_APP_ENDPOINT
+          }/api/user/Dashboard/get/top/sellingModels?time=${days}&deviceType=${deviceType}`,
           { headers: { authorization: `${token}` } }
         );
         const updatedData = await response.data.map((item) => ({
@@ -657,7 +658,7 @@ const SelectDeviceType = () => {
       }
     };
     fetchtop();
-  }, [days, deviceType, fromDateDup, toDateDup]);
+  }, [days, deviceType]);
 
   const handlepick = (e) => {
     if (e.target.value === "Custom") {
@@ -667,11 +668,6 @@ const SelectDeviceType = () => {
       console.log("days", e.target.value);
       setDays(e.target.value);
       setshowFromdate(false);
-      // Clear custom dates when selecting predefined filter
-      setFromDateDup("");
-      setToDateDup("");
-      setFromDate("");
-      setToDate("");
     }
   };
 
@@ -727,9 +723,7 @@ const SearchBox = ({
     const authToken = sessionStorage.getItem("authToken");
     try {
       await axios.post(
-        `${
-          import.meta.env.VITE_REACT_APP_ENDPOINT
-        }/api/user/Dashboard/add/PhoneView?time=${days}`,
+        `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/user/Dashboard/add/PhoneView?time=${days}`,
         {
           modelId: modelId,
         },
@@ -752,6 +746,7 @@ const SearchBox = ({
     navigate("/selectmodel");
     addPhoneView(model._id);
   };
+
   const isArray = Array.isArray(modelsL);
   const sortedModels = isArray
     ? [...modelsL].sort((a, b) => {
@@ -760,6 +755,7 @@ const SearchBox = ({
         return numA - numB;
       })
     : [];
+
   return (
     <React.Fragment>
       <div className="flex items-center w-[99%] h-16 py-4 bg-white border-b-2 HEADER ">
@@ -947,21 +943,21 @@ const MiddlePart = ({
           </div>}
 
           {currentDomain !== buyback && <div className={`flex gap-2 justify-between ${styles.info_wrap}`}>
-            <Link className="w-[33%]" to={`/orderscreated/${days || "custom"}`}>
+            <Link className="w-[33%]" to={`/orderscreated/${days ||"custom"}`}>
               <OrderStatusBox
                 figures={orderCount}
                 title="Order Created"
                 background="rgb(2, 117, 242)"
               />
             </Link>
-            <Link className="w-[33%]" to={`/orderscompleted/${days || "custom"}`}>
+            <Link className="w-[33%]" to={`/orderscompleted/${days ||"custom"}`}>
               <OrderStatusBox
                 figures={orderSaled}
                 title="Order Completed"
                 background="#E94A4E"
               />
             </Link>
-            <Link className="w-[33%]" to={`/quotescreated/${days || "custom"}`}>
+            <Link className="w-[33%]" to={`/quotescreated/${days ||"custom"}`}>
               <OrderStatusBox
                 figures={quoteCount}
                 title="Quotes Created"
