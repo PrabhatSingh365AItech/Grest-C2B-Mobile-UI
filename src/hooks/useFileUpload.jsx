@@ -44,6 +44,7 @@ export const useFileUpload = (token, imeinumber) => {
 
     try {
       let fileToProcess = fileToUpload
+      let finalFileType = fileType
 
       // Compress only images, skip PDFs and other file types
       if (fileToUpload.type.startsWith('image/')) {
@@ -51,19 +52,28 @@ export const useFileUpload = (token, imeinumber) => {
           maxSizeMB: 1, // Maximum file size in MB
           maxWidthOrHeight: 1920, // Maximum width or height
           useWebWorker: true, // Use web worker for non-blocking compression
-          preserveExif: false, // Remove EXIF data to avoid iOS orientation issues
-          fileType: fileToUpload.type, // Preserve original file type
+          fileType: 'image/jpeg', // Always convert to JPEG for consistency
+          initialQuality: 0.8, // Good balance between quality and size
         }
 
         try {
           const originalSizeMB = (fileToUpload.size / (1024 * 1024)).toFixed(2)
-          fileToProcess = await imageCompression(fileToUpload, options)
-          const compressedSizeMB = (fileToProcess.size / (1024 * 1024)).toFixed(
-            2
-          )
+          const compressedBlob = await imageCompression(fileToUpload, options)
+          const compressedSizeMB = (compressedBlob.size / (1024 * 1024)).toFixed(2)
+
           console.log(
             `Image compressed: ${originalSizeMB}MB → ${compressedSizeMB}MB`
           )
+
+          // Convert blob to File object with proper name and type
+          const originalFileName = fileToUpload.name || 'image.jpg'
+          const fileNameWithoutExt = originalFileName.replace(/\.[^/.]+$/, '')
+          fileToProcess = new File(
+            [compressedBlob],
+            `${fileNameWithoutExt}.jpg`,
+            { type: 'image/jpeg' }
+          )
+          finalFileType = 'image/jpeg'
         } catch (compressionError) {
           console.warn(
             'Compression failed, using original file:',
@@ -75,7 +85,7 @@ export const useFileUpload = (token, imeinumber) => {
       }
 
       const fullFileName = `${imeinumber}-${fileName}`
-      await fileUploader(token, fileToProcess, fullFileName, fileType)
+      await fileUploader(token, fileToProcess, fullFileName, finalFileType)
 
       // Update status to success
       setUploadStatus((prev) => ({
