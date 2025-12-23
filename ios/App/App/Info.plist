@@ -18,16 +18,69 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>2.0.0</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.grest.ti.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>grestc2b</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>14</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>http</string>
+		<string>https</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We need access to your photo library to upload product images for trade-in evaluation.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>We need permission to save photos to your photo library.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>amazonaws.com</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSTemporaryExceptionMinimumTLSVersion</key>
+				<string>TLSv1.2</string>
+			</dict>
+			<key>grest-c2b-images.s3.ap-south-1.amazonaws.com</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSTemporaryExceptionMinimumTLSVersion</key>
+				<string>TLSv1.2</string>
+			</dict>
+			<key>s3.amazonaws.com</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSTemporaryExceptionMinimumTLSVersion</key>
+				<string>TLSv1.2</string>
+			</dict>
+		</dict>
+	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>We need access to your camera to take product photos. </string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need permission to save photos to your photo library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to upload product images for trade-in evaluation.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -36,6 +89,20 @@
 	<array>
 		<string>armv7</string>
 	</array>
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleDarkContent</string>
+	<key>UIStatusBarTintParameters</key>
+	<dict>
+		<key>UINavigationBar</key>
+		<dict>
+			<key>Style</key>
+			<string>UIBarStyleDefault</string>
+			<key>Translucent</key>
+			<false/>
+		</dict>
+	</dict>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -51,72 +118,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>UIStatusBarHidden</key>
-	<false/>
-	<key>UIStatusBarStyle</key>
-	<string>UIStatusBarStyleDarkContent</string>
-	<key>UIStatusBarTintParameters</key>
-	<dict>
-		<key>UINavigationBar</key>
-		<dict>
-			<key>Style</key>
-			<string>UIBarStyleDefault</string>
-			<key>Translucent</key>
-			<false/>
-		</dict>
-	</dict>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<false/>
-		<key>NSAllowsArbitraryLoadsInWebContent</key>
-		<true/>
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>grest-c2b-images.s3.ap-south-1.amazonaws.com</key>
-			<dict>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
-				<false/>
-				<key>NSTemporaryExceptionMinimumTLSVersion</key>
-				<string>TLSv1.2</string>
-			</dict>
-			<key>amazonaws.com</key>
-			<dict>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-				<key>NSTemporaryExceptionMinimumTLSVersion</key>
-				<string>TLSv1.2</string>
-			</dict>
-			<key>s3.amazonaws.com</key>
-			<dict>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-				<key>NSTemporaryExceptionMinimumTLSVersion</key>
-				<string>TLSv1.2</string>
-			</dict>
-		</dict>
-	</dict>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.grest.ti.app</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>grestc2b</string>
-			</array>
-		</dict>
-	</array>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>http</string>
-		<string>https</string>
-	</array>
 </dict>
 </plist>
