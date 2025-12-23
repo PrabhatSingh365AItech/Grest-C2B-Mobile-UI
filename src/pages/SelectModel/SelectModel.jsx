@@ -41,8 +41,39 @@ const SelectModel = () => {
     const modelConfigData = JSON.parse(
       sessionStorage.getItem('dataModelConfig')
     )
-    setConfigData(modelConfigData)
 
+    // Sort config by RAM first, then by storage
+    if (modelConfigData?.config) {
+      const sortedConfig = [...modelConfigData.config].sort((a, b) => {
+        const parseSize = (size) => {
+          const num = parseFloat(size)
+          const unit = size.toUpperCase()
+          // Convert to MB for comparison
+          if (unit.includes('TB')) {
+            return num * 1024 * 1024
+          }
+          if (unit.includes('GB')) {
+            return num * 1024
+          }
+          return num
+        }
+
+        const ramA = parseSize(a.RAM)
+        const ramB = parseSize(b.RAM)
+
+        if (ramA !== ramB) {
+          return ramA - ramB
+        }
+
+        const storageA = parseSize(a.storage)
+        const storageB = parseSize(b.storage)
+        return storageA - storageB
+      })
+
+      modelConfigData.config = sortedConfig
+    }
+
+    setConfigData(modelConfigData)
     setSelectedConfig(modelConfigData?.config[0])
   }, [])
 

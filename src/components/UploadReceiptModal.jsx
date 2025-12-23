@@ -11,9 +11,19 @@ const UploadReceiptModal = ({ isOpen, onClose, onUpload, lotCode }) => {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0]
     if (selectedFile) {
-      // Validate PDF only
-      if (selectedFile.type !== 'application/pdf') {
-        setError('Only PDF files are allowed.')
+      // Validate images and PDF
+      const allowedTypes = [
+        'application/pdf',
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'image/bmp',
+        'image/svg+xml',
+      ]
+      if (!allowedTypes.includes(selectedFile.type)) {
+        setError('Only PDF and image files are allowed.')
         setFile(null)
         return
       }
@@ -30,7 +40,7 @@ const UploadReceiptModal = ({ isOpen, onClose, onUpload, lotCode }) => {
 
   const handleSubmit = async () => {
     if (!file) {
-      setError('Please select a PDF file to upload.')
+      setError('Please select a file to upload.')
       return
     }
 
@@ -83,17 +93,17 @@ const UploadReceiptModal = ({ isOpen, onClose, onUpload, lotCode }) => {
 
         <p className='text-sm text-gray-600 mb-4'>
           Please upload the payment receipt for <strong>Lot {lotCode}</strong>{' '}
-          in PDF format only.
+          in PDF or image format.
         </p>
 
         <div className='mb-4'>
           <label className='block text-sm font-medium text-gray-700 mb-2'>
-            Payment Receipt (PDF only, max 5MB)
+            Payment Receipt (PDF or Image, max 5MB)
           </label>
           <div className='relative'>
             <input
               type='file'
-              accept='.pdf'
+              accept='.pdf,.jpg,.jpeg,.png,.gif,.webp,.bmp,.svg'
               onChange={handleFileChange}
               className='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500'
               disabled={isUploading}

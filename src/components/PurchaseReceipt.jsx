@@ -6,14 +6,25 @@ const isBuybackDomain = currentDomain === import.meta.env.VITE_BUYBACK_URL
 const GREST_LOGO = isBuybackDomain ? BUYBACK_LOGO : DEFAULT_LOGO
 
 // Helper functions
-const maskPhoneNumber = (phNumber) => {
+const maskPhoneNumber = (phNumber, storeName) => {
+  if (storeName === 'Grest@MG_BS02') {
+    return phNumber
+  }
+
   const visibleLength = Math.ceil(phNumber?.length * 0.25)
   const maskedSection = phNumber?.slice(0, phNumber.length - visibleLength)
   const visibleSection = phNumber?.slice(phNumber?.length - visibleLength)
   return `${maskedSection.replace(/./g, 'x')}${visibleSection}`
 }
 
-const maskEmail = (email) => {
+const maskEmail = (email, storeName) => {
+  if (storeName === 'Grest@MG_BS02') {
+    return email
+  }
+  if (!email) {
+    return ''
+  }
+
   const [namee, domain] = email.split('@')
   const visibleLength = Math.ceil(namee?.length * 0.25)
   const maskedName = namee?.slice(0, namee?.length - visibleLength)
@@ -69,6 +80,7 @@ const TransactionInfo = ({
   phoneNumber,
   emailId,
   aadharNumber,
+  storeName,
 }) => (
   <div className='flex items-center mt-4 justify-between mx-auto'>
     <div className='w-[30%]'>
@@ -84,13 +96,16 @@ const TransactionInfo = ({
         <span className='font-bold'> Purchased From: {name}</span>
       </p>
       <p></p>
-      <span> Contact: {maskPhoneNumber(phoneNumber)}</span>
+      <span> Contact: {maskPhoneNumber(phoneNumber, storeName)}</span>
       <p>
-        <span> Mail: {maskEmail(emailId)}</span>
+        <span> Mail: {maskEmail(emailId, storeName)}</span>
       </p>
-      <p>
+      <div className='flex flex-wrap items-center gap-1'>
         <span> Aadhar No.: {aadharNumber}</span>
-      </p>
+        <span className='flex items-center text-xs text-green-700 font-bold'>
+          ( Verified by aadhar OTP )
+        </span>
+      </div>
     </div>
   </div>
 )
@@ -296,6 +311,7 @@ const PurchaseReceipt = ({
         phoneNumber={phoneNumber}
         emailId={emailId}
         aadharNumber={aadharNumber}
+        storeName={storeName}
       />
       <ItemDetails
         phoneName={phoneName}
