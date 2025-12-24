@@ -1,0 +1,40 @@
+.prof_button {
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 0.55rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 15px;
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    -1px -1px 2px 0px rgba(0, 0, 0, 0.034);
+  transition: all 0.5s ease;
+}
+
+.prof_button:hover {
+  transform: translateY(-3px);
+}
+
+.prof_button2 {
+  color: var(--primary-color);
+  border-radius: 0.55rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 15px;
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    -1px -1px 2px 0px rgba(0, 0, 0, 0.034);
+  transition: all 0.5s ease;
+}
+
+.prof_button2:hover {
+  transform: translateY(-3px);
+}

@@ -1,0 +1,28 @@
+.page_wrap {
+  padding-top: env(safe-area-inset-top);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  width: 100%;
+  position: relative;
+}
+
+@supports (-webkit-touch-callout: none) {
+  .page_wrap {
+    min-height: -webkit-fill-available;
+  }
+}
+
+.contopt_page {
+  position: fixed;
+  width: 100.1vw;
+  height: 100dvh;
+  background-color: var(--primary-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.QuoteCardShadow {
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+}

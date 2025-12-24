@@ -1,0 +1,175 @@
+.edit_page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  z-index: 200;
+  min-height: 100dvh;
+  height: 100%;
+  background-color: white;
+  overflow-y: scroll;
+}
+
+.acpt_btn {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1px 7px;
+  border-radius: 0.25rem;
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    0px 0px 0px 0px rgba(0, 0, 0, 0.034);
+  cursor: pointer;
+  transition: all 0.5s ease;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.acpt_btn:hover {
+  box-shadow: 0px 0px 0px 1px var(--secondary-color), 0px 0px 0px 1px var(--secondary-color);
+}
+
+.view_btn {
+  background-color: white;
+  color: var(--primary-color);
+  padding: 1px 7px;
+  border-radius: 0.25rem;
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    0px 0px 0px 0px rgba(0, 0, 0, 0.034);
+  cursor: pointer;
+  transition: all 0.5s ease;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.view_btn:hover {
+  box-shadow: 0px 0px 0px 1px var(--secondary-color), 0px 0px 0px 1px var(--secondary-color);
+  scale: 1.03;
+}
+
+.rjct_btn {
+  background-color: white;
+  color: var(--secondary-color);
+  padding: 1px 7px;
+  border-radius: 0.25rem;
+  box-shadow: 0px 0px 0px 1px var(--secondary-color), 0px 0px 0px 1px var(--secondary-color);
+  cursor: pointer;
+  transition: all 0.5s ease;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.rjct_btn:hover {
+  scale: 1.03;
+  text-decoration: underline;
+}
+
+.search_bar_wrap {
+  display: flex;
+  flex-direction: row;
+  width: 350px;
+  height: 34px;
+  border-radius: 0.55rem;
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    -1px -1px 2px 0px rgba(0, 0, 0, 0.034);
+  margin-left: 5px;
+  padding-left: 15px;
+  padding-right: 10px;
+  align-items: center;
+}
+
+.search_bar_wrap input {
+  outline: none;
+  width: 100%;
+  background-color: transparent;
+}
+.search_bar_wrap svg {
+  margin-right: -5px;
+  transition: all 0.5s ease;
+  color: var(--primary-color);
+  border-radius: 0.25rem;
+}
+.search_bar_wrap svg:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.date_picker_wrap input {
+  visibility: hidden;
+  position: absolute;
+  z-index: 0;
+  right: 0;
+}
+
+.icons_box {
+  color: white;
+  background-color: var(--primary-color);
+  border-radius: 0.55rem;
+  padding: 4px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    -1px -1px 2px 0px rgba(0, 0, 0, 0.034);
+}
+
+.bulkdown_button {
+  color: var(--primary-color);
+  border-radius: 0.55rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 15px;
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    -1px -1px 2px 0px rgba(0, 0, 0, 0.034);
+  transition: all 0.5s ease;
+}
+
+.bulkdown_button:hover {
+  transform: translateY(2px);
+}
+
+.err_mod_box {
+  background-color: white;
+  width: 50vw;
+  border-radius: 0.55rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 10px;
+  gap: 20px;
+}
+
+.err_mod_box h6 {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.err_mod_box p {
+  font-size: 1.1rem;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.err_mod_box button {
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    -1px -1px 2px 0px rgba(0, 0, 0, 0.034);
+  padding: 7px 30px;
+  margin-top: 7px;
+  border-radius: 0.55rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  transition: all 0.5s ease;
+  cursor: pointer;
+}
+
+.err_mod_box button:hover {
+  box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.158),
+    0px 0px 4px 0px rgba(0, 0, 0, 0.189);
+}

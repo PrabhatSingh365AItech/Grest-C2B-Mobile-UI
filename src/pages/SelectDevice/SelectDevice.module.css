@@ -1,0 +1,128 @@
+/* .cardsContainer {
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+} */
+
+.card {
+  /* border: 1px solid rgba(0, 0, 0, 0.082); */
+  box-shadow: 0 0 10px 0 rgb(0 0 0 / 0.1);
+  /* box-shadow: none; */
+}
+
+.select_button_wrap {
+  display: flex;
+  justify-content: center;
+  width: 99vw;
+  padding: 0 10px;
+}
+.select_button_box {
+  width: 100%;
+  padding: 7px 0;
+  justify-content: flex-start;
+  gap: 15px;
+}
+
+.select_button_box img {
+  margin: 0 3px 0 10px;
+  width: 24px;
+  height: 24px;
+  margin-right: 3px;
+}
+
+.select_button_box span {
+  margin-right: 10px;
+}
+
+.scroll_button {
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--primary-color)84;
+  background-color: white;
+  height: 20px;
+  width: 20px;
+  padding: 2.5px;
+  margin: auto 0;
+
+  border-radius: 50%;
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 4px, rgba(0, 0, 0, 0.16) 0px 2px 8px;
+  transition: all 0.5s ease;
+}
+
+.scroll_button:hover {
+  scale: 1.05;
+}
+
+.button_checked {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100px;
+  padding: 7px 10px;
+  color: white;
+  background-color: var(--primary-color);
+  outline: none;
+  border-radius: 0.75rem;
+  filter: drop-shadow(1px 2px 2px var(--primary-color)ac);
+  cursor: pointer;
+  transition: all 0.5s ease;
+}
+
+.button_checked:hover {
+  scale: 1.03;
+}
+
+.button_unchecked {
+  display: flex;
+  flex-direction: row;
+  width: 100px;
+  justify-content: center;
+  align-items: center;
+  padding: 7px 15px;
+  outline: none;
+  border-radius: 0.55rem;
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    0px 0px 0px 0px rgba(0, 0, 0, 0.034);
+  cursor: pointer;
+  transition: all 0.5s ease;
+}
+
+.button_unchecked:hover {
+  background-color: var(--primary-color);
+  color: white;
+  filter: drop-shadow(1px 2px 2px var(--primary-color)ac);
+  scale: 1.03;
+}
+
+@media (min-width: 786px) {
+  .card {
+    width: 20%;
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1), 0 0 10px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  /* .cardsContainer {
+    box-shadow: none;
+  } */
+
+  .select_button_wrap {
+    display: flex;
+    justify-content: center;
+    width: 99vw;
+    padding: 0 10px;
+  }
+  .select_button_box {
+    width: 100%;
+    padding: 7px 0;
+    justify-content: flex-start;
+    gap: 15px;
+  }
+
+  .select_button_box img {
+    margin: 0 3px 0 10px;
+  }
+
+  .select_button_box span {
+    margin-right: 10px;
+  }
+}

@@ -1,0 +1,275 @@
+.page_wrap {
+  padding-top: env(safe-area-inset-top);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  width: 100%;
+  position: relative;
+}
+
+@supports (-webkit-touch-callout: none) {
+  .page_wrap {
+    min-height: -webkit-fill-available;
+  }
+}
+
+.contopt_page {
+  position: fixed;
+  width: 100vw;
+  height: 100dvh;
+  background-color: var(--quaternary-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.optbox_wrap {
+  margin-top: 60px;
+  background-color: white;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+  border-radius: 0.55rem;
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  transition: all 0.5s ease;
+  overflow-y: auto;
+}
+
+.optimg_wrap {
+  width: 100%;
+  display: flex;
+  padding-top: 20px;
+  justify-content: center;
+}
+
+.optimg_wrap img {
+  width: 60%;
+}
+
+.opt_heading {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 40px;
+}
+
+.opt_heading span {
+  text-align: center;
+}
+
+.otp_field_wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin-left: 13px;
+}
+
+.otp_field {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+}
+
+.form_fields_wrap {
+  width: 100%;
+  padding: 0 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.form_fields_wrap div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.form_fields_wrap input {
+  width: 85%;
+  display: flex;
+  font-size: medium;
+  font-weight: 500;
+  outline: none;
+}
+
+.resend_otp_wrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.resend_otp_wrap button {
+  transition: all 0.5s ease;
+  cursor: pointer;
+  color: var(--primary-color);
+  opacity: 1;
+}
+
+.resend_otp_wrap button:hover {
+  scale: 1.03;
+}
+
+.otp_button_wrap {
+  width: 100%;
+  padding: 0 40px;
+  margin-bottom: 20px;
+}
+
+.otp_button_wrap button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 40px;
+  padding: 7px 0px;
+  border-radius: 0.55rem;
+  font-weight: 500;
+  transition: all 0.5s ease;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.otp_button_wrap button:hover {
+  scale: 1.05;
+}
+
+.spinner {
+  scale: 0.4;
+}
+
+.form_fields_wrap div div {
+  display: flex;
+  flex-direction: row;
+}
+
+.QuoteCardShadow {
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+}
+
+@media screen and (max-width: 767px) {
+  .contopt_page {
+    width: 100.1vw;
+  }
+
+  .optbox_wrap {
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 17px;
+  }
+
+  .optimg_wrap {
+    width: 100%;
+    display: flex;
+    padding-top: 20px;
+    justify-content: center;
+  }
+
+  .optimg_wrap img {
+    width: 60%;
+  }
+
+  .opt_heading {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 40px;
+  }
+
+  .opt_heading span {
+    text-align: center;
+  }
+
+  .form_fields_wrap {
+    width: 100%;
+    padding: 0 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 30px;
+  }
+
+  .form_fields_wrap div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .form_fields_wrap div div {
+    display: flex;
+    flex-direction: row;
+  }
+}
+
+@media screen and (max-width: 360px) {
+  .Editresponsive {
+    flex-direction: column;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1024px) {
+  .contopt_page {
+    width: 100vw;
+    padding-top: 60px;
+    padding-bottom: 60px;
+    height: 100dvh;
+  }
+
+  .optbox_wrap {
+    width: 60%;
+    padding: 20px 0;
+    gap: 20px;
+  }
+
+  .optimg_wrap img {
+    width: 50%;
+  }
+
+  .opt_heading {
+    padding: 0 20px;
+  }
+
+  .form_fields_wrap {
+    padding: 0 20px;
+    gap: 25px;
+  }
+
+  .form_fields_wrap input {
+    width: 90%;
+    font-size: 1rem;
+  }
+
+  .otp_button_wrap {
+    padding: 0 20px;
+    margin-bottom: 20px;
+  }
+
+  .otp_button_wrap button {
+    font-size: 1rem;
+    height: 45px;
+  }
+
+  .resend_otp_wrap button {
+    font-size: 0.9rem;
+  }
+
+  .Editresponsive {
+    flex-direction: row;
+    gap: 5px;
+  }
+}

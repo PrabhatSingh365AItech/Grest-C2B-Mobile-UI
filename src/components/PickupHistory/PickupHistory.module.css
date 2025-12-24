@@ -1,0 +1,112 @@
+.view_wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: white;
+  width: 100vw;
+  height: 100dvh;
+  overflow: scroll;
+}
+
+.view_btn {
+  background-color: white;
+  color: var(--primary-color);
+  padding: 1px 15px;
+  border-radius: 0.25rem;
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    0px 0px 0px 0px rgba(0, 0, 0, 0.034);
+  cursor: pointer;
+  transition: all 0.5s ease;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.view_btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+  box-shadow: 0px 0px 0px 1px var(--secondary-color), 0px 0px 0px 1px var(--secondary-color);
+}
+
+.bulkdown_button {
+  color: var(--primary-color);
+  font-weight: bold;
+  display: flex;
+  flex-direction: row;
+  margin-left: 10px;
+  margin-top: 10px;
+  width: fit-content;
+  margin-bottom: 5px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    -1px -1px 2px 0px rgba(0, 0, 0, 0.034);
+  padding: 7px 15px;
+  border-radius: 0.55rem;
+  transition: all 0.4s ease;
+}
+
+.bulkdown_button:hover {
+  transform: translateY(4px);
+}
+
+.filter_button {
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: 500;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    -1px -1px 2px 0px rgba(0, 0, 0, 0.034);
+  padding: 7px 15px;
+  border-radius: 0.55rem;
+  transition: all 0.5s ease;
+  cursor: pointer;
+}
+
+.filter_button svg {
+  transition: all 0.5s ease;
+}
+
+.filter_drop {
+  position: absolute;
+  z-index: 10;
+  color: var(--primary-color);
+  background-color: white;
+  font-weight: 500;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-top: 5px;
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    -1px -1px 2px 0px rgba(0, 0, 0, 0.034);
+  border-radius: 0.55rem;
+  transition: all 0.5s ease;
+  overflow: hidden;
+}
+
+.filter_option {
+  /* border-bottom: 2px solid rgba(0, 0, 0, 0.151); */
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    -1px -1px 2px 0px rgba(0, 0, 0, 0.034);
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 10px;
+  transition: all 0.4s ease;
+  cursor: pointer;
+}
+
+.filter_option:hover {
+  background-color: var(--primary-color);
+  color: white;
+}

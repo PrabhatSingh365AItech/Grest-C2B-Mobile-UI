@@ -1,0 +1,41 @@
+.navigation_wrap {
+  display: flex;
+  flex-direction: row;
+  margin: 7px auto;
+  justify-content: space-evenly;
+  align-items: center;
+  max-width: 500px;
+}
+
+.button_unsel {
+  border-radius: 0.55rem;
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.605);
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    -1px -1px 2px 0px rgba(0, 0, 0, 0.034);
+  transition: all 0.5s ease;
+}
+
+.button_unsel:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.button_sel {
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 0.55rem;
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    -1px -1px 2px 0px rgba(0, 0, 0, 0.034);
+  transition: all 0.5s ease;
+}
+
+.button_sel:hover {
+  color: rgba(0, 0, 0, 0.605);
+  background-color: white;
+}

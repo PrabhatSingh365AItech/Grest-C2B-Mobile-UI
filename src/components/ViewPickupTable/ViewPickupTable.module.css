@@ -1,0 +1,21 @@
+.bulkdown_button {
+  color: var(--primary-color);
+  font-weight: bold;
+  display: flex;
+  flex-direction: row;
+  margin-left: 10px;
+  width: fit-content;
+  margin-bottom: 5px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 1px 1px 2px 0px rgba(0, 0, 0, 0.158),
+    -1px -1px 2px 0px rgba(0, 0, 0, 0.034);
+  padding: 7px 15px;
+  border-radius: 0.55rem;
+  transition: all 0.4s ease;
+}
+
+.bulkdown_button:hover {
+  transform: translateY(4px);
+}

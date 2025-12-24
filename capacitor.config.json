@@ -1,0 +1,37 @@
+{
+  "appId": "com.grest.ti.app",
+  "appName": "Grest",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "never",
+    "allowsLinkPreview": false
+  },
+  "android": {
+    "allowMixedContent": true
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    },
+    "App": {
+      "iosScheme": "grestc2b",
+      "androidScheme": "grestc2b"
+    },
+    "Camera": {
+      "ios": {
+        "sourceType": "prompt"
+      },
+      "android": {
+        "sourceType": "prompt"
+      },
+      "saveToGallery": false,
+      "correctOrientation": true,
+      "allowEditing": false,
+      "resultType": "uri",
+      "quality": 90
+    },
+    "BarcodeScanner": {
+      "cameraDirection": "back"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #ec2752;
+  --secondary-color: red;
+  --tertiary-color: #d7203d;
+  --quaternary-color: #ff3864;
+}
+body {
+  padding-top: env(safe-area-inset-top);
+  /* padding-bottom: env(safe-area-inset-bottom); */
+}
+
+html,body{
+  max-height: 100dvh;
+}
+
+/* Make background transparent when barcode scanner is active */
+body.scanner-active {
+  background: transparent !important;
+}
+
+html:has(body.scanner-active) {
+  background: transparent !important;
+}
+@media print {
+  .page-break {
+    page-break-before: always;
+  }
+}
