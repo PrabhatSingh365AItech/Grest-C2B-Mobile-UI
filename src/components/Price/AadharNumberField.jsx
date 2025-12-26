@@ -57,17 +57,24 @@ const AadharNumberField = ({
           console.log('Deep link callback response:', response)
 
           // Check for success FIRST - ignore cancelled if no error_code
-          if (response.message === 'success' || (response.message !== 'failed' && !response.error_code)) {
+          if (
+            response.message === 'success' ||
+            (response.message !== 'failed' && !response.error_code)
+          ) {
             setIsVerifying(false)
             setError('')
             setIsVerified(true)
             toast.success('Aadhar verified successfully!')
-            console.log('Verification completed successfully via deep link', response)
+            console.log(
+              'Verification completed successfully via deep link',
+              response
+            )
           }
           // Only treat as error if there's an error_code or explicit failure
           else if (response.error_code || response.message === 'failed') {
             setIsVerifying(false)
-            const errorMessage = response.message || 'Verification failed. Please try again.'
+            const errorMessage =
+              response.message || 'Verification failed. Please try again.'
             setError(errorMessage)
             toast.error(errorMessage)
             console.error('Error in Digilocker process:', response)
@@ -131,36 +138,37 @@ const AadharNumberField = ({
       const digio = initializeDigilocker({
         callback: function (sdkResponse) {
           console.log('Digilocker SDK Response:', sdkResponse)
-
-          // On iOS, ignore SDK callback if verification is already done via deep link
-          if (isVerified) {
-            console.log('Verification already completed via deep link, ignoring SDK callback')
-            return
-          }
-
           setIsVerifying(false)
 
+          // On iOS, ignore SDK callback if verification is already done via deep link
+          // if (isVerified) {
+          //   console.log(
+          //     'Verification already completed via deep link, ignoring SDK callback'
+          //   )
+          //   return
+          // }
+
+          setError('')
+          setIsVerified(true)
+          toast.success('Aadhar verified successfully!')
+          console.log('Verification completed successfully', sdkResponse)
           // Check for successful verification FIRST
-          if (
-            sdkResponse.message === 'success' ||
-            (sdkResponse.message !== 'failed' && sdkResponse.message !== 'cancelled' && !sdkResponse.hasOwnProperty('error_code'))
-          ) {
-            setError('')
-            setIsVerified(true)
-            toast.success('Aadhar verified successfully!')
-            console.log('Verification completed successfully', sdkResponse)
-          }
-          // Check for errors in the response
-          else if (
-            sdkResponse.hasOwnProperty('error_code') ||
-            sdkResponse.message === 'failed'
-          ) {
-            const errorMessage =
-              sdkResponse.message || 'Verification failed. Please try again.'
-            setError(errorMessage)
-            toast.error(errorMessage)
-            console.error('Error in Digilocker process:', sdkResponse)
-          }
+          // if (
+          //   sdkResponse.message === 'success' ||
+          //   (sdkResponse.message !== 'failed' && sdkResponse.message !== 'cancelled' && !sdkResponse.hasOwnProperty('error_code'))
+          // ) {
+          // }
+          // // Check for errors in the response
+          // else if (
+          //   sdkResponse.hasOwnProperty('error_code') ||
+          //   sdkResponse.message === 'failed'
+          // ) {
+          //   const errorMessage =
+          //     sdkResponse.message || 'Verification failed. Please try again.'
+          //   setError(errorMessage)
+          //   toast.error(errorMessage)
+          //   console.error('Error in Digilocker process:', sdkResponse)
+          // }
         },
         event_listener: function (event) {
           console.log('Digilocker Event:', event.event)
@@ -174,10 +182,10 @@ const AadharNumberField = ({
             // On mobile, intercept the URL and open in system browser
             if (Capacitor.isNativePlatform()) {
               console.log('Opening URL in system browser:', event.url)
-              Browser.open({ 
+              Browser.open({
                 url: event.url,
                 presentationStyle: 'popover',
-                windowName: '_self'
+                windowName: '_self',
               })
             }
           }

@@ -483,8 +483,9 @@ const BonusInput = ({ bonus, setBonus }) => (
         name='bonus'
         id='bonus'
         type='number'
+        inputMode='numeric'
         placeholder='Enter Bonus Amount'
-        value={bonus}
+        value={bonus || ''}
         maxLength={6}
         onKeyDown={(e) => {
           if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
@@ -492,8 +493,15 @@ const BonusInput = ({ bonus, setBonus }) => (
           }
         }}
         onChange={(e) => {
-          if (Number(e.target.value) >= 0 && Number(e.target.value) <= 10000) {
-            setBonus(e.target.value)
+          const value = e.target.value
+          // Allow empty string or valid numbers within range
+          if (value === '') {
+            setBonus(null)
+          } else {
+            const numValue = Number(value)
+            if (!isNaN(numValue) && numValue >= 0 && numValue <= 10000) {
+              setBonus(value)
+            }
           }
         }}
       />
