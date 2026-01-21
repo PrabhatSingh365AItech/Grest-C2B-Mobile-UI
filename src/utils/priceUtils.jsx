@@ -20,7 +20,7 @@ export const getStatusIcon = (status) => {
 }
 
 // ----------------------------
-// FILE → BLOB (Android / Web)
+// FILE → BLOB (All platforms)
 // ----------------------------
 const fileToBlob = async (file) => {
   if (file instanceof Blob || file instanceof File) {
@@ -41,91 +41,84 @@ const fileToBlob = async (file) => {
 }
 
 // ----------------------------
-// FILE → BASE64 (iOS only)
-// ----------------------------
-const fileToBase64 = async (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-
-    reader.onload = () => resolve(reader.result.split(',')[1])
-    reader.onerror = reject
-    reader.onabort = () => reject(new Error('FileReader aborted'))
-    reader.readAsDataURL(file)
-  })
-}
-
-// ----------------------------
-// MERGED FILE UPLOADER (iOS + Web + Android)
+// BACKEND FILE UPLOADER (All platforms - iOS, Android, Web)
 // ----------------------------
 export const fileUploader = async (authToken, file, fileName, fileType) => {
   try {
-    const isIOS = Capacitor.getPlatform() === 'ios'
+    console.log('📤 Starting file upload:', {
+      fileName,
+      fileType,
+      fileSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
+      endpoint: `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/s3/upload-file`
+    })
 
-    // ----------------------------------------------------------------
-    // 1️⃣ iOS — Upload through backend using FormData
-    // ----------------------------------------------------------------
-    if (isIOS) {
-      const fileBlob = await fileToBlob(file)
+    // Convert file to blob for consistent handling
+    const fileBlob = await fileToBlob(file)
 
-      const formData = new FormData()
-      formData.append('file', fileBlob, fileName)
-      formData.append('fileName', fileName)
-      formData.append('fileType', fileType)
+    // Create FormData for multipart/form-data upload
+    const formData = new FormData()
+    formData.append('file', fileBlob, fileName)
+    formData.append('fileName', fileName)
+    formData.append('fileType', fileType)
 
-      const response = await axios.post(
-        `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/s3/upload-file`,
-        formData,
-        {
-          headers: {
-            Authorization: authToken,
-            'Content-Type': 'multipart/form-data',
-          },
-          timeout: 120000,
-        }
-      )
+    console.log('📋 FormData created:', {
+      fileName,
+      fileType,
+      fileSize: fileBlob.size,
+      formDataKeys: Array.from(formData.keys())
+    })
 
-      // Return file URL from backend
-      return (
-        response?.data?.fileUrl ||
-        response?.data?.data?.fileUrl ||
-        response?.data?.url
-      )
-    }
-
-    // ----------------------------------------------------------------
-    // 2️⃣ Android & Web — Direct S3 Upload With Presigned URL
-    // ----------------------------------------------------------------
-    const resURL = await axios.get(
-      `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/s3/get-presigned-url`,
+    // Upload through backend to avoid CORS issues
+    // IMPORTANT: Don't set Content-Type header manually!
+    // Axios will automatically set it with the correct boundary for multipart/form-data
+    const response = await axios.post(
+      `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/s3/upload-file`,
+      formData,
       {
-        params: { fileName, fileType },
-        headers: { Authorization: authToken },
+        headers: {
+          Authorization: authToken,
+          // DO NOT set 'Content-Type' - let axios set it automatically with boundary
+        },
+        timeout: 120000, // 2 minutes timeout for large files
       }
     )
 
-    if (!resURL?.data?.url) {
-      throw new Error('Failed to get presigned URL')
-    }
-
-    const presignedUrl = resURL.data.url
-    const fileBlob = await fileToBlob(file)
-
-    await axios.put(presignedUrl, fileBlob, {
-      headers: {
-        'Content-Type': fileType,
-      },
-      transformRequest: [
-        (data, headers) => {
-          delete headers.Authorization
-          return data
-        },
-      ],
+    console.log('✅ Upload response received:', {
+      status: response.status,
+      data: response.data
     })
 
-    // Extract S3 file URL (remove query params)
-    return presignedUrl.split('?')[0]
+    // Return file URL from backend response
+    const fileUrl = 
+      response?.data?.fileUrl ||
+      response?.data?.data?.fileUrl ||
+      response?.data?.url
+
+    if (!fileUrl) {
+      console.error('❌ No file URL in response:', response.data)
+      throw new Error('No file URL returned from server')
+    }
+
+    console.log('✅ File uploaded successfully:', fileUrl)
+    return fileUrl
   } catch (error) {
-    console.error('Error uploading file:', error)
+    console.error('❌ Error uploading file:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      statusText: error.response?.statusText
+    })
+    
+    // Provide more detailed error message
+    if (error.response) {
+      const errorMessage = 
+        error.response.data?.error || 
+        error.response.data?.message || 
+        `Upload failed: ${error.response.status} ${error.response.statusText}`
+      
+      throw new Error(errorMessage)
+    }
+    
     throw error
   }
 }
