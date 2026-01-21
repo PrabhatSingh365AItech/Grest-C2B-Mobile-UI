@@ -298,6 +298,7 @@ const QuotesCreatedAdmin = () => {
   const saveStore = async () => {
     const temparr = await getStore()
     setStoreData(temparr)
+    setFilteredStores(temparr)
   }
   useEffect(() => {
     saveStore()
@@ -395,7 +396,7 @@ const QuotesCreatedAdmin = () => {
           onFromDateChange={handleFromDateChange}
           onToDateChange={handleToDateChange}
         />
-        {storeData && storeData.length > 1 && (
+        {storeData && storeData.length > 0 && (
           <StoreDropdown
             storeData={storeData}
             storeDrop={storeDrop}

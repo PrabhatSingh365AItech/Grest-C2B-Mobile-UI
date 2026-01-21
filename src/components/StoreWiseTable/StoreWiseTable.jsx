@@ -22,6 +22,8 @@ const StoreWiseTable = ({ currentPage, tableData }) => {
               <th className='p-2 text-sm  '>IMEI No.</th>
               <th className='p-2 text-sm min-w-[200px] '>Product Details</th>
               <th className='p-2 text-sm  '>Location</th>
+              <th className='p-2 text-sm  '>Company</th>
+              <th className='p-2 text-sm  '>Grade</th>
               <th className='p-2 text-sm  '>Price</th>
               <th className='p-2 text-sm  '>Price Offered to Customer</th>
               <th className='p-2 text-sm  '>Unique ID</th>
@@ -64,6 +66,12 @@ const StoreWiseTable = ({ currentPage, tableData }) => {
                   </td>
                   <td className='p-2 text-sm text-center md:p-3 md:text-base'>
                     {data.store?.storeName}
+                  </td>
+                  <td className='p-2 text-sm text-center md:p-3 md:text-base'>
+                    {data.companyInfo?.name || 'N/A'}
+                  </td>
+                  <td className='p-2 text-sm text-center md:p-3 md:text-base'>
+                    {data.grade}
                   </td>
                   <td className='p-2 text-sm text-center md:p-3 md:text-base'>
                     {data.actualPrice}

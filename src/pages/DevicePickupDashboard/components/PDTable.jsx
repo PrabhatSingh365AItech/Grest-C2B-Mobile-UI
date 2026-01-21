@@ -4,6 +4,7 @@ import StatusSelector from './StatusSelector'
 import ModalContainer from './ModalContainer'
 import { useStatusHandlers } from '../hooks/useStatusHandlers'
 import axios from 'axios'
+import NoDataMessage from '../../../components/NoDataMessage'
 
 const PDTable = ({
   pendingTableData,
@@ -23,6 +24,7 @@ const PDTable = ({
   setIsTableLoaded,
   setSuccessMod,
   getData,
+  userRole,
 }) => {
   const token2 = sessionStorage.getItem('authToken')
   const [showCancelModal, setShowCancelModal] = useState(false)
@@ -42,7 +44,7 @@ const PDTable = ({
     setErrorMsg2,
     setSuccessMod,
     setFailMode,
-    getData
+    getData,
   }
 
   const {
@@ -98,6 +100,13 @@ const PDTable = ({
     }
   }
 
+  // Check if there's no data
+  const hasData = pendingTableData && pendingTableData.length > 0
+
+  if (!hasData) {
+    return <NoDataMessage />
+  }
+
   return (
     <React.Fragment>
       <PendingDevicesTable
@@ -107,6 +116,7 @@ const PDTable = ({
         setSelectedRows={setSelectedRows}
         selectedData={selectedData}
         selectedRows={selectedRows}
+        userRole={userRole}
       />
       <StatusSelector
         selectedStatus={selectedStatus}

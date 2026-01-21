@@ -3,7 +3,6 @@ import axios from 'axios'
 import { BeatLoader } from 'react-spinners'
 import AdminNavbar from '../../../components/Admin_Navbar'
 import SideMenu from '../../../components/SideMenu'
-import ProfileBox from '../../../components/ProfileBox/ProfileBox'
 import UploadReceiptModal from '../../../components/UploadReceiptModal'
 import { OUT_FOR_PICKUP, ApprovDelivery } from '../constants'
 import { StatusModals } from './StatusModals'
@@ -38,8 +37,6 @@ const ExtComps = ({
 }) => {
   const [sideMenu, setsideMenu] = useState(false)
   const token1 = sessionStorage.getItem('authToken')
-  const LoggedInUser = JSON.parse(sessionStorage.getItem('profile'))
-  const userRole = LoggedInUser?.role || ''
 
   const handleUploadReceipt = (file, remarks) => {
     const formData = new FormData()
@@ -139,17 +136,10 @@ const ExtComps = ({
   return (
     <React.Fragment>
       <div className='flex items-center border-b-2 w-screen h-16 py-4 bg-white HEADER '>
-        {userRole === 'Technician' ? (
-          <div className='flex items-center justify-between w-full '>
-            <ProfileBox />
-            <img className='w-40' src={GREST_LOGO} alt='app logo' />
-          </div>
-        ) : (
-          <div className='navbar'>
-            <AdminNavbar setsideMenu={setsideMenu} sideMenu={sideMenu} />
-            <SideMenu setsideMenu={setsideMenu} sideMenu={sideMenu} />
-          </div>
-        )}
+        <div className='navbar'>
+          <AdminNavbar setsideMenu={setsideMenu} sideMenu={sideMenu} />
+          <SideMenu setsideMenu={setsideMenu} sideMenu={sideMenu} />
+        </div>
       </div>
       <StatusModals
         successMod={successMod}

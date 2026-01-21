@@ -1,128 +1,145 @@
-import React, { useEffect, useState, useRef } from 'react'
-import { useSelector } from 'react-redux'
-import axios from 'axios'
-import NavigateTable from '../../components/NavigateTable/NavigateTable'
-import ExtComps from './components/ExtComps'
-import PickedUpFilter from './components/PickedUpFilter'
-import PickedUpDevicesTable from './components/PickedUpDevicesTable'
-import styles from './PickedUpDevices.module.css'
+import React, { useEffect, useState, useRef } from "react";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import NavigateTable from "../../components/NavigateTable/NavigateTable";
+import ExtComps from "./components/ExtComps";
+import PickedUpFilter from "./components/PickedUpFilter";
+import PickedUpDevicesTable from "./components/PickedUpDevicesTable";
+import styles from "./PickedUpDevices.module.css";
 
 const PickedUpDevices = () => {
-  const LoggedInUser = JSON.parse(sessionStorage.getItem('profile'))
-  const userRole = LoggedInUser?.role || ''
-  const QRole = userRole === 'Technician' ? userRole : 'Admin'
-  const token = sessionStorage.getItem('authToken')
-  const isSuperAdmin = userRole === 'Super Admin'
-  const userProfile = useSelector((state) => state.user)
-  const [data, setData] = useState([])
-  const [isTableLoaded, setIsTableLoaded] = useState(false)
-  const [dateValue, setDateValue] = useState('')
-  const [searchValue, setSearchValue] = useState('')
-  const [tempId, setTempId] = useState()
-  const [tempUCode, setTempUCode] = useState()
-  const [successMod, setSuccessMod] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('successfully updated status')
-  const [errorMsg1, setErrorMsg1] = useState(null)
-  const [errorMsg2, setErrorMsg2] = useState(null)
-  const [confMod, setConfMod] = useState(false)
-  const [failMod, setFailMode] = useState(false)
-  const [region, setRegion] = useState(userProfile.selRegion)
-  const [storeName, setStoreName] = useState(userProfile.selStore)
-  const [regionData, setRegionData] = useState([])
-  const [storeData, setStoreData] = useState([])
-  const firsttime = useRef(true)
-  const [allStore, setAllStore] = useState([])
-  const [uploadReceiptMod, setUploadReceiptMod] = useState(false)
+  const LoggedInUser = JSON.parse(sessionStorage.getItem("profile"));
+  const userRole = LoggedInUser?.role || "";
+  const QRole = userRole === "Technician" ? userRole : "Admin";
+  const token = sessionStorage.getItem("authToken");
+  const isSuperAdmin = userRole === "Super Admin";
+  const userProfile = useSelector((state) => state.user);
+  const [data, setData] = useState([]);
+  const [isTableLoaded, setIsTableLoaded] = useState(false);
+  const [dateValue, setDateValue] = useState("");
+  const [searchValue, setSearchValue] = useState("");
+  const [tempId, setTempId] = useState();
+  const [tempUCode, setTempUCode] = useState();
+  const [successMod, setSuccessMod] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("successfully updated status");
+  const [errorMsg1, setErrorMsg1] = useState(null);
+  const [errorMsg2, setErrorMsg2] = useState(null);
+  const [confMod, setConfMod] = useState(false);
+  const [failMod, setFailMode] = useState(false);
+  const [region, setRegion] = useState(userProfile.selRegion);
+  const [storeName, setStoreName] = useState(userProfile.selStore);
+  const [regionData, setRegionData] = useState([]);
+  const [storeData, setStoreData] = useState([]);
+  const firsttime = useRef(true);
+  const [allStore, setAllStore] = useState([]);
+  const [uploadReceiptMod, setUploadReceiptMod] = useState(false);
 
   const getData = () => {
-    setIsTableLoaded(true)
+    setIsTableLoaded(true);
     const configuration = {
-      method: 'get',
+      method: "get",
       url: `${
         import.meta.env.VITE_REACT_APP_ENDPOINT
       }/api/pickupDevices/all?region=${region}&storeName=${storeName}&userRole=${QRole}`,
       headers: { Authorization: token },
-    }
+    };
     axios
       .request(configuration)
       .then((res) => {
-        setData(res.data.data)
-        setIsTableLoaded(false)
+        setData(res.data.data);
+        setIsTableLoaded(false);
       })
       .catch((error) => {
-        setErrorMsg(`Failed to load data`)
-        setIsTableLoaded(false)
-        setFailMode(true)
-      })
-  }
+        setErrorMsg(`Failed to load data`);
+        setIsTableLoaded(false);
+        setFailMode(true);
+      });
+  };
 
   const getStore = () => {
-    setIsTableLoaded(true)
+    console.log("getstore entered");
+    setIsTableLoaded(true);
     const configuration = {
-      method: 'get',
+      method: "get",
       url: `${
         import.meta.env.VITE_REACT_APP_ENDPOINT
       }/api/store/findAll?page=0&limit=9999`,
       headers: { Authorization: token },
-    }
+    };
     axios
       .request(configuration)
       .then((res) => {
-        const allData = res.data.result
-        const storeNamesArr = res.data.result.map((store) => store.storeName)
+        const allData = res.data.result;
+        const storeNamesArr = res.data.result.map((store) => store.storeName);
+        console.log("storenamearr", storeNamesArr);
         const uniqueRegionsArr = [
           ...new Set(res.data.result.map((store) => store.region)),
-        ]
-        setStoreData(storeNamesArr)
-        setAllStore(allData)
-        setIsTableLoaded(false)
-        setRegionData(uniqueRegionsArr)
+        ];
+        setStoreData(storeNamesArr);
+        setAllStore(allData);
+        setRegionData(uniqueRegionsArr);
+
+        // Filter based on the current region immediately.
+        // If 'region' state has a value (e.g. "Chandigarh"), we only set stores for that region.
+        if (region) {
+          const filtered = allData.filter((store) => store.region === region);
+          const filteredStoreNames = filtered.map((store) => store.storeName);
+          setStoreData(filteredStoreNames);
+        } else {
+          // If no region, show all stores
+          const allStoreNames = allData.map((store) => store.storeName);
+          setStoreData(allStoreNames);
+        }
+        setIsTableLoaded(false);
       })
       .catch((error) => {
-        setIsTableLoaded(false)
-      })
-  }
+        setIsTableLoaded(false);
+      });
+  };
 
   const getDataBySearch = () => {
-    setIsTableLoaded(true)
+    setIsTableLoaded(true);
     const configuration = {
-      method: 'get',
+      method: "get",
       url: `${
         import.meta.env.VITE_REACT_APP_ENDPOINT
       }/api/pickupDevices/search?rid=${searchValue}&date=${dateValue}&region=${region}&storeName=${storeName}&userRole=${QRole}`,
       headers: { Authorization: token },
-    }
+    };
     axios
       .request(configuration)
       .then((response) => {
-        setData(response.data.data)
-        setIsTableLoaded(false)
+        console.log("pickupdevices-data",response.data.data)
+        setData(response.data.data);
+        setIsTableLoaded(false);
       })
       .catch((error) => {
-        setErrorMsg(`Failed to load data`)
-        setFailMode(true)
-        setIsTableLoaded(false)
-      })
-  }
+        setErrorMsg(`Failed to load data`);
+        setFailMode(true);
+        setIsTableLoaded(false);
+      });
+  };
 
+  // Removed the condition `&& !!storeName && !!region`
+  // This ensures data and stores are fetched even if filters are empty (All)
   useEffect(() => {
-    if (firsttime.current && !!storeName && !!region) {
-      getData()
+    if (firsttime.current) {
+      getData();
       if (isSuperAdmin) {
-        getStore()
+        getStore();
       }
-      firsttime.current = false
-    } else if (!firsttime.current) {
-      getDataBySearch()
+      firsttime.current = false;
+    } else {
+      getDataBySearch();
     }
-  }, [dateValue, storeName, region, searchValue])
+  }, [dateValue, storeName, region, searchValue]);
 
   const confHandler = (id, uniqueCode) => {
-    console.log(id)
-    setTempId(id)
-    setTempUCode(uniqueCode)
-    setConfMod(true)
-  }
+    console.log(id);
+    setTempId(id);
+    setTempUCode(uniqueCode);
+    setConfMod(true);
+  };
 
   return (
     <div className={`${styles.pickedup_page}`}>
@@ -147,7 +164,7 @@ const PickedUpDevices = () => {
         uploadReceiptMod={uploadReceiptMod}
         setUploadReceiptMod={setUploadReceiptMod}
       />
-      <div className='flex flex-row m-2 gap-4'></div>
+      <div className="flex flex-row m-2 gap-4"></div>
       <NavigateTable />
       <PickedUpFilter
         setSearchValue={setSearchValue}
@@ -179,7 +196,7 @@ const PickedUpDevices = () => {
         setFailMode={setFailMode}
       />
     </div>
-  )
-}
+  );
+};
 
-export default PickedUpDevices
+export default PickedUpDevices;

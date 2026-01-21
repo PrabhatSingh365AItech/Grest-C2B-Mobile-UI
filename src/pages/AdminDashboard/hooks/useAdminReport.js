@@ -2,14 +2,17 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   getAdminReport,
   downloadAdminReport,
+  getCompanies,
 } from '../services/adminReportService'
 import { downloadExcel } from '../utils/excelUtils'
 
 export const useAdminReport = () => {
   const [tableData, setTableData] = useState({})
+  const [companies, setCompanies] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [flag, setFlag] = useState(false)
   const [searchValue, setSearchValue] = useState('')
+  const [companyFilter, setCompanyFilter] = useState('')
   const [fromDate, setFromDate] = useState(null)
   const [toDate, setToDate] = useState(null)
   const [fromDateDup, setFromDateDup] = useState(null)
@@ -27,6 +30,9 @@ export const useAdminReport = () => {
     }
     if (fromDateDup) {
       queryParams.append('fromDate', fromDateDup)
+    }
+    if (companyFilter) {
+      queryParams.append('companyId', companyFilter)
     }
 
     getAdminReport(token, queryParams.toString())
@@ -50,7 +56,7 @@ export const useAdminReport = () => {
         setIsLoading(false)
         setFlag(true)
       })
-  }, [fromDateDup, toDateDup, searchValue])
+  }, [fromDateDup, toDateDup, searchValue, companyFilter])
 
   const handleDownload = () => {
     const token = sessionStorage.getItem('authToken')
@@ -63,25 +69,41 @@ export const useAdminReport = () => {
       .catch((err) => console.error('Download Error:', err))
   }
 
+  const fetchCompanies = useCallback(() => {
+    const token = sessionStorage.getItem('authToken')
+    getCompanies(token)
+      .then((res) => {
+        setCompanies(res.data.result || [])
+      })
+      .catch((err) => {
+        console.log('Failed to load companies:', err)
+      })
+  }, [])
+
   const resetFilters = useCallback(() => {
     setFromDate(null)
     setToDate(null)
     setFromDateDup(null)
     setToDateDup(null)
     setSearchValue('')
+    setCompanyFilter('')
     fetchTableData()
   }, [fetchTableData])
 
   useEffect(() => {
     fetchTableData()
-  }, [fetchTableData])
+    fetchCompanies()
+  }, [fetchTableData, fetchCompanies])
 
   return {
     tableData,
+    companies,
     isLoading,
     flag,
     searchValue,
     setSearchValue,
+    companyFilter,
+    setCompanyFilter,
     fromDate,
     setFromDate,
     toDate,

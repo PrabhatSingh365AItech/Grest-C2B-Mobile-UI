@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./StoreListing.module.css";
 import AdminNavbar from "../../components/Admin_Navbar";
 import SideMenu from "../../components/SideMenu";
@@ -16,6 +16,7 @@ const initStoreForm = {
   email: "",
   contactNumber: "",
   address: "",
+  companyId: "",
 };
 
 const StoreListing = () => {
@@ -27,6 +28,25 @@ const StoreListing = () => {
   const [errMsg, setErrMsg] = useState("");
   const [sucBox, setSucBox] = useState(false);
   const [failBox, setFailBox] = useState(false);
+  const [companies, setCompanies] = useState([]);
+
+  // Fetch companies on mount
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/company/findAll`,
+          {
+            headers: { Authorization: token }
+          }
+        );
+        setCompanies(response.data.result || []);
+      } catch (error) {
+        console.error("Error fetching companies:", error);
+      }
+    };
+    fetchCompanies();
+  }, [token]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -40,6 +60,13 @@ const StoreListing = () => {
 
   const submitHandler = (event) => {
     event.preventDefault();
+
+    if (!formData.companyId) {
+      setErrMsg("Please select a company");
+      setFailBox(true);
+      return;
+    }
+
     setIsTableLoaded(true);
     const data = {
       storeName: formData.storeName,
@@ -47,6 +74,7 @@ const StoreListing = () => {
       contactNumber: formData.contactNumber,
       region: formData.region,
       address: formData.address,
+      companyId: formData.companyId,
     };
     const config = {
       method: "post",
@@ -143,6 +171,7 @@ const StoreListing = () => {
             submitHandler={submitHandler}
             formData={formData}
             handleChange={handleChange}
+            companies={companies}
           />
         </div>
       </div>
@@ -150,9 +179,27 @@ const StoreListing = () => {
   );
 };
 
-const StoreListingForm = ({ submitHandler, formData, handleChange }) => {
+const StoreListingForm = ({ submitHandler, formData, handleChange, companies }) => {
   return (
 <form onSubmit={submitHandler} className="flex flex-col gap-4 px-4 md:px-10">
+      <div className="flex flex-col gap-2 w-full md:w-[70%]">
+        <span className="text-xl font-medium">Company*</span>
+        <select
+          id="companyId"
+          value={formData.companyId}
+          name="companyId"
+          className="border-2 px-2 py-2 rounded-lg outline-none"
+          onChange={handleChange}
+          required={true}
+        >
+          <option value="">Select Company</option>
+          {companies.map((company) => (
+            <option key={company._id} value={company._id}>
+              {company.name} ({company.companyCode})
+            </option>
+          ))}
+        </select>
+      </div>
 <div className="flex flex-col gap-2 w-full md:w-[70%]">
 <span className="text-xl font-medium">Store Name*</span>
         <input

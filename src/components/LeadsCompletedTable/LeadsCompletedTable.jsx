@@ -45,6 +45,10 @@ const TableHeader = () => (
   <thead className='bg-primary text-white'>
     <tr className='align-top'>
       <th className='p-2 text-sm md:p-3 md:text-base'>Date</th>
+      <th className='p-2 text-sm md:p-3 md:text-base'>Company Name</th>
+      <th className='p-2 min-w-[140px] text-sm md:p-3 md:text-base'>
+        Purchase Grade
+      </th>
       <th className='p-2 text-sm md:p-3 md:text-base'>Username</th>
       <th className='p-2 text-sm md:p-3 md:text-base'>Category</th>
       <th className='p-2 text-sm md:p-3 md:text-base'>Product Name</th>
@@ -74,7 +78,15 @@ const TableRow = ({ val, index, onDetailsClick, onImageClick, onPDFClick }) => (
         year: 'numeric',
       })}
     </td>
+    <td className='p-2 min-w-[150px] text-sm text-center md:p-3 md:text-base'>
+      {val?.companyInfo?.name || 'N/A'}
+    </td>
     <td className='p-2 text-sm text-center md:p-3 md:text-base'>
+      <span className='p-2 text-sm text-center md:p-3 md:text-base'>
+        {val?.gradeId?.grade || val.grade || 'N/A'}
+      </span>
+    </td>
+    <td className='p-2 min-w-[140px] text-sm text-center md:p-3 md:text-base'>
       {getUserName(val)}
     </td>
     <td className='p-2 text-sm text-center md:p-3 md:text-base'>
@@ -135,6 +147,7 @@ const LeadsCompletedTable = ({ data }) => {
   const [dataIndex, setDataIndex] = useState(null)
 
   const handleDetailsClick = (value) => {
+    console.log('cvalue', value)
     setQNAData(value.QNA)
     setShowModal(true)
   }
@@ -151,12 +164,16 @@ const LeadsCompletedTable = ({ data }) => {
 
   const handleGeneratePdf = async (index) => {
     console.log('store is', data[index]?.store?.storeName)
+    console.log(data[index])
     const dateString = data[index]?.updatedAt
     const formattedDate = new Date(dateString).toLocaleDateString('en-IN', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
     })
+
+    const showPrice = data[index].companyInfo.showPrice
+    const maskInfo = data[index].companyInfo.maskInfo
 
     const signatureUrl = data[index]?.documentId?.signature
     const signatureBase64 = signatureUrl
@@ -181,7 +198,9 @@ const LeadsCompletedTable = ({ data }) => {
         RAM={data[index]?.ram}
         formattedDate={formattedDate}
         signatureUrl={signatureBase64 || signatureUrl}
-      />
+        showPrice={showPrice}
+        maskInfo={maskInfo}
+      />,
     )
 
     generatePDF(printElement)

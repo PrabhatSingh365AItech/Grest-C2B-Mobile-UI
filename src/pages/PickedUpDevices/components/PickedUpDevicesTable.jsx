@@ -19,6 +19,7 @@ import {
   PickupCancelConf,
   OutForPickup,
 } from '../constants'
+import NoDataMessage from '../../../components/NoDataMessage'
 
 const renderTableRow = (val, index, renderActionCell) => (
   <tr key={index} className={index % 2 === 0 ? 'bg-gray-200' : ''}>
@@ -31,6 +32,8 @@ const renderTableRow = (val, index, renderActionCell) => (
     <td className={TABLE_CELL_CENTER}>{val?.totalDevice}</td>
     <td className={TABLE_CELL_CENTER}>{val?.totalAmount}</td>
     <td className={TABLE_CELL_CENTER}>{val?.remarks || ''}</td>
+    {/* Added Location Data Cell */}
+    <td className={TABLE_CELL_CENTER}>{val?.location || ''}</td>
   </tr>
 )
 
@@ -165,7 +168,9 @@ const PickedUpDevicesTable = ({
   const renderActionCell = (val) => (
     <td className={TABLE_CELL_CENTER}>
       {userRoles[userRole] === 'Store' && renderStoreActions(val)}
-      {(userRole === 'Super Admin' || userRole === 'Admin Manager') && (
+      {(userRole === 'Super Admin' ||
+        userRole === 'Company Admin' ||
+        userRole === 'Admin Manager') && (
         <UserAdminContent
           confHandler={confHandler}
           val={val}
@@ -177,6 +182,9 @@ const PickedUpDevicesTable = ({
     </td>
   )
 
+  // Check if there's no data
+  const hasData = data && data.length > 0
+
   return (
     <div className={styles.pd_cont}>
       <div className='m-2 overflow-x-auto md:m-5'>
@@ -186,24 +194,29 @@ const PickedUpDevicesTable = ({
           </div>
         )}
 
-        <table className='w-full border border-primary'>
-          <thead className='bg-primary text-white'>
-            <tr>
-              <th className={TABLE_CELL_BASE}>Action</th>
-              <th className={TABLE_CELL_BASE}>Status</th>
-              <th className={TABLE_CELL_BASE}>Date</th>
-              <th className={TABLE_CELL_BASE}>Lot Number</th>
-              <th className={TABLE_CELL_BASE}>Number Of Device</th>
-              <th className={TABLE_CELL_BASE}>Amount</th>
-              <th className={TABLE_CELL_BASE}>Reason</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((val, index) =>
-              renderTableRow(val, index, renderActionCell)
-            )}
-          </tbody>
-        </table>
+        {!hasData && <NoDataMessage />}
+
+        {hasData && (
+          <table className='w-full border border-primary'>
+            <thead className='bg-primary text-white'>
+              <tr>
+                <th className={TABLE_CELL_BASE}>Action</th>
+                <th className={TABLE_CELL_BASE}>Status</th>
+                <th className={TABLE_CELL_BASE}>Date</th>
+                <th className={TABLE_CELL_BASE}>Lot Number</th>
+                <th className={TABLE_CELL_BASE}>Number Of Device</th>
+                <th className={TABLE_CELL_BASE}>Amount</th>
+                <th className={TABLE_CELL_BASE}>Reason</th>
+                <th className={TABLE_CELL_BASE}>Location</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((val, index) =>
+                renderTableRow(val, index, renderActionCell)
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <StatusReasonModal

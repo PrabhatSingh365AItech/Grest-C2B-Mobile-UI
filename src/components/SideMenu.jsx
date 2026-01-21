@@ -1,220 +1,77 @@
-import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import axiosInstance from '../utils/axiosInterceptor'
+import { USER_ROLES } from '../constants/roleConstants'
 
-function SideMenu({ setsideMenu, sideMenu }) {
+const useNavigationHandlers = (setsideMenu, sideMenu, profile) => {
   const navigate = useNavigate()
 
-  const profile = JSON.parse(sessionStorage.getItem('profile'))
+  const createNavigationHandler = (path) => () => {
+    setsideMenu(!sideMenu)
+    navigate(path)
+  }
 
   const handleHome = () => {
     setsideMenu(!sideMenu)
-    if (profile.role === 'Super Admin') {
+    if (profile.role === USER_ROLES.SUPER_ADMIN) {
       navigate('/adminmodels')
-    } else if (profile.role === 'Admin Manager') {
+    } else if (
+      profile.role === USER_ROLES.ADMIN_MANAGER ||
+      profile.role === USER_ROLES.COMPANY_ADMIN
+    ) {
       navigate('/customertable')
-    } else if (profile.role === 'Technician') {
+    } else if (profile.role === USER_ROLES.TECHNICIAN) {
       navigate('/devicepickupdashboard')
     }
   }
 
-  const handleTable = () => {
-    setsideMenu(!sideMenu)
-    navigate('/customertable')
-  }
-
-  const handleGrade = () => {
-    setsideMenu(!sideMenu)
-    navigate('/gradepricingsheet')
-  }
-  const handleProfile = () => {
-    setsideMenu(!sideMenu)
-    navigate('/profile')
-  }
-
-  const handleRegister = () => {
-    setsideMenu(!sideMenu)
-    navigate('/registeruser')
-  }
-  const handleStoreListing = () => {
-    setsideMenu(!sideMenu)
-    navigate('/storelisting')
-  }
-  const handleCompanyListing = () => {
-    setsideMenu(!sideMenu)
-    navigate('/companylisting')
-  }
-  const handleTechnician = () => {
-    setsideMenu(!sideMenu)
-    navigate('/technicianwisereport')
-  }
-  const handleStoreReport = () => {
-    setsideMenu(!sideMenu)
-    navigate('/storewisereport')
-  }
-  const adminDashboard = () => {
-    setsideMenu(!sideMenu)
-    navigate('/admindashboard')
-  }
-
-  const handlpickup = () => {
-    setsideMenu(!sideMenu)
-    navigate('/devicepickupdashboard')
-  }
-
-  const handleBulkUploadHistory = () => {
-    setsideMenu(!sideMenu)
-    navigate('/bulkuploadhistory')
-  }
-
-  const handleQuoteTracking = () => {
-    setsideMenu(!sideMenu)
-    navigate('/quotetrackingdashboard')
-  }
-
-  const handleCouponManagement = () => {
-    setsideMenu(!sideMenu)
-    navigate('/coupondetails')
-  }
-
   const handleLogout = async () => {
     try {
-      // Call backend logout endpoint to invalidate session
       await axiosInstance.post('/api/userregistry/logout')
     } catch (error) {
       console.error('Logout API error:', error)
-      // Continue with logout even if API call fails
     } finally {
-      // Clear all client-side data
       localStorage.clear()
       sessionStorage.clear()
       navigate('/')
     }
   }
+
+  return {
+    handleHome,
+    handleTable: createNavigationHandler('/customertable'),
+    handleGrade: createNavigationHandler('/gradepricingsheet'),
+    handleProfile: createNavigationHandler('/profile'),
+    handleRegister: createNavigationHandler('/registeruser'),
+    handleStoreListing: createNavigationHandler('/storelisting'),
+    handleCompanyListing: createNavigationHandler('/companylisting'),
+    handleTechnician: createNavigationHandler('/technicianwisereport'),
+    handleStoreReport: createNavigationHandler('/storewisereport'),
+    adminDashboard: createNavigationHandler('/admindashboard'),
+    handlpickup: createNavigationHandler('/devicepickupdashboard'),
+    handleBulkUploadHistory: createNavigationHandler('/bulkuploadhistory'),
+    handleQuoteTracking: createNavigationHandler('/quotetrackingdashboard'),
+    handleCouponManagement: createNavigationHandler('/coupondetails'),
+    handleLogout,
+  }
+}
+
+function SideMenu({ setsideMenu, sideMenu }) {
+  const profile = JSON.parse(sessionStorage.getItem('profile'))
+
+  const handlers = useNavigationHandlers(setsideMenu, sideMenu, profile)
   return (
     <>
-      {/* //new for change  */}
-      {(profile.role === 'Super Admin' ||
-        profile.role === 'Super_Admin_Unicorn') && (
-        <SuperAdminProfile
-          sideMenu={sideMenu}
-          handleHome={handleHome}
-          handleProfile={handleProfile}
-          handleGrade={handleGrade}
-          handleRegister={handleRegister}
-          handleStoreListing={handleStoreListing}
-          handleStoreReport={handleStoreReport}
-          handleTable={handleTable}
-          handleCompanyListing={handleCompanyListing}
-          handlpickup={handlpickup}
-          handleTechnician={handleTechnician}
-          adminDashboard={adminDashboard}
-          handleBulkUploadHistory={handleBulkUploadHistory}
-          handleQuoteTracking={handleQuoteTracking}
-          handleCouponManagement={handleCouponManagement}
-          handleLogout={handleLogout}
-        />
+      {(profile.role === USER_ROLES.SUPER_ADMIN ||
+        profile.role === USER_ROLES.COMPANY_ADMIN ||
+        profile.role === USER_ROLES.SUPER_ADMIN_UNICORN) && (
+        <SuperAdminProfile sideMenu={sideMenu} profile={profile} {...handlers} />
       )}
-      {(profile.role === 'Admin Manager' ||
-        profile.role === 'Admin_Manager_Unicorn') && (
-        <div
-          className={
-            'menu fixed justify-center left-[-200px] top-0 w-[200px] h-full bg-slate-300 z-50 flex items-center transition-all duration-950 ease-in ' +
-            (sideMenu && 'left-[0]')
-          }
-        >
-          <ul className='list-none flex flex-col h-full pl-[6%] pt-[10%] justify-start gap-[2vh]'>
-            <li
-              onClick={handleHome}
-              className='text-[20px] font-[300] cursor-pointer '
-            >
-              Home
-            </li>
-            <li
-              className='text-[20px] font-[300] cursor-pointer '
-              onClick={handleProfile}
-            >
-              Profile
-            </li>
-            {/* <li
-              className="text-[20px] font-[300] cursor-pointer "
-              onClick={handleTable}
-            >
-              Customer Table
-            </li> */}
-            <li
-              className='text-[20px] font-[300] cursor-pointer '
-              onClick={handleRegister}
-            >
-              Register User
-            </li>
-            <li
-              className='text-[20px] font-[300] cursor-pointer '
-              onClick={handlpickup}
-            >
-              Pickup & Cancel Device
-            </li>
-            <li
-              className='text-[20px] font-[300] cursor-pointer '
-              onClick={handleStoreReport}
-            >
-              Store Report
-            </li>
-            <li
-              className='text-[20px] font-[300] cursor-pointer'
-              onClick={handleQuoteTracking}
-            >
-              Quote Tracking
-            </li>
-            <li
-              className='text-[20px] font-[300] cursor-pointer '
-              onClick={handleTechnician}
-            >
-              Technician Report
-            </li>
-            <li
-              className='text-[20px] font-[300] cursor-pointer '
-              onClick={adminDashboard}
-            >
-              Admin Dashboard
-            </li>
-            <li
-              className='text-[20px] font-[300] cursor-pointer '
-              onClick={handleLogout}
-            >
-              Logout
-            </li>
-          </ul>
-        </div>
+      {(profile.role === USER_ROLES.ADMIN_MANAGER ||
+        profile.role === USER_ROLES.ADMIN_MANAGER_UNICORN) && (
+        <AdminManagerMenu sideMenu={sideMenu} {...handlers} />
       )}
-      {profile.role === 'Technician' && (
-        <div
-          className={
-            'menu fixed left-[-200px] top-0 w-[200px] h-full bg-slate-300 z-50 flex items-center justify-center transition-all duration-950 ease-in ' +
-            (sideMenu && 'left-[0]')
-          }
-        >
-          <ul className='list-none flex flex-col h-full pl-[6%] pt-[10%] justify-start gap-[2vh]'>
-            <li
-              className='text-[20px] font-[300] cursor-pointer '
-              onClick={handleHome}
-            >
-              Home
-            </li>
-            <li
-              className='text-[20px] font-[300] cursor-pointer '
-              onClick={handleProfile}
-            >
-              Profile
-            </li>
-            <li
-              className='text-[20px] font-[300] cursor-pointer '
-              onClick={handleLogout}
-            >
-              Logout
-            </li>
-          </ul>
-        </div>
+      {profile.role === USER_ROLES.TECHNICIAN && (
+        <TechnicianMenu sideMenu={sideMenu} {...handlers} />
       )}
     </>
   )
@@ -222,8 +79,62 @@ function SideMenu({ setsideMenu, sideMenu }) {
 
 export default SideMenu
 
+const MenuItem = ({ onClick, children }) => (
+  <li className='text-[20px] font-[300] cursor-pointer' onClick={onClick}>
+    {children}
+  </li>
+)
+
+const AdminManagerMenu = ({
+  sideMenu,
+  handleHome,
+  handleProfile,
+  handleRegister,
+  handlpickup,
+  handleStoreReport,
+  handleQuoteTracking,
+  handleTechnician,
+  adminDashboard,
+  handleLogout,
+}) => (
+  <div
+    className={
+      'menu fixed justify-center left-[-200px] top-0 w-[200px] h-full bg-slate-300 z-50 flex items-center transition-all duration-950 ease-in ' +
+      (sideMenu && 'left-[0]')
+    }
+  >
+    <ul className='list-none flex flex-col h-full pl-[6%] pt-[10%] justify-start gap-[2vh]'>
+      <MenuItem onClick={handleHome}>Home</MenuItem>
+      <MenuItem onClick={handleProfile}>Profile</MenuItem>
+      <MenuItem onClick={handleRegister}>Register User</MenuItem>
+      <MenuItem onClick={handlpickup}>Pickup & Cancel Device</MenuItem>
+      <MenuItem onClick={handleStoreReport}>Store Report</MenuItem>
+      <MenuItem onClick={handleQuoteTracking}>Quote Tracking</MenuItem>
+      <MenuItem onClick={handleTechnician}>Technician Report</MenuItem>
+      <MenuItem onClick={adminDashboard}>Admin Dashboard</MenuItem>
+      <MenuItem onClick={handleLogout}>Logout</MenuItem>
+    </ul>
+  </div>
+)
+
+const TechnicianMenu = ({ sideMenu, handleHome, handleProfile, handleLogout }) => (
+  <div
+    className={
+      'menu fixed left-[-200px] top-0 w-[200px] h-full bg-slate-300 z-50 flex items-center justify-center transition-all duration-950 ease-in ' +
+      (sideMenu && 'left-[0]')
+    }
+  >
+    <ul className='list-none flex flex-col h-full pl-[6%] pt-[10%] justify-start gap-[2vh]'>
+      <MenuItem onClick={handleHome}>Home</MenuItem>
+      <MenuItem onClick={handleProfile}>Profile</MenuItem>
+      <MenuItem onClick={handleLogout}>Logout</MenuItem>
+    </ul>
+  </div>
+)
+
 const SuperAdminProfile = ({
   sideMenu,
+  profile,
   handleHome,
   handleProfile,
   handleGrade,
@@ -240,6 +151,7 @@ const SuperAdminProfile = ({
   handleQuoteTracking,
   handleCouponManagement,
 }) => {
+  const isCompanyAdmin = profile.role === USER_ROLES.COMPANY_ADMIN
   return (
     <div
       className={
@@ -248,98 +160,21 @@ const SuperAdminProfile = ({
       }
     >
       <ul className='list-none flex flex-col h-full pl-[6%] pt-[10%] justify-start gap-[2vh]'>
-        <li
-          className='text-[20px] font-[300] cursor-pointer'
-          onClick={handleHome}
-        >
-          Home
-        </li>
-        <li
-          className='text-[20px] font-[300] cursor-pointer  '
-          onClick={handleProfile}
-        >
-          Profile
-        </li>
-        <li
-          className='text-[20px] font-[300] cursor-pointer '
-          onClick={handleGrade}
-        >
-          Grade Pricing
-        </li>
-        <li
-          className='text-[20px] font-[300] cursor-pointer '
-          onClick={handleRegister}
-        >
-          Register User
-        </li>
-
-        <li
-          className='text-[20px] font-[300] cursor-pointer '
-          onClick={handleBulkUploadHistory}
-        >
-          Bulk Upload History
-        </li>
-
-        <li
-          className='text-[20px] font-[300] cursor-pointer '
-          onClick={handleStoreListing}
-        >
-          Store Listing
-        </li>
-        <li
-          className='text-[20px] font-[300] cursor-pointer '
-          onClick={handleStoreReport}
-        >
-          Store Report
-        </li>
-        <li
-          className='text-[20px] font-[300] cursor-pointer'
-          onClick={handleQuoteTracking}
-        >
-          Quote Tracking
-        </li>
-        <li
-          className='text-[20px] font-[300] cursor-pointer'
-          onClick={handleCouponManagement}
-        >
-          Coupon Management
-        </li>
-        <li
-          className='text-[20px] font-[300] cursor-pointer '
-          onClick={handleTable}
-        >
-          Customer Table
-        </li>
-        <li
-          className='text-[20px] font-[300] cursor-pointer '
-          onClick={handleCompanyListing}
-        >
-          Company Listing
-        </li>
-        <li
-          className='text-[20px] font-[300] cursor-pointer '
-          onClick={handlpickup}
-        >
-          Pickup & Cancel Device
-        </li>
-        <li
-          onClick={handleTechnician}
-          className='text-[20px] cursor-pointer font-[300] '
-        >
-          Technician Report
-        </li>
-        <li
-          className='font-[300] cursor-pointer text-[20px] '
-          onClick={adminDashboard}
-        >
-          Admin Dashboard
-        </li>
-        <li
-          className='text-[20px] font-[300] cursor-pointer '
-          onClick={handleLogout}
-        >
-          Logout
-        </li>
+        <MenuItem onClick={handleHome}>Home</MenuItem>
+        <MenuItem onClick={handleProfile}>Profile</MenuItem>
+        {!isCompanyAdmin && <MenuItem onClick={handleGrade}>Grade Pricing</MenuItem>}
+        <MenuItem onClick={handleRegister}>Register User</MenuItem>
+        <MenuItem onClick={handleBulkUploadHistory}>Bulk Upload History</MenuItem>
+        <MenuItem onClick={handleStoreListing}>Store Listing</MenuItem>
+        <MenuItem onClick={handleStoreReport}>Store Report</MenuItem>
+        <MenuItem onClick={handleQuoteTracking}>Quote Tracking</MenuItem>
+        {!isCompanyAdmin && <MenuItem onClick={handleCouponManagement}>Coupon Management</MenuItem>}
+        <MenuItem onClick={handleTable}>Customer Table</MenuItem>
+        {!isCompanyAdmin && <MenuItem onClick={handleCompanyListing}>Company Listing</MenuItem>}
+        <MenuItem onClick={handlpickup}>Pickup & Cancel Device</MenuItem>
+        <MenuItem onClick={handleTechnician}>Technician Report</MenuItem>
+        <MenuItem onClick={adminDashboard}>Admin Dashboard</MenuItem>
+        <MenuItem onClick={handleLogout}>Logout</MenuItem>
       </ul>
     </div>
   )
