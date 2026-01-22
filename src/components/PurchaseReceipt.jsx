@@ -110,15 +110,7 @@ const TransactionInfo = ({
   </div>
 );
 
-const ItemDetails = ({
-  phoneName,
-  RAM,
-  storage,
-  price,
-  imeiNumber,
-  type,
-  showPrice,
-}) => (
+const ItemDetails = ({ phoneName, RAM, storage, price, imeiNumber, type }) => (
   <>
     <div className="flex gap-8 flex-row justify-start">
       <div className="flex flex-col items-start">
@@ -134,7 +126,7 @@ const ItemDetails = ({
       </div>
       <div>
         <p className="font-bold flex flex-col items-start">PRICE</p>
-        <p>{showPrice ? `₹ ${Math.floor(price)}/-` : "-"}</p>
+        <p>{`₹ ${Math.floor(price)}/-`}</p>
       </div>
     </div>
     <div className="flex gap-8 flex-row justify-start">
@@ -291,7 +283,6 @@ const PurchaseReceipt = ({
   address,
   price,
   signatureUrl,
-  showPrice,
   maskInfo,
 }) => {
   const WEBSITE_SHORT_NAME =
@@ -328,7 +319,6 @@ const PurchaseReceipt = ({
         price={price}
         imeiNumber={imeiNumber}
         type={type}
-        showPrice={showPrice}
       />
       <hr className="border-black mt-10 border-1" />
       <StorePartnerSection storeName={storeName} address={address} />

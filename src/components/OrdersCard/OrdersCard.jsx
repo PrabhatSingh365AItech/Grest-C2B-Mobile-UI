@@ -110,7 +110,7 @@ async function hanldlejsx_pdf(item) {
 }
 
 async function buildPrintElement(item) {
-  console.log('order item', item)
+  console.log("order item", item);
   const formattedDate = new Date(item.updatedAt).toLocaleDateString("en-IN", {
     day: "numeric",
     month: "short",
@@ -121,7 +121,6 @@ async function buildPrintElement(item) {
     ? await fetchSignatureAsBase64(signatureUrl)
     : null;
 
-  const showPrice = item.companyInfo.showPrice;
   const maskInfo = item.companyInfo.maskInfo;
 
   return ReactDOMServer.renderToString(
@@ -142,9 +141,8 @@ async function buildPrintElement(item) {
       formattedDate={formattedDate}
       price={item.price}
       signatureUrl={signatureBase64 || signatureUrl}
-      showPrice={showPrice}
       maskInfo={maskInfo}
-    />
+    />,
   );
 }
 
@@ -280,7 +278,7 @@ const OrdersCard = ({
     };
 
     return new Intl.DateTimeFormat("en-IN", options).format(
-      new Date(dateTimeString)
+      new Date(dateTimeString),
     );
   };
 
