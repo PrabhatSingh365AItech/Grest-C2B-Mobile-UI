@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import { BeatLoader } from 'react-spinners'
 import AdminNavbar from '../../components/Admin_Navbar'
 import BulkUploadModal from '../../components/BulkUploadModal'
 import SideMenu from '../../components/SideMenu'
-import { BeatLoader } from 'react-spinners'
-import axios from 'axios'
 import StatusModal from './StatusModal'
 import UserForm from './UserForm'
+
 import { useStoreData } from './useStoreData'
 import { usePasswordValidation } from './usePasswordValidation'
+import { USER_ROLES } from '../../constants/roleConstants'
 
 const initForm = {
   firstName: '',
@@ -17,30 +19,128 @@ const initForm = {
   password: '',
   phoneNumber: '',
   role: '',
+  assignedStores: [],
   storeId: '',
   city: '',
   address: '',
+  companyId: '',
+}
+
+const applyCompanyForAdmin = (
+  isCompanyAdmin,
+  isAdminManager,
+  LoggedInUser,
+  setFormData
+) => {
+  if ((isCompanyAdmin || isAdminManager) && LoggedInUser?.companyId) {
+    setFormData((prev) => ({
+      ...prev,
+      companyId: LoggedInUser.companyId,
+    }))
+  }
+}
+
+const fetchCompaniesIfSuperAdmin = async (
+  isSuperAdmin,
+  token,
+  setCompanies
+) => {
+  if (!isSuperAdmin) {
+    return
+  }
+  const response = await axios.get(
+    `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/company/findAll`,
+    { headers: { Authorization: token } }
+  )
+  setCompanies(response.data.result || [])
+}
+
+const fetchStoresByCompanyId = async (companyId, token, setStores) => {
+  if (!companyId) {
+    setStores([])
+    return
+  }
+
+  try {
+    const response = await axios.get(
+      `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/store/findAll`,
+      {
+        headers: { Authorization: token },
+        params: { companyId },
+      }
+    )
+    setStores(response.data.result || [])
+  } catch {
+    setStores([])
+  }
+}
+
+const buildRegisterUserPayload = (formData, LoggedInUser, isCompanyAdmin) => {
+  const finalCompanyId = isCompanyAdmin
+    ? LoggedInUser.companyId
+    : formData.companyId
+
+  const payload = { ...formData, companyId: finalCompanyId }
+
+  if (
+    formData.role === USER_ROLES.ADMIN_MANAGER ||
+    formData.role === USER_ROLES.TECHNICIAN
+  ) {
+    delete payload.storeId
+  } else if (
+    formData.role === USER_ROLES.SUPER_ADMIN ||
+    formData.role === USER_ROLES.COMPANY_ADMIN
+  ) {
+    delete payload.storeId
+    delete payload.assignedStores
+  } else {
+    delete payload.assignedStores
+  }
+
+  return payload
 }
 
 const RegisterUser = () => {
   const token = sessionStorage.getItem('authToken')
   const LoggedInUser = JSON.parse(sessionStorage.getItem('profile'))
-  const isSuperAdmin = LoggedInUser?.role === 'Super Admin'
+
+  const isSuperAdmin = LoggedInUser?.role === USER_ROLES.SUPER_ADMIN
+  const isCompanyAdmin = LoggedInUser?.role === USER_ROLES.COMPANY_ADMIN
+  const isAdminManager = LoggedInUser?.role === USER_ROLES.ADMIN_MANAGER
+
+  const navigate = useNavigate()
 
   const [sideMenu, setsideMenu] = useState(false)
   const [isGrest, setIsGrest] = useState(null)
   const [formData, setFormData] = useState(initForm)
   const [modal, setModal] = useState({ open: false, success: false, msg: '' })
   const [passwordValid, setPasswordValid] = useState(false)
+  const [companies, setCompanies] = useState([])
+  const [stores, setStores] = useState([])
 
-  const navigate = useNavigate()
-
-  // store data hook
   const { storeData, loading } = useStoreData(isSuperAdmin, setFormData)
 
-  // password validation hook
   const [errMsg, setErrMsg] = useState('')
   usePasswordValidation(formData.password, setPasswordValid, setErrMsg)
+
+  useEffect(() => {
+    applyCompanyForAdmin(
+      isCompanyAdmin,
+      isAdminManager,
+      LoggedInUser,
+      setFormData
+    )
+  }, [isCompanyAdmin, isAdminManager, LoggedInUser])
+
+  useEffect(() => {
+    fetchCompaniesIfSuperAdmin(isSuperAdmin, token, setCompanies).catch(
+      console.error
+    )
+  }, [token, isSuperAdmin])
+
+  useEffect(() => {
+    fetchStoresByCompanyId(formData.companyId, token, setStores)
+  }, [formData.companyId, token])
 
   useEffect(() => {
     setFormData((prev) => ({ ...prev, grestMember: isGrest === 'yes' }))
@@ -48,33 +148,60 @@ const RegisterUser = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
-    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value })
+
+    if (name === 'role') {
+      setFormData({
+        ...formData,
+        [name]: type === 'checkbox' ? checked : value,
+        assignedStores: [],
+        storeId: '',
+      })
+    } else {
+      setFormData({
+        ...formData,
+        [name]: type === 'checkbox' ? checked : value,
+      })
+    }
   }
 
-  const submitHandler = (event) => {
+  const submitHandler = async (event) => {
     event.preventDefault()
 
-    axios
-      .post(
-        `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/userregistry/register`,
+    if (!formData.companyId) {
+      setModal({
+        open: true,
+        success: false,
+        msg: 'Please select a company',
+      })
+      return
+    }
+
+    try {
+      const payload = buildRegisterUserPayload(
         formData,
+        LoggedInUser,
+        isCompanyAdmin
+      )
+
+      await axios.post(
+        `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/userregistry/register`,
+        payload,
         { headers: { Authorization: token } }
       )
-      .then(() => {
-        setModal({
-          open: true,
-          success: true,
-          msg: 'Successfully added new user',
-        })
-        navigate('/registeruserdetails')
+
+      setModal({
+        open: true,
+        success: true,
+        msg: 'Successfully added new user',
       })
-      .catch((error) => {
-        setModal({
-          open: true,
-          success: false,
-          msg: 'Failed to add new user, ' + error.response?.data?.msg,
-        })
+      navigate('/registeruserdetails')
+    } catch (error) {
+      setModal({
+        open: true,
+        success: false,
+        msg: error.response?.data?.msg || 'Failed to add new user',
       })
+    }
   }
 
   return (
@@ -139,9 +266,14 @@ const RegisterUser = () => {
             handleChange={handleChange}
             storeData={storeData}
             isSuperAdmin={isSuperAdmin}
+            isCompanyAdmin={isCompanyAdmin}
+            isAdminManager={isAdminManager}
             errMsg={errMsg}
             isValid={passwordValid}
             setIsGrest={setIsGrest}
+            companies={companies}
+            stores={stores}
+            setFormData={setFormData}
           />
         </div>
       </div>

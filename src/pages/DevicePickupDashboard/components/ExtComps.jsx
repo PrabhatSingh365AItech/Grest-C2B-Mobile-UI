@@ -4,7 +4,6 @@ import { IoIosCheckmarkCircle, IoIosCloseCircle } from 'react-icons/io'
 import styles from '../DevicePickupDashboard.module.css'
 import SideMenu from '../../../components/SideMenu'
 import AdminNavbar from '../../../components/Admin_Navbar'
-import ProfileBox from '../../../components/ProfileBox/ProfileBox'
 import axios from 'axios'
 
 const currentDomain = window.location.origin
@@ -67,6 +66,7 @@ const ExtComps = ({
     const LDIds = pendingTableData
       ?.filter((obj) => selectedIds.includes(obj._id))
       .map((obj) => obj._id.toString())
+
     const config = {
       method: 'post',
       maxBodyLength: Infinity,
@@ -175,17 +175,10 @@ const ExtComps = ({
         </div>
       )}
       <div className='flex items-center w-[99%] h-16 py-4 bg-white border-b-2 HEADER header'>
-        {LoggedInUser?.role === 'Technician' ? (
-          <div className='flex items-center justify-between w-full '>
-            <ProfileBox />
-            <img className='w-40' src={GREST_LOGO} alt='app logo' />
-          </div>
-        ) : (
-          <div className='navbar'>
-            <AdminNavbar setsideMenu={setsideMenu} sideMenu={sideMenu} />
-            <SideMenu setsideMenu={setsideMenu} sideMenu={sideMenu} />
-          </div>
-        )}
+        <div className='navbar'>
+          <AdminNavbar setsideMenu={setsideMenu} sideMenu={sideMenu} />
+          <SideMenu setsideMenu={setsideMenu} sideMenu={sideMenu} />
+        </div>
       </div>
     </React.Fragment>
   )

@@ -7,7 +7,6 @@ import axios from 'axios'
 // Components
 import PriceHeader from '../components/Price/PriceHeader'
 import PriceFormFields from '../components/Price/PriceFormFields'
-import ImagePickerBottomSheet from '../components/Price/ImagePickerBottomSheet'
 
 // Hooks
 import { usePriceForm } from '../hooks/usePriceForm'
@@ -40,9 +39,6 @@ const Price = () => {
     ceirImage,
     isAadharVerified,
     handleCameraButtonClick,
-    showBottomSheet,
-    handleBottomSheetOptionSelect,
-    handleBottomSheetClose,
     token,
   } = formState
 
@@ -141,13 +137,6 @@ const Price = () => {
           </p>
         </div>
       </div>
-
-      {/* IMAGE PICKER BOTTOM SHEET */}
-      <ImagePickerBottomSheet
-        isOpen={showBottomSheet}
-        onClose={handleBottomSheetClose}
-        onSelectOption={handleBottomSheetOptionSelect}
-      />
     </div>
   )
 }

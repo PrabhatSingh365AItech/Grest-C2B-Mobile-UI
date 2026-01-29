@@ -29,6 +29,19 @@ const downloadExcelStoreWise = (apiData) => {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
   const fileExtension = '.xlsx'
   const formattedData = apiData.map((item) => {
+    // Filter device report to show only selected issues
+    let deviceReportSummary = 'N/A'
+    if (item.deviceReport && typeof item.deviceReport === 'object') {
+      const selectedIssues = Object.entries(item.deviceReport)
+        .filter(
+          ([key, value]) =>
+            value === true || value === 'Yes' || value === 'true'
+        )
+        .map(([key]) => key)
+      deviceReportSummary =
+        selectedIssues.length > 0 ? selectedIssues.join(', ') : 'No Issues'
+    }
+
     return {
       'Purchase Date': new Date(item.createdAt).toLocaleDateString('en-IN'),
       Technicians: item.userId?.firstName,
@@ -36,6 +49,9 @@ const downloadExcelStoreWise = (apiData) => {
       'IMEI No.': item.documentId?.IMEI,
       'Product Details': item.modelId?.name,
       Location: item?.store?.storeName,
+      Company: item?.companyInfo?.name,
+      Grade: item?.grade,
+      'Device Issues': deviceReportSummary,
       Price: item?.actualPrice,
       'Price Offered To Customer': item?.price,
       'Unique ID': item?.uniqueCode,
@@ -65,6 +81,8 @@ const fetchDownloadDataStoreWise = (
   fromDate,
   toDate,
   storeId,
+  companyId,
+  purchaseGrade,
   token
 ) => {
   if (!fromDate || !toDate) {
@@ -72,17 +90,23 @@ const fetchDownloadDataStoreWise = (
     return
   }
   const userToken = sessionStorage.getItem('authToken')
+  let url = `${
+    import.meta.env.VITE_REACT_APP_ENDPOINT
+  }/api/prospects/findAll?page=${0}&limit=${9999}&is_selled=${isSelled}&deviceType=${deviceCategory}&startDate=${fromDate}&endDate=${toDate}&store=${storeId}`
+
+  if (companyId) {
+    url += `&companyId=${companyId}`
+  }
+  if (purchaseGrade) {
+    url += `&purchaseGrade=${purchaseGrade}`
+  }
+
   axios
-    .get(
-      `${
-        import.meta.env.VITE_REACT_APP_ENDPOINT
-      }/api/prospects/findAll?page=${0}&limit=${9999}&is_selled=${isSelled}&deviceType=${deviceCategory}&startDate=${fromDate}&endDate=${toDate}&store=${storeId}`,
-      {
-        headers: {
-          authorization: `${userToken}`,
-        },
-      }
-    )
+    .get(url, {
+      headers: {
+        authorization: `${userToken}`,
+      },
+    })
     .then((res) => {
       downloadExcelStoreWise(res.data.data)
     })
@@ -109,6 +133,14 @@ const useStoreWiseData = (token, config) => {
       userId: config.techId,
       deviceType: config.deviceCategory,
     })
+
+    // Add optional filters
+    if (config.companyId) {
+      queryParams.append('companyId', config.companyId)
+    }
+    if (config.purchaseGrade) {
+      queryParams.append('purchaseGrade', config.purchaseGrade)
+    }
 
     axios
       .get(
@@ -145,6 +177,7 @@ const useStoreMetadata = (token) => {
   const [entireStore, setEntireStore] = useState([])
   const [allUser, setAllUser] = useState([])
   const [categories, setCategories] = useState([])
+  const [companies, setCompanies] = useState([])
 
   const getStore = () => {
     const config = {
@@ -186,7 +219,7 @@ const useStoreMetadata = (token) => {
 
   const getCategories = () => {
     axios
-      .get(`${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/category/findAll`, {
+      .get(`${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/category/getAll`, {
         headers: { Authorization: token },
       })
       .then((res) => {
@@ -197,15 +230,30 @@ const useStoreMetadata = (token) => {
       })
   }
 
+  const getCompanies = () => {
+    axios
+      .get(`${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/company/findAll`, {
+        headers: { Authorization: token },
+      })
+      .then((res) => {
+        setCompanies(res.data.result || [])
+      })
+      .catch((err) => {
+        console.error('Failed to fetch companies:', err)
+      })
+  }
+
   return {
     storeData,
     regionalData,
     entireStore,
     allUser,
     categories,
+    companies,
     getStore,
     getAllUser,
     getCategories,
+    getCompanies,
     setStoreData,
   }
 }
@@ -230,6 +278,8 @@ const StoreWiseReport = () => {
   const [techName, setTechName] = useState('')
   const [deviceCategory, setDeviceCategory] = useState('CTG1')
   const [searchTerm, setSearchTerm] = useState('')
+  const [companyId, setCompanyId] = useState('')
+  const [purchaseGrade, setPurchaseGrade] = useState('')
 
   const storeConfig = {
     currentPage,
@@ -240,6 +290,8 @@ const StoreWiseReport = () => {
     fromDateDup,
     techId,
     deviceCategory,
+    companyId,
+    purchaseGrade,
   }
 
   const { tableData, isTableLoaded, maxPages, fetchStoreData } =
@@ -251,19 +303,22 @@ const StoreWiseReport = () => {
     entireStore,
     allUser,
     categories,
+    companies,
     getStore,
     getAllUser,
     getCategories,
+    getCompanies,
     setStoreData,
   } = useStoreMetadata(token)
 
   useEffect(() => {
     getCategories()
+    getCompanies()
     if (isSuperAdmin) {
       getStore()
       getAllUser()
     }
-  }, [isSuperAdmin])
+  }, [])
 
   useEffect(() => {
     fetchStoreData()
@@ -275,6 +330,8 @@ const StoreWiseReport = () => {
     toDateDup,
     techId,
     deviceCategory,
+    companyId,
+    purchaseGrade,
   ])
 
   useEffect(() => {
@@ -296,6 +353,8 @@ const StoreWiseReport = () => {
     setTechId('')
     setTechName('')
     setSearchTerm('')
+    setCompanyId('')
+    setPurchaseGrade('')
   }
   useEffect(() => {
     if (
@@ -339,8 +398,13 @@ const StoreWiseReport = () => {
         handleSearchClear={handleSearchClear}
         fetchStoreData={fetchStoreData}
         categories={categories}
+        companies={companies}
         token={token}
         storeId={storeId}
+        companyId={companyId}
+        setCompanyId={setCompanyId}
+        purchaseGrade={purchaseGrade}
+        setPurchaseGrade={setPurchaseGrade}
       />
       <MainFilter
         techName={techName}
@@ -390,7 +454,12 @@ const UpperFilter = ({
   handleSearchClear,
   fetchStoreData,
   categories,
+  companies,
   storeId,
+  companyId,
+  setCompanyId,
+  purchaseGrade,
+  setPurchaseGrade,
   token,
 }) => {
   const [sideMenu, setsideMenu] = useState(false)
@@ -409,54 +478,125 @@ const UpperFilter = ({
         <AdminNavbar setsideMenu={setsideMenu} sideMenu={sideMenu} />
         <SideMenu setsideMenu={setsideMenu} sideMenu={sideMenu} />
       </div>
-      <div className='flex flex-row gap-2 items-center justify-center'>
-        <div className='flex gap-2'>
-          <p className='font-medium'>Select Category</p>
-          <select
-            name=''
-            id=''
-            className='bg-primary text-white rounded-lg outline-none px-2 py-1'
-            onChange={(e) => setDeviceCategory(e.target.value)}
-          >
-            {categories.map((cat) => (
-              <option
-                className='bg-white text-primary font-medium'
-                key={cat?._id}
-                value={cat?.categoryCode}
-              >
-                {cat?.categoryName}
+      <div className='flex flex-col gap-3 px-4'>
+        <div className='flex flex-row gap-2 items-center justify-center'>
+          <div className='flex gap-2'>
+            <p className='font-medium'>Select Category</p>
+            <select
+              name=''
+              id=''
+              value={deviceCategory}
+              className='bg-primary text-white rounded-lg outline-none px-2 py-1'
+              onChange={(e) => setDeviceCategory(e.target.value)}
+            >
+              {categories.map((cat) => (
+                <option
+                  className='bg-white text-primary font-medium'
+                  key={cat?._id}
+                  value={cat?.categoryCode}
+                >
+                  {cat?.categoryName}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className='flex gap-2'>
+            <p className='font-medium'>Company</p>
+            <select
+              value={companyId}
+              onChange={(e) => setCompanyId(e.target.value)}
+              className='bg-primary text-white rounded-lg outline-none px-2 py-1'
+            >
+              <option className='bg-white text-primary font-medium' value=''>
+                All Companies
               </option>
-            ))}
-          </select>
-        </div>
-        <div className={`${styles.search_bar_wrap}`}>
-          <input
-            onChange={(e) => setSearchValue(e.target.value)}
-            className='text-sm'
-            type='text'
-            placeholder='Search Store Name/Email/Id/Region'
-            value={searchValue}
-          />
-          <IoMdSearch onClick={() => fetchStoreData()} size={25} />
-        </div>
-        <div className={styles.icons_box}>
-          <IoRefresh onClick={handleSearchClear} className='' size={25} />
-        </div>
-        <div>
-          <button
-            className={`${styles.bulkdown_button}`}
-            onClick={() =>
-              fetchDownloadDataStoreWise(
-                deviceCategory,
-                fromDate,
-                toDate,
-                storeId,
-                token
-              )
-            }
-          >
-            <FaDownload /> Bulk Download
-          </button>
+              {companies.map((company) => (
+                <option
+                  className='bg-white text-primary font-medium'
+                  key={company._id}
+                  value={company._id}
+                >
+                  {company.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className='flex gap-2'>
+            <p className='font-medium'>Purchase Grade</p>
+            <select
+              value={purchaseGrade}
+              onChange={(e) => setPurchaseGrade(e.target.value)}
+              className='bg-primary text-white rounded-lg outline-none px-2 py-1'
+            >
+              <option className='bg-white text-primary font-medium' value=''>
+                All Grades
+              </option>
+              <option className='bg-white text-primary font-medium' value='A+'>
+                A+
+              </option>
+              <option className='bg-white text-primary font-medium' value='A'>
+                A
+              </option>
+              <option className='bg-white text-primary font-medium' value='B'>
+                B
+              </option>
+              <option className='bg-white text-primary font-medium' value='B-'>
+                B-
+              </option>
+              <option className='bg-white text-primary font-medium' value='C+'>
+                C+
+              </option>
+              <option className='bg-white text-primary font-medium' value='C'>
+                C
+              </option>
+              <option className='bg-white text-primary font-medium' value='C-'>
+                C-
+              </option>
+              <option className='bg-white text-primary font-medium' value='D+'>
+                D+
+              </option>
+              <option className='bg-white text-primary font-medium' value='D'>
+                D
+              </option>
+              <option className='bg-white text-primary font-medium' value='D-'>
+                D-
+              </option>
+              <option className='bg-white text-primary font-medium' value='E'>
+                E
+              </option>
+            </select>
+          </div>
+          <div className={`${styles.search_bar_wrap}`}>
+            <input
+              onChange={(e) => setSearchValue(e.target.value)}
+              className='text-sm'
+              type='text'
+              placeholder='Search Store Name/Email/Id/Region'
+              value={searchValue}
+            />
+            <IoMdSearch onClick={() => fetchStoreData()} size={25} />
+          </div>
+          <div className={styles.icons_box}>
+            <IoRefresh onClick={handleSearchClear} className='' size={25} />
+          </div>
+          <div>
+            <button
+              className={`${styles.bulkdown_button}`}
+              onClick={() =>
+                fetchDownloadDataStoreWise(
+                  deviceCategory,
+                  fromDate,
+                  toDate,
+                  storeId,
+                  companyId,
+                  purchaseGrade,
+                  token
+                )
+              }
+            >
+              <FaDownload /> Bulk Download
+            </button>
+          </div>
         </div>
       </div>
     </React.Fragment>

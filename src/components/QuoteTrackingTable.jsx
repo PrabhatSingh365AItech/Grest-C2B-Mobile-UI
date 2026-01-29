@@ -1,5 +1,6 @@
 import React from 'react'
 import { FaEye } from 'react-icons/fa'
+import NoDataMessage from './NoDataMessage'
 
 const QuoteTrackingTable = ({
   data,
@@ -8,15 +9,11 @@ const QuoteTrackingTable = ({
   onViewActivity,
 }) => {
   if (!data || data.length === 0) {
-    return (
-      <p className='text-center text-gray-500 mt-10'>
-        No data found for the selected filters.
-      </p>
-    )
+    return <NoDataMessage />
   }
 
   const { currentPage, totalPages, totalRecords } = pagination
-  const limit = 6
+  const limit = 10
   return (
     <div className='m-2 md:m-5'>
       <div className='overflow-x-auto border border-gray-300 rounded-md'>
@@ -98,8 +95,9 @@ const QuoteTrackingTable = ({
                   {row.brand || 'N/A'}
                 </td>
                 <td className='px-4 py-2 text-sm text-left md:px-6 md:py-3 md:text-base whitespace-nowrap'>
-                  {`RAM: ${row.deviceDetails?.ram || 'N/A'}, ROM: ${row.deviceDetails?.rom || 'N/A'
-                    }`}
+                  {`RAM: ${row.deviceDetails?.ram || 'N/A'}, ROM: ${
+                    row.deviceDetails?.rom || 'N/A'
+                  }`}
                 </td>
                 <td className='px-4 py-2 text-sm text-center md:px-6 md:py-3 md:text-base whitespace-nowrap'>
                   <h
@@ -121,23 +119,25 @@ const QuoteTrackingTable = ({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`mx-2 px-4 py-2 rounded-lg ${currentPage === 1
-            ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-            : 'bg-primary text-white cursor-pointer'
-            }`}
+          className={`mx-2 px-4 py-2 rounded-lg ${
+            currentPage === 1
+              ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+              : 'bg-primary text-white cursor-pointer'
+          }`}
         >
           Previous
         </button>
         <span className='mx-4'>
-          Page {currentPage} of {totalPages} (Total: {totalRecords} users)
+          Page {currentPage} of {totalPages} (Total: {totalRecords})
         </span>
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`mx-2 px-4 py-2 rounded-lg ${currentPage === totalPages
-            ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-            : 'bg-primary text-white cursor-pointer'
-            }`}
+          className={`mx-2 px-4 py-2 rounded-lg ${
+            currentPage === totalPages
+              ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+              : 'bg-primary text-white cursor-pointer'
+          }`}
         >
           Next
         </button>

@@ -1,61 +1,24 @@
-import React, { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import UploadSummary from './UploadSummary'
 import FileUploadForm from './FileUploadForm'
 import UploadSpinner from './UploadSpinner'
-import { buildCSVAndDownload, generatePreview } from '../utils/bulkUploadUtils'
+import { buildCSVAndDownload } from '../utils/bulkUploadUtils'
+import { useBulkUpload } from '../hooks/useBulkUpload'
 
 const BulkUploadModal = ({ isOpen, onClose }) => {
-  const [file, setFile] = useState(null)
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadResult, setUploadResult] = useState(null)
-  const [error, setError] = useState('')
-  const [previewData, setPreviewData] = useState([])
-  const [previewHeaders, setPreviewHeaders] = useState([])
-
-  const resetState = useCallback(() => {
-    setFile(null)
-    setIsUploading(false)
-    setUploadResult(null)
-    setError('')
-    clearPreview()
-  }, [])
-
-  const clearPreview = () => {
-    setPreviewData([])
-    setPreviewHeaders([])
-  }
-
-  useEffect(() => {
-    if (isOpen) {
-      resetState()
-    }
-  }, [isOpen, resetState])
-
-  const handlePreview = (inputFile) => {
-    generatePreview(inputFile, setPreviewHeaders, setPreviewData, setError)
-  }
-
-  const handleFileChange = (e) => {
-    clearPreview()
-    const selectedFile = e.target.files[0]
-
-    if (selectedFile) {
-      const allowedTypes = [
-        'text/csv',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      ]
-      if (allowedTypes.includes(selectedFile.type)) {
-        setFile(selectedFile)
-        setError('')
-        handlePreview(selectedFile)
-      } else {
-        setError('Invalid file type. Please upload a .csv or .xlsx file.')
-        setFile(null)
-      }
-    }
-  }
+  const {
+    file,
+    isUploading,
+    setIsUploading,
+    uploadResult,
+    setUploadResult,
+    error,
+    setError,
+    previewData,
+    previewHeaders,
+    handleFileChange,
+    resetState,
+  } = useBulkUpload(isOpen)
 
   const handleUpload = async () => {
     if (!file) {
@@ -100,8 +63,9 @@ const BulkUploadModal = ({ isOpen, onClose }) => {
       'Email',
       'Password',
       'Mobile Number',
-      'Store Name',
+      'Company',
       'Role',
+      'Store Name',
       'City',
       'Address',
     ]
@@ -112,8 +76,9 @@ const BulkUploadModal = ({ isOpen, onClose }) => {
         'john.doe@example.com',
         'Password@1234',
         '9876543210',
+        'COMPNC0',
+        'Admin Manager',
         'Store A',
-        'Admin',
         'Delhi',
         '123 MG Road',
       ],
@@ -123,10 +88,11 @@ const BulkUploadModal = ({ isOpen, onClose }) => {
         'jane.doe@example.com',
         'Password@1234',
         '8765432109',
-        'Store B',
+        'COMPNC0',
         'Sale User',
-        'Delhi',
-        '123 MG Road',
+        'Store B',
+        'Mumbai',
+        '456 Park Street',
       ],
     ]
     buildCSVAndDownload(headers, rows, 'sample_user_upload.csv')
@@ -140,8 +106,9 @@ const BulkUploadModal = ({ isOpen, onClose }) => {
         'Email',
         'Password',
         'Mobile Number',
-        'Store Name',
+        'Company',
         'Role',
+        'Store Name',
         'City',
         'Address',
         'Error Message',

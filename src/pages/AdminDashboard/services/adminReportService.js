@@ -13,3 +13,9 @@ export const downloadAdminReport = async (token) => {
     headers: { Authorization: `${token}` },
   })
 }
+
+export const getCompanies = async (token) => {
+  return axios.get(`${API_BASE}/api/company/findAll`, {
+    headers: { Authorization: `${token}` },
+  })
+}

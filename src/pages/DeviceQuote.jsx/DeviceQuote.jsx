@@ -57,20 +57,80 @@ const getDeviceDisplayName = (deviceModalInfo) => {
   return `${models?.name}(${ram}/${storage})`
 }
 
-const DeviceQuote = () => {
+// Custom hooks
+const useDeviceQuoteData = () => {
   const dispatch = useDispatch()
   const Device = sessionStorage.getItem('DeviceType')
-  const DummyImg =
-    Device === 'CTG1'
-      ? 'https://grest-c2b-images.s3.ap-south-1.amazonaws.com/gresTest/1705473080031front.jpg'
-      : apple_watch
+  let DummyImg = apple_watch
+
+  if (Device === 'CTG1') {
+    DummyImg = 'https://grest-c2b-images.s3.ap-south-1.amazonaws.com/gresTest/1705473080031front.jpg'
+  }
+
   const phoneImg = JSON.parse(sessionStorage.getItem('dataModel'))
-  const phoneFrontPhoto =
-    phoneImg?.models?.phonePhotos?.front ||
-    phoneImg?.models?.phonePhotos?.upFront
+  const phoneFrontPhoto = phoneImg?.models?.phonePhotos?.front || phoneImg?.models?.phonePhotos?.upFront
   const exactQuoteValue = sessionStorage.getItem('ExactQuote')
   const dataModel = JSON.parse(sessionStorage.getItem('dataModel'))
   const deviceModalInfo = dataModel
+  const leadId = sessionStorage.getItem('LeadId')
+  const token = sessionStorage.getItem('authToken')
+
+  const ResponseData = useSelector((state) => state.responseData)
+  const Price = useSelector((state) => state.responseData.price)
+  const uniqueCode = useSelector((state) => state.responseData.uniqueCode)
+  const savedBonus = useSelector((state) => state.responseData?.bonus) || null
+
+  return {
+    dispatch,
+    DummyImg,
+    phoneFrontPhoto,
+    exactQuoteValue,
+    deviceModalInfo,
+    leadId,
+    token,
+    ResponseData,
+    Price,
+    uniqueCode,
+    savedBonus
+  }
+}
+
+const useCouponHandlers = (setMode, setIsCouponApplied, setBonus, setSelectedCoupon, setIsCouponApplied2) => {
+  const handleModeSwitch = (newMode) => {
+    setMode(newMode)
+    if (newMode === 'bonus') {
+      setIsCouponApplied(false)
+    } else if (newMode === 'coupon') {
+      setBonus(null)
+    }
+  }
+
+  const handleApplyCoupon = (selectedCoupon) => {
+    if (!selectedCoupon) {
+      toast.error('Please select a coupon first.')
+      return
+    }
+    setIsCouponApplied(true)
+    toast.success(`Coupon "${selectedCoupon.couponCode}" applied!`)
+  }
+
+  const handleCouponSelect = (coupon) => {
+    setSelectedCoupon(coupon)
+    setIsCouponApplied2(true)
+    toast.success(`Coupon "${coupon.couponCode}" applied!`)
+  }
+
+  const handleRemoveCoupon = () => {
+    setIsCouponApplied(false)
+    toast.success('Coupon removed.')
+  }
+
+  return { handleModeSwitch, handleApplyCoupon, handleCouponSelect, handleRemoveCoupon }
+}
+
+const DeviceQuote = () => {
+  const quoteData = useDeviceQuoteData()
+  const { dispatch, DummyImg, phoneFrontPhoto, exactQuoteValue, deviceModalInfo, leadId, token, ResponseData, Price, uniqueCode, savedBonus } = quoteData
 
   const [showModal, setShowModal] = useState(false)
   const [continueOTPOpen, setContinueOTPOpen] = useState(false)
@@ -81,33 +141,29 @@ const DeviceQuote = () => {
   const [termsChecked, setTermsChecked] = useState(false)
   const hasShownError = useRef(false)
 
-  // Coupon and Bonus toggle states
-  const [mode, setMode] = useState('bonus') // 'bonus' or 'coupon'
-  const [eligibleCoupon, setEligibleCoupon] = useState(null)
+  const [mode, setMode] = useState('bonus')
+  const [eligibleCoupons, setEligibleCoupons] = useState([])
+  const [selectedCoupon, setSelectedCoupon] = useState(null)
   const [isCouponApplied, setIsCouponApplied] = useState(false)
   const [isLoadingCoupon, setIsLoadingCoupon] = useState(true)
-  const leadId = sessionStorage.getItem('LeadId')
-  const token = sessionStorage.getItem('authToken')
-
-  const ResponseData = useSelector((state) => state.responseData)
-  const Price = useSelector((state) => state.responseData.price)
-  const uniqueCode = useSelector((state) => state.responseData.uniqueCode)
-  const savedBonus = useSelector((state) => state.responseData?.bonus) || null
 
   useEffect(() => {
     setQuoteId(uniqueCode)
     setBonus(savedBonus || null)
   }, [uniqueCode, savedBonus])
 
-  // Calculate final bonus for current mode
   const calculateFinalBonus = () => {
     if (mode === 'bonus') {
       return Number(bonus) || 0
-    } else if (mode === 'coupon' && isCouponApplied && eligibleCoupon) {
-      return eligibleCoupon.discountType === 'Fixed'
-        ? eligibleCoupon.discountValue
-        : Math.round((Number(Price) * eligibleCoupon.discountValue) / 100)
     }
+
+    if (mode === 'coupon' && isCouponApplied && selectedCoupon) {
+      if (selectedCoupon.discountType === 'Fixed') {
+        return selectedCoupon.discountValue
+      }
+      return Math.round((Number(Price) * selectedCoupon.discountValue) / 100)
+    }
+
     return 0
   }
 
@@ -119,74 +175,56 @@ const DeviceQuote = () => {
     appliedCoupon: null,
   })
 
-  // Fetch eligible coupon when component mounts
   useEffect(() => {
-    const fetchCoupon = async () => {
+    const fetchCoupons = async () => {
       if (!leadId || !token) {
         setIsLoadingCoupon(false)
         return
       }
       try {
         const response = await axios.get(
-          `${
-            import.meta.env.VITE_REACT_APP_ENDPOINT
-          }/api/coupons/find-eligible/${leadId}`,
+          `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/coupons/find-eligible/${leadId}`,
           {
             headers: { Authorization: token },
           }
         )
-        const coupon = response?.data?.data
-        setEligibleCoupon(coupon)
-        if (coupon && coupon.couponCode) {
-          sessionStorage.setItem('eligibleCouponCode', coupon.couponCode)
+        const coupons = response?.data?.data
+        let couponsArray = []
+
+        if (Array.isArray(coupons)) {
+          couponsArray = coupons
+        } else if (coupons) {
+          couponsArray = [coupons]
+        }
+
+        setEligibleCoupons(couponsArray)
+
+        if (couponsArray.length === 1) {
+          setSelectedCoupon(couponsArray[0])
+        }
+        if (couponsArray.length > 0 && couponsArray[0].couponCode) {
+          sessionStorage.setItem('eligibleCouponCode', couponsArray[0].couponCode)
         }
       } catch (error) {
-        console.error(
-          '❌ Error fetching coupon:',
-          error?.response?.data || error.message
-        )
-        setEligibleCoupon(null)
+        console.error('❌ Error fetching coupons:', error?.response?.data || error.message)
+        setEligibleCoupons([])
       } finally {
         setIsLoadingCoupon(false)
       }
     }
-    fetchCoupon()
+    fetchCoupons()
   }, [leadId, token])
 
-  // Mode switching and coupon functions
-  const handleModeSwitch = (newMode) => {
-    setMode(newMode)
-    if (newMode === 'bonus') {
-      setIsCouponApplied(false)
-    } else if (newMode === 'coupon') {
-      setBonus(null) // Clear bonus when switching to coupon mode
-    }
-  }
-
-  const handleApplyCoupon = () => {
-    if (!eligibleCoupon) {
-      return
-    }
-    setIsCouponApplied(true)
-    toast.success(`Coupon "${eligibleCoupon.couponCode}" applied!`)
-  }
-
-  const handleRemoveCoupon = () => {
-    setIsCouponApplied(false)
-    toast.success('Coupon removed.')
-  }
+  const couponHandlers = useCouponHandlers(setMode, setIsCouponApplied, setBonus, setSelectedCoupon, setIsCouponApplied)
 
   useEffect(() => {
-    if (
-      !hasShownError.current &&
-      quoteSaved === false &&
-      exactQuoteValue === 'true' &&
-      currentDomain !== buyback
-    ) {
+    const shouldShowError = !hasShownError.current && quoteSaved === false && exactQuoteValue === 'true' && currentDomain !== buyback
+
+    if (shouldShowError) {
       toast.error('Bonus Must Be Less Than ₹2000.')
       hasShownError.current = true
     }
-  }, [quoteSaved, exactQuoteValue, currentDomain])
+  }, [quoteSaved, exactQuoteValue])
 
   const continueOTPHandler = () => {
     const resData = {
@@ -204,13 +242,13 @@ const DeviceQuote = () => {
   const toggleModal = () => setShowModal(!showModal)
   const showDeviceReportHandler = () => setShowDeviceReport(!showDeviceReport)
 
+  console.log(quoteSaved, exactQuoteValue, currentDomain)
+
   return (
     <div
       className={`bg-white min-h-screen ${styles.page_wrap}`}
       style={{
-        paddingTop: continueOTPOpen
-          ? 0
-          : 'calc(4rem + env(safe-area-inset-top))',
+        paddingTop: continueOTPOpen ? 0 : 'calc(4rem + env(safe-area-inset-top))',
         minHeight: '100vh',
       }}
     >
@@ -236,12 +274,14 @@ const DeviceQuote = () => {
               exactQuoteValue={exactQuoteValue}
               showDeviceReportHandler={showDeviceReportHandler}
               mode={mode}
-              handleModeSwitch={handleModeSwitch}
-              eligibleCoupon={eligibleCoupon}
+              handleModeSwitch={couponHandlers.handleModeSwitch}
+              eligibleCoupons={eligibleCoupons}
+              selectedCoupon={selectedCoupon}
               isCouponApplied={isCouponApplied}
               isLoadingCoupon={isLoadingCoupon}
-              handleApplyCoupon={handleApplyCoupon}
-              handleRemoveCoupon={handleRemoveCoupon}
+              handleApplyCoupon={() => couponHandlers.handleApplyCoupon(selectedCoupon)}
+              handleRemoveCoupon={couponHandlers.handleRemoveCoupon}
+              handleCouponSelect={couponHandlers.handleCouponSelect}
             />
           </div>
           <div className='fixed bottom-0 flex flex-col w-full gap-2 p-4 border-t-2 bg-white'>
@@ -341,11 +381,13 @@ const QuoteCard = ({
   showDeviceReportHandler,
   mode,
   handleModeSwitch,
-  eligibleCoupon,
+  eligibleCoupons,
+  selectedCoupon,
   isCouponApplied,
   isLoadingCoupon,
   handleApplyCoupon,
   handleRemoveCoupon,
+  handleCouponSelect,
 }) => (
   <div
     className={`${styles.QuoteCardShadow} rounded-md p-4 w-full max-w-[600px]`}
@@ -383,11 +425,13 @@ const QuoteCard = ({
           mode={mode}
           bonus={bonus}
           setBonus={setBonus}
-          eligibleCoupon={eligibleCoupon}
+          eligibleCoupons={eligibleCoupons}
+          selectedCoupon={selectedCoupon}
           isCouponApplied={isCouponApplied}
           isLoadingCoupon={isLoadingCoupon}
           handleApplyCoupon={handleApplyCoupon}
           handleRemoveCoupon={handleRemoveCoupon}
+          handleCouponSelect={handleCouponSelect}
         />
       )}
 
@@ -434,16 +478,14 @@ const QuoteCard = ({
             </div>
           )}
       </div>
-      {quoteSaved === false &&
-        exactQuoteValue === 'true' &&
-        currentDomain !== buyback && (
-          <button
-            className='hidden sm:block text-sm font-medium px-3 py-1 rounded text-primary border border-primary lg:ml-auto'
-            onClick={toggleModal}
-          >
-            Save Quote
-          </button>
-        )}
+      {quoteSaved === false && (
+        <button
+          className='hidden sm:block text-sm font-medium px-3 py-1 rounded text-primary border border-primary lg:ml-auto'
+          onClick={toggleModal}
+        >
+          Save Quote
+        </button>
+      )}
     </div>
   </div>
 )
@@ -452,21 +494,25 @@ const CouponBonusToggle = ({
   mode,
   bonus,
   setBonus,
-  eligibleCoupon,
+  eligibleCoupons,
+  selectedCoupon,
   isCouponApplied,
   isLoadingCoupon,
   handleApplyCoupon,
   handleRemoveCoupon,
+  handleCouponSelect,
 }) => (
   <div className='px-2 my-2'>
     {mode === 'bonus' && <BonusInput bonus={bonus} setBonus={setBonus} />}
     {mode === 'coupon' && (
       <CouponDisplay
-        eligibleCoupon={eligibleCoupon}
+        eligibleCoupons={eligibleCoupons}
+        selectedCoupon={selectedCoupon}
         isCouponApplied={isCouponApplied}
         isLoadingCoupon={isLoadingCoupon}
         handleApplyCoupon={handleApplyCoupon}
         handleRemoveCoupon={handleRemoveCoupon}
+        handleCouponSelect={handleCouponSelect}
       />
     )}
   </div>
@@ -483,9 +529,8 @@ const BonusInput = ({ bonus, setBonus }) => (
         name='bonus'
         id='bonus'
         type='number'
-        inputMode='numeric'
         placeholder='Enter Bonus Amount'
-        value={bonus || ''}
+        value={bonus}
         maxLength={6}
         onKeyDown={(e) => {
           if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
@@ -493,15 +538,8 @@ const BonusInput = ({ bonus, setBonus }) => (
           }
         }}
         onChange={(e) => {
-          const value = e.target.value
-          // Allow empty string or valid numbers within range
-          if (value === '') {
-            setBonus(null)
-          } else {
-            const numValue = Number(value)
-            if (!isNaN(numValue) && numValue >= 0 && numValue <= 10000) {
-              setBonus(value)
-            }
+          if (Number(e.target.value) >= 0 && Number(e.target.value) <= 10000) {
+            setBonus(e.target.value)
           }
         }}
       />
@@ -510,24 +548,26 @@ const BonusInput = ({ bonus, setBonus }) => (
 )
 
 const CouponDisplay = ({
-  eligibleCoupon,
+  eligibleCoupons,
+  selectedCoupon,
   isCouponApplied,
   isLoadingCoupon,
   handleApplyCoupon,
   handleRemoveCoupon,
+  handleCouponSelect,
 }) => {
   if (isLoadingCoupon) {
     return (
       <div className='px-2 my-3 h-12 flex items-center justify-center'>
         <div className='flex items-center justify-center'>
           <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-primary'></div>
-          <span className='ml-2 text-sm text-gray-600'>Loading coupon...</span>
+          <span className='ml-2 text-sm text-gray-600'>Loading coupons...</span>
         </div>
       </div>
     )
   }
 
-  if (!eligibleCoupon) {
+  if (!eligibleCoupons || eligibleCoupons.length === 0) {
     return (
       <div className='px-2 my-3 h-12 flex items-center justify-center'>
         <div className='w-full p-2 text-center bg-gray-100 border border-gray-300 rounded-md'>
@@ -539,32 +579,104 @@ const CouponDisplay = ({
     )
   }
 
-  const discountText =
-    eligibleCoupon.discountType === 'Fixed'
-      ? `₹${eligibleCoupon.discountValue}`
-      : `${eligibleCoupon.discountValue}%`
+  // Single coupon - original UI
+  if (eligibleCoupons.length === 1) {
+    const coupon = eligibleCoupons[0]
+    const discountText =
+      coupon.discountType === 'Fixed'
+        ? `₹${coupon.discountValue}`
+        : `${coupon.discountValue}%`
 
+    return (
+      <div className='px-2 my-3 h-12 flex items-center justify-center'>
+        <div className='flex items-center justify-between w-full p-2 bg-green-100 border border-green-400 rounded-md'>
+          <p className='text-sm font-medium text-green-800'>
+            {coupon.couponCode} ({discountText})
+          </p>
+          {!isCouponApplied ? (
+            <button
+              onClick={handleApplyCoupon}
+              className='px-3 py-1 text-xs font-semibold text-white bg-primary rounded-md'
+            >
+              Apply
+            </button>
+          ) : (
+            <button
+              onClick={handleRemoveCoupon}
+              className='px-3 py-1 text-xs font-semibold text-white bg-red-600 rounded-md'
+            >
+              Remove
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Multiple coupons - new UI with selection
   return (
-    <div className='px-2 my-3 h-12 flex items-center justify-center'>
-      <div className='flex items-center justify-between w-full p-2 bg-green-100 border border-green-400 rounded-md'>
-        <p className='text-sm font-medium text-green-800'>
-          Eligible: {eligibleCoupon.couponCode} ({discountText})
-        </p>
-        {!isCouponApplied ? (
-          <button
-            onClick={handleApplyCoupon}
-            className='px-3 py-1 text-xs font-semibold text-white bg-primary rounded-md'
-          >
-            Apply
-          </button>
-        ) : (
-          <button
-            onClick={handleRemoveCoupon}
-            className='px-3 py-1 text-xs font-semibold text-white bg-red-600 rounded-md'
-          >
-            Remove
-          </button>
-        )}
+    <div className='px-2 my-3'>
+      <p className='text-sm font-medium text-gray-700 mb-2'>
+        {eligibleCoupons.length} coupons available - Click to apply:
+      </p>
+      <div className='flex flex-col gap-2 max-h-[200px] overflow-y-auto'>
+        {eligibleCoupons.map((coupon) => {
+          const discountText =
+            coupon.discountType === 'Fixed'
+              ? `₹${coupon.discountValue}`
+              : `${coupon.discountValue}%`
+          const isSelected = selectedCoupon?._id === coupon._id
+          const isCurrentlyApplied = isSelected && isCouponApplied
+
+          return (
+            <div
+              key={coupon._id}
+              className={`flex items-center justify-between w-full p-2 rounded-md border-2 transition-all ${
+                isCurrentlyApplied
+                  ? 'bg-green-50 border-green-500 shadow-sm'
+                  : 'bg-gray-50 border-gray-300 hover:border-primary hover:shadow-sm cursor-pointer'
+              }`}
+              onClick={() => !isCurrentlyApplied && handleCouponSelect(coupon)}
+            >
+              <div className='flex items-center gap-2 flex-1'>
+                <input
+                  type='radio'
+                  checked={isCurrentlyApplied}
+                  onChange={() => handleCouponSelect(coupon)}
+                  className='w-4 h-4 cursor-pointer accent-green-600'
+                  disabled={isCurrentlyApplied}
+                />
+                <div className='flex flex-col'>
+                  <div className='flex items-center gap-2'>
+                    <p className='text-sm font-semibold text-gray-800'>
+                      {coupon.couponCode}
+                    </p>
+                    {isCurrentlyApplied && (
+                      <span className='text-xs font-medium text-green-600 bg-green-100 px-2 py-0.5 rounded'>
+                        Applied
+                      </span>
+                    )}
+                  </div>
+                  <p className='text-xs text-gray-600'>
+                    Discount: {discountText}
+                    {coupon.description && ` - ${coupon.description}`}
+                  </p>
+                </div>
+              </div>
+              {isCurrentlyApplied && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleRemoveCoupon()
+                  }}
+                  className='px-3 py-1 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors'
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

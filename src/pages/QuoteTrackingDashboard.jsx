@@ -48,7 +48,8 @@ const QuoteTrackingDashboard = () => {
       }
 
       const response = await axios.get(
-        `${import.meta.env.VITE_REACT_APP_ENDPOINT
+        `${
+          import.meta.env.VITE_REACT_APP_ENDPOINT
         }/api/quoteTracking/dashboard`,
         {
           headers: { Authorization: token },
@@ -93,7 +94,7 @@ const QuoteTrackingDashboard = () => {
       filters,
       setIsDownloading,
       debouncedSearch,
-      setToastIdRef: () => { },
+      setToastIdRef: () => {},
     })
   }
 

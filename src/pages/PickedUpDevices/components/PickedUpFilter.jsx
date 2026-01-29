@@ -7,6 +7,156 @@ import { BsCalendarDate } from 'react-icons/bs'
 import { setStoreFilter } from '../../../store/slices/userSlice'
 import styles from '../PickedUpDevices.module.css'
 
+const getAllStoreNames = (allStore = []) =>
+  allStore.map((store) => store.storeName)
+
+const getStoresByRegion = (allStore = [], region = '') =>
+  allStore
+    .filter((store) => store.region === region)
+    .map((store) => store.storeName)
+
+const filterStoresBySearch = (stores = [], searchTerm = '') => {
+  if (!searchTerm) {
+    return stores
+  }
+  return stores.filter((store) =>
+    store.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+}
+
+/* Custom hook for effects */
+const useStoreFilterEffects = ({
+  storeDrop,
+  searchTerm,
+  storeData,
+  setFilteredStores,
+  dateValue,
+  searchValue,
+  getData,
+}) => {
+  useEffect(() => {
+    if (storeDrop && searchTerm.trim() === '') {
+      setFilteredStores(storeData)
+    }
+  }, [storeDrop, searchTerm, storeData, setFilteredStores])
+
+  useEffect(() => {
+    if (dateValue === '' && searchValue === '') {
+      getData()
+    }
+  }, [dateValue, searchValue])
+}
+
+const SearchBar = ({ searchValue, setSearchValue, getDataBySearch, handleSearchClear, dateValue, setDateValue, dateChangeHandler }) => (
+  <div className='mt-[3px] flex gap-2 items-center outline-none'>
+    <div className={styles.search_bar_wrap}>
+      <input
+        className='text-sm'
+        onChange={(e) => setSearchValue(e.target.value)}
+        type='text'
+        value={searchValue}
+        placeholder='Search'
+      />
+      <IoMdSearch size={34} onClick={getDataBySearch} />
+    </div>
+    <div className={styles.icons_box}>
+      <IoRefresh onClick={handleSearchClear} size={25} />
+    </div>
+    <div className={`flex items-center ${styles.date_picker_wrap}`}>
+      <input
+        id='datepicker'
+        type='date'
+        value={dateValue}
+        onChange={dateChangeHandler}
+      />
+      <div
+        onClick={() => document.getElementById('datepicker').showPicker()}
+        className={styles.date_box}
+      >
+        <p>{dateValue || 'DD/MM/YYYY'}</p>
+        <BsCalendarDate size={25} />
+      </div>
+    </div>
+  </div>
+)
+
+const RegionDropdown = ({ region, regionDrop, setRegionDrop, regionData, handleRegionChange }) => (
+  <div className='relative w-[45%]'>
+    <div
+      className={styles.filter_button}
+      onClick={() => setRegionDrop(!regionDrop)}
+    >
+      <p className='truncate'>{region === '' ? 'All Region' : region}</p>
+      <FaAngleDown size={17} className={regionDrop ? 'rotate-180' : ''} />
+    </div>
+    {regionDrop && (
+      <div className={styles.filter_drop}>
+        <div
+          className={styles.filter_option}
+          onClick={() => handleRegionChange('')}
+        >
+          All
+        </div>
+        {regionData.map((item) => (
+          <div
+            key={item}
+            className={styles.filter_option}
+            onClick={() => handleRegionChange(item)}
+          >
+            {item}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)
+
+const StoreDropdown = ({ searchTerm, storeDrop, setStoreDrop, handleSearch, filteredStores, handleStoreChange }) => (
+  <div className='relative w-[70%]'>
+    <div
+      className={`${styles.filter_button} w-full`}
+      onClick={() => setStoreDrop(!storeDrop)}
+    >
+      <p className='truncate'>{searchTerm === '' ? 'All Store' : searchTerm}</p>
+      <FaAngleDown size={17} className={storeDrop ? 'rotate-180' : ''} />
+    </div>
+    {storeDrop && (
+      <div className='absolute w-full bg-white shadow-md'>
+        <input
+          type='text'
+          onChange={handleSearch}
+          value={searchTerm}
+          className='w-full p-2 border-b'
+          placeholder='Search store...'
+        />
+        <div className={`${styles.filter_drop} max-h-[200px]`}>
+          <div
+            className={styles.filter_option}
+            onClick={() => handleStoreChange('')}
+          >
+            All
+          </div>
+          {filteredStores.length ? (
+            filteredStores.map((store, index) => (
+              <div
+                key={index}
+                className={styles.filter_option}
+                onClick={() => handleStoreChange(store)}
+              >
+                {store}
+              </div>
+            ))
+          ) : (
+            <p className='p-2 text-gray-500'>No stores found</p>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+)
+
+//  Main Component
+
 const PickedUpFilter = ({
   setSearchValue,
   searchValue,
@@ -28,7 +178,18 @@ const PickedUpFilter = ({
   const [storeDrop, setStoreDrop] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredStores, setFilteredStores] = useState(storeData)
+
   const dispatch = useDispatch()
+
+  useStoreFilterEffects({
+    storeDrop,
+    searchTerm,
+    storeData,
+    setFilteredStores,
+    dateValue,
+    searchValue,
+    getData,
+  })
 
   const handleSearchClear = () => {
     setSearchValue('')
@@ -38,47 +199,51 @@ const PickedUpFilter = ({
     setStoreName(import.meta.env.VITE_USER_STORE_NAME)
   }
 
-  useEffect(() => {
-    if (dateValue === '' && searchValue === '') {
-      getData()
-    }
-  }, [dateValue, searchValue])
-
   const handleSearch = (e) => {
     const value = e.target.value
     setSearchTerm(value)
-
-    if (value === '') {
-      setFilteredStores(storeData)
-    } else {
-      const filtered = storeData.filter((store) =>
-        store.toLowerCase().includes(value.toLowerCase())
-      )
-      setFilteredStores(filtered)
-    }
+    setFilteredStores(filterStoresBySearch(storeData, value))
   }
 
   const handleRegionChange = (value) => {
     setRegionDrop(false)
     setStoreName('')
-    const filteredStoresTemp = allStore?.filter(
-      (store) => store.region === value
-    )
-    const storeNamesArray = filteredStoresTemp.map((store) => store.storeName)
-    dispatch(setStoreFilter({ selStore: '', selRegion: value }))
-    setStoreData(storeNamesArray)
+
+    if (value === '') {
+      setRegion('')
+      setStoreData(getAllStoreNames(allStore))
+      dispatch(setStoreFilter({ selStore: '', selRegion: '' }))
+      return
+    }
+
     setRegion(value)
+    setStoreData(getStoresByRegion(allStore, value))
+    dispatch(setStoreFilter({ selStore: '', selRegion: value }))
   }
 
   const handleStoreChange = (value) => {
     setStoreDrop(false)
-    const filteredStoresTemp2 = allStore?.filter(
-      (store) => store.storeName === value
-    )
-    const newRegion = filteredStoresTemp2[0].region
-    setRegion(newRegion)
-    dispatch(setStoreFilter({ selStore: value, selRegion: newRegion }))
-    setStoreName(value)
+
+    if (value === '') {
+      setRegion('')
+      setStoreName('')
+      setStoreData(getAllStoreNames(allStore))
+      dispatch(setStoreFilter({ selStore: '', selRegion: '' }))
+      return
+    }
+
+    const selectedStore = allStore.find((store) => store.storeName === value)
+
+    if (selectedStore) {
+      setRegion(selectedStore.region)
+      setStoreName(value)
+      dispatch(
+        setStoreFilter({
+          selStore: value,
+          selRegion: selectedStore.region,
+        })
+      )
+    }
   }
 
   const dateChangeHandler = (event) => {
@@ -90,117 +255,33 @@ const PickedUpFilter = ({
 
   return (
     <div className='m-2 flex flex-col gap-2'>
-      <div className='mt-[3px] flex gap-2 items-center outline-none'>
-        <div className={`${styles.search_bar_wrap}`}>
-          <input
-            className='text-sm'
-            onChange={(e) => setSearchValue(e.target.value)}
-            type='text'
-            value={searchValue}
-            placeholder='Search'
-          />
-          <IoMdSearch size={34} onClick={() => getDataBySearch()} />
-        </div>
-        <div className={styles.icons_box}>
-          <IoRefresh className='' onClick={handleSearchClear} size={25} />
-        </div>
-        <div
-          className={`flex flex-row  items-center justify-center ${styles.date_picker_wrap}`}
-        >
-          <input
-            id='datepicker'
-            style={{ color: 'var(--primary-color)' }}
-            type='date'
-            value={dateValue}
-            onChange={dateChangeHandler}
-            className=''
-          />
-          <div
-            onClick={() => document.getElementById('datepicker').showPicker()}
-            className={styles.date_box}
-          >
-            <p>{dateValue ? dateValue : 'DD/MM/YYYY'}</p>
-            <BsCalendarDate size={25} />
-          </div>
-        </div>
-      </div>
+      <SearchBar
+        searchValue={searchValue}
+        setSearchValue={setSearchValue}
+        getDataBySearch={getDataBySearch}
+        handleSearchClear={handleSearchClear}
+        dateValue={dateValue}
+        setDateValue={setDateValue}
+        dateChangeHandler={dateChangeHandler}
+      />
+
       {isSuperAdmin && (
-        <div className='flex gap-2 w-100 items-center outline-none'>
-          <div className='relative w-[45%]'>
-            <div
-              className={`${styles.filter_button}`}
-              onClick={() => {
-                setRegionDrop(!regionDrop)
-              }}
-            >
-              <p className='truncate'>
-                {region === '' ? 'Select Region' : region}
-              </p>
-              <FaAngleDown
-                size={17}
-                className={`${regionDrop && 'rotate-180'}`}
-              />
-            </div>
-            {regionDrop && (
-              <div className={`${styles.filter_drop}`}>
-                {regionData.map((element) => (
-                  <div
-                    key={element}
-                    className={`${styles.filter_option}`}
-                    onClick={() => handleRegionChange(element)}
-                  >
-                    <p className='truncate'>{element}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className='relative w-[70%]'>
-            <div
-              className={`${styles.filter_button} w-full`}
-              onClick={() => setStoreDrop(!storeDrop)}
-            >
-              <p className='  truncate'>
-                {searchTerm === '' ? 'Select Store' : searchTerm}
-              </p>
-              <FaAngleDown
-                className={`${storeDrop && 'rotate-180'}`}
-                size={17}
-              />
-            </div>
-            {storeDrop && (
-              <div className='absolute w-full bg-white   shadow-md'>
-                <input
-                  type='text'
-                  onChange={handleSearch}
-                  value={searchTerm}
-                  className='w-full p-2 border-b   border-gray-300'
-                  placeholder='Search store...'
-                />
-                <div
-                  className={`overflow-y-scroll   max-h-[200px] ${styles.filter_drop} w-full`}
-                >
-                  {filteredStores.length > 0 ? (
-                    filteredStores.map((item2, index) => (
-                      <div
-                        key={index}
-                        onClick={() => {
-                          handleStoreChange(item2)
-                          setSearchTerm(item2)
-                          setStoreDrop(false)
-                        }}
-                        className={`${styles.filter_option}`}
-                      >
-                        <p className='truncate'>{item2}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className='p-2   text-gray-500'>No stores found</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+        <div className='flex gap-2'>
+          <RegionDropdown
+            region={region}
+            regionDrop={regionDrop}
+            setRegionDrop={setRegionDrop}
+            regionData={regionData}
+            handleRegionChange={handleRegionChange}
+          />
+          <StoreDropdown
+            searchTerm={searchTerm}
+            storeDrop={storeDrop}
+            setStoreDrop={setStoreDrop}
+            handleSearch={handleSearch}
+            filteredStores={filteredStores}
+            handleStoreChange={handleStoreChange}
+          />
         </div>
       )}
     </div>

@@ -51,11 +51,11 @@
     <!-- Camera permission for taking product photos (core trade-in functionality) -->
     <uses-permission android:name="android.permission.CAMERA" />
 
-    <!-- 
-        NOTE: We DO NOT request READ_MEDIA_IMAGES or storage permissions.
-        Instead, we use Android's photo picker which provides access without permissions.
-        This complies with Google Play's Photo and Video Permissions policy.
+    <!--
+        Using system photo picker instead of READ_MEDIA_IMAGES permission.
+        For Android 12 and below (API 32-), we use READ_EXTERNAL_STORAGE.
     -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 
     <!-- Camera hardware features (not required - app works without rear camera) -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
@@ -64,6 +64,14 @@
     <queries>
         <intent>
             <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.GET_CONTENT" />
+            <data android:mimeType="image/*" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.PICK" />
+            <data android:mimeType="image/*" />
         </intent>
         <intent>
             <action android:name="android.intent.action.VIEW" />

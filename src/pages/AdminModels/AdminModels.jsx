@@ -19,9 +19,52 @@ import {
   setMobileID,
   setRam,
   setStorage,
-  resetAdminAnswer
+  resetAdminAnswer,
 } from "../../store/slices/newAdminGrade";
 import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
+
+// --- Helper Functions (Moved outside to reduce component size) ---
+
+const processBrandData = (responseData) => {
+  const allConfigurations = [];
+  responseData.forEach((brand) => {
+    brand.models.forEach((model) => {
+      model.config.forEach((conf) => {
+        const newConfig = {
+          brandId: brand.brand._id,
+          brandName: brand.brand.name,
+          modelId: model._id,
+          modelName: model.name,
+          storage: conf.storage,
+          RAM: conf.RAM,
+          price: conf.price,
+        };
+        allConfigurations.push(newConfig);
+      });
+    });
+  });
+  return allConfigurations;
+};
+
+const processSearchData = (responseData) => {
+  const allConfigurations = [];
+  responseData.forEach((model) => {
+    const brandName = model.name.split(" ")[0];
+    model.config.forEach((conf) => {
+      const newConfig = {
+        brandId: model.brandId,
+        modelId: model._id,
+        brandName: brandName,
+        modelName: model.name,
+        storage: conf.storage,
+        RAM: conf.RAM,
+        price: conf.price,
+      };
+      allConfigurations.push(newConfig);
+    });
+  });
+  return allConfigurations;
+};
 
 const getEvenRowClass = (index, selectmodel, selectstorage, selectram, val) => {
   if (index % 2 === 0) {
@@ -118,24 +161,8 @@ const AdminModels = () => {
     axios
       .request(config)
       .then((response) => {
-        const responseData = response.data.data;
-        const allConfigurations = [];
-        responseData.forEach((brand) => {
-          brand.models.forEach((model) => {
-            model.config.forEach((conf) => {
-              const newConfig = {
-                brandId: brand.brand._id,
-                brandName: brand.brand.name,
-                modelId: model._id,
-                modelName: model.name,
-                storage: conf.storage,
-                RAM: conf.RAM,
-                price: conf.price,
-              };
-              allConfigurations.push(newConfig);
-            });
-          });
-        });
+        const allConfigurations = processBrandData(response.data.data);
+
         setData(allConfigurations);
         setIsTableLoaded(false);
       })
@@ -162,23 +189,7 @@ const AdminModels = () => {
     axios
       .request(config)
       .then((response) => {
-        const responseData = response.data;
-        const allConfigurations = [];
-        responseData.forEach((model) => {
-          const brandName = model.name.split(" ")[0];
-          model.config.forEach((conf) => {
-            const newConfig = {
-              brandId: model.brandId,
-              modelId: model._id,
-              brandName: brandName,
-              modelName: model.name,
-              storage: conf.storage,
-              RAM: conf.RAM,
-              price: conf.price,
-            };
-            allConfigurations.push(newConfig);
-          });
-        });
+        const allConfigurations = processSearchData(response.data);
         setData(allConfigurations);
         setIsTableLoaded(false);
       })
@@ -196,9 +207,9 @@ const AdminModels = () => {
       );
       setCategories(response.data.data);
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
-  }
+  };
   const selectHandler = (modelId, modelStorage, ram, modelName) => {
     sessionStorage.setItem(
       "adminModelName",
@@ -240,29 +251,17 @@ const AdminModels = () => {
         setCategory={setCategory}
         categories={categories}
       />
-      <div className="m-2 flex flex-col gap-2 items-center w-[100%]">
-        <div className="flex gap-2 items-center justify-center outline-none mt-5 w-[100%]">
-          <div className={`${styles.search_bar_wrap}`}>
-            <input
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="text-sm"
-              type="text"
-              placeholder="Search Model"
-              value={searchValue}
-            />
-            <IoMdSearch onClick={() => getDataBySearch()} />
-          </div>
-          <div className={styles.icons_box}>
-            <IoRefresh onClick={handleSearchClear} className="" size={25} />
-          </div>
-          <button
-            className={`${styles.bulkdown_button}`}
-            onClick={() => downloadExcel(data)}
-          >
-            <FaDownload /> Bulk Download
-          </button>
-        </div>
-      </div>
+      {/* Extracted Filter UI to reduce lines */}
+      <AdminModelFilters
+        category={category}
+        setCategory={setCategory}
+        categories={categories}
+        searchValue={searchValue}
+        setSearchValue={setSearchValue}
+        getDataBySearch={getDataBySearch}
+        handleSearchClear={handleSearchClear}
+        onDownload={() => downloadExcel(data)}
+      />
       <div className={`${styles.pd_cont}`}>
         <AdminModelsTable
           grestTheme1={grestTheme}
@@ -279,6 +278,61 @@ const AdminModels = () => {
   );
 };
 
+// --- Sub Component for Filters (Reduces main component size) ---
+const AdminModelFilters = ({
+  category,
+  setCategory,
+  categories,
+  searchValue,
+  setSearchValue,
+  getDataBySearch,
+  handleSearchClear,
+  onDownload,
+}) => {
+  return (
+    <div className="m-2 flex flex-col gap-2 items-center w-[100%]">
+      <div className="flex gap-2 items-center justify-center outline-none mt-5 w-[100%]">
+        <div className="m-2 flex gap-2 items-center">
+          <div className="flex gap-2">
+            <p className="font-medium">Select Category</p>
+            <select
+              className="bg-primary text-white rounded-lg outline-none px-2 py-1"
+              onChange={(e) => setCategory(e.target.value)}
+              value={category}
+            >
+              {categories.map((cat) => (
+                <option
+                  className="bg-white text-primary font-medium"
+                  key={cat?._id}
+                  value={cat?.categoryCode}
+                >
+                  {cat?.categoryName}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className={`${styles.search_bar_wrap}`}>
+          <input
+            onChange={(e) => setSearchValue(e.target.value)}
+            className="text-sm"
+            type="text"
+            placeholder="Search Model"
+            value={searchValue}
+          />
+          <IoMdSearch onClick={() => getDataBySearch()} />
+        </div>
+        <div className={styles.icons_box}>
+          <IoRefresh onClick={handleSearchClear} className="" size={25} />
+        </div>
+        <button className={`${styles.bulkdown_button}`} onClick={onDownload}>
+          <FaDownload /> Bulk Download
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const ExtComps = ({
   isTableLoaded,
   setIsTableLoaded,
@@ -289,9 +343,6 @@ const ExtComps = ({
   confBox,
   deleteHandler,
   setConfBox,
-  category,
-  setCategory,
-  categories,
 }) => {
   const [sideMenu, setsideMenu] = useState(false);
   return (
@@ -311,13 +362,13 @@ const ExtComps = ({
           />
         </div>
       )}
-      {(failBox || sucBox ) && (
+      {(failBox || sucBox) && (
         <div className="fixed z-50  top-0 left-0 flex items-center justify-center h-full w-full  bg-black bg-opacity-50">
           <div className={`${styles.err_mod_box} ${getTextColorClass(sucBox)}`}>
             {sucBox ? (
               <IoIosCheckmarkCircle
-              size={90}
-              className={`${getTextColorClass(sucBox)}`}
+                size={90}
+                className={`${getTextColorClass(sucBox)}`}
               />
             ) : (
               <IoIosCloseCircle
@@ -343,7 +394,9 @@ const ExtComps = ({
       )}
       {confBox && (
         <div className="fixed top-0 left-0 z-50 flex  justify-center items-center w-full h-full bg-black bg-opacity-50">
-          <div className={`${styles.err_mod_box}  ${getTextColorClass(sucBox)}`}>
+          <div
+            className={`${styles.err_mod_box}  ${getTextColorClass(sucBox)}`}
+          >
             <h6 className={`${getTextColorClass(sucBox)} `}>Confirmation!</h6>
             <p className="text-slate-500 ">
               {`Do you want to delete store - ${selectedModel} ?`} ?
@@ -368,26 +421,6 @@ const ExtComps = ({
           </div>
         </div>
       )}
-      <div className="m-2 flex  gap-2 items-center w-[100%]">
-        <div className="flex gap-2">
-          <p className="font-medium">Select Category</p>
-          <select
-            className="bg-primary text-white rounded-lg outline-none px-2 py-1"
-            onChange={(e) => setCategory(e.target.value)}
-            value={category}
-          >
-            {categories.map((cat) => (
-              <option
-                className="bg-white text-primary font-medium"
-                key={cat?._id}
-                value={cat?.categoryCode}
-              >
-                {cat?.categoryName}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
     </React.Fragment>
   );
 };
