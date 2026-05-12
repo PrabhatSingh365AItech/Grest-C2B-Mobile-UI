@@ -83,7 +83,7 @@ const fetchQuestionnaireData = async (
   Dispatch,
   answersQuick,
   setAnswersQUICK,
-  dispatch
+  dispatch,
 ) => {
   try {
     const apiUrl = `${
@@ -125,7 +125,7 @@ const fetchQuestionnaireData = async (
 
       groups.forEach((group) => {
         const answers = newAnswers.filter(
-          (question) => question.group === group
+          (question) => question.group === group,
         )
         dispatch(setGroupAnswerss({ group, answers }))
       })
@@ -141,7 +141,7 @@ const fetchUserStores = async (setSelectedStoreId) => {
     const token = sessionStorage.getItem('authToken')
     const response = await axios.get(
       `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/store/findAll`,
-      { headers: { Authorization: token } }
+      { headers: { Authorization: token } },
     )
 
     const storeList = response.data.result || []
@@ -170,10 +170,10 @@ const QuickQuote = () => {
   const Cosmetics = useSelector((state) => state.qnaQuick.Cosmetics)
   const Display = useSelector((state) => state.qnaQuick.Display)
   const FunctionalMajor = useSelector(
-    (state) => state.qnaQuick.Functional_major
+    (state) => state.qnaQuick.Functional_major,
   )
   const FunctionalMinor = useSelector(
-    (state) => state.qnaQuick.Functional_minor
+    (state) => state.qnaQuick.Functional_minor,
   )
   const Warranty = useSelector((state) => state.qnaQuick.Warranty)
   const qnaQuick = useSelector((state) => state.qnaQuick)
@@ -199,7 +199,7 @@ const QuickQuote = () => {
       Dispatch,
       answersQuick,
       setAnswersQUICK,
-      dispatch
+      dispatch,
     )
 
     const token = sessionStorage.getItem('authToken')
@@ -222,13 +222,16 @@ const QuickQuote = () => {
 
     try {
       const token = sessionStorage.getItem('authToken')
+      const LoggedInUser = JSON.parse(sessionStorage.getItem('profile'))
       let id = sessionStorage.getItem('dataModel')
+
       id = JSON.parse(id)
 
       const finalPayload = {
         QNA: qnaQuick,
         phoneNumber: '123456789',
         modelId: id?.models?._id,
+        companyId: LoggedInUser.companyId || null,
         storage: id?.models?.config?.storage,
         ram: id?.models?.config?.RAM,
         aadharNumber: '1234567890',
@@ -241,7 +244,7 @@ const QuickQuote = () => {
           import.meta.env.VITE_REACT_APP_ENDPOINT
         }/api/questionnaires/calculatePrice`,
         finalPayload,
-        { headers: { Authorization: `${token}` } }
+        { headers: { Authorization: `${token}` } },
       )
 
       sessionStorage.setItem('selectedQuickQuoteStoreId', selectedStoreId)
@@ -250,7 +253,7 @@ const QuickQuote = () => {
       sessionStorage.setItem('LeadId', data.data.id)
       sessionStorage.setItem(
         'responsedatadata',
-        JSON.stringify({ ...data.data, bonus: 0 })
+        JSON.stringify({ ...data.data, bonus: 0 }),
       )
       sessionStorage.setItem('ExactQuote', false)
       dispatch(setResponseData({ ...data.data, bonus: 0 }))

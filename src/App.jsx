@@ -61,6 +61,8 @@ import QuoteTrackingDashboard from './pages/QuoteTrackingDashboard'
 import ThankYou from './pages/ThankYou'
 import CreateCoupon from './pages/CreateCoupon'
 import CouponDetails from './pages/CouponDetails'
+import SessionTimeoutWarning from './components/SessionTimeoutWarning'
+import DeleteMyData from './pages/DeleteMyData'
 
 function App() {
   // Setup global axios interceptors on app mount
@@ -222,7 +224,9 @@ function App() {
                 <Route path='/createcoupon' element={<CreateCoupon />}></Route>
                 <Route path='/editcoupon/:id' element={<CreateCoupon />}></Route>
                 <Route path='/coupondetails' element={<CouponDetails />}></Route>
+                <Route path='/delete-my-data' element={<DeleteMyData />}></Route>
               </Routes>
+              <SessionTimeoutWarning />
             </Router>
             <Toaster
               position='top-center'

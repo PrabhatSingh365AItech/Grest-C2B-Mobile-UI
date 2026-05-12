@@ -53,11 +53,19 @@ const extractAccessories = (qna) => {
   return accessories
 }
 
-const buildFinalPayload = (id, qna, profile, warrantyRange, accessories) => ({
+const buildFinalPayload = (
+  id,
+  qna,
+  companyId,
+  profile,
+  warrantyRange,
+  accessories,
+) => ({
   QNA: qna,
   phoneNumber: id?.phoneNumber || '123456789',
   aadharNumber: id?.aadharNumber || '123456789012',
   modelId: id?.models?._id,
+  companyId,
   storage: id?.models?.config?.storage,
   ram: id?.models?.config?.RAM,
   name: id?.customerName || profile?.name,
@@ -66,14 +74,14 @@ const buildFinalPayload = (id, qna, profile, warrantyRange, accessories) => ({
 
 const saveBillData = (finalPayload) => {
   const billData = finalPayload.QNA.Accessories.find(
-    (item) => item.quetion && item.quetion.toLowerCase().includes('bill')
+    (item) => item.quetion && item.quetion.toLowerCase().includes('bill'),
   )
   if (billData) {
     sessionStorage.setItem('billData', JSON.stringify(billData))
   } else {
     sessionStorage.setItem(
       'billData',
-      JSON.stringify(finalPayload.QNA.Cosmetics[6])
+      JSON.stringify(finalPayload.QNA.Cosmetics[6]),
     )
   }
 }
@@ -97,7 +105,7 @@ const calculateAdjustedPrice = (response, warrantyRange, accessories) => {
     devicePrice,
     deviceType,
     warrantyRange,
-    accessories
+    accessories,
   )
 
   sessionStorage.setItem('priceBreakdown', JSON.stringify(priceBreakdown))
@@ -144,7 +152,7 @@ const logQuickQuoteAttempt = async (quoteResult, deviceModel) => {
         import.meta.env.VITE_REACT_APP_ENDPOINT
       }/api/quoteTracking/log-quote-attempt`,
       logPayload,
-      { headers: { Authorization: token } }
+      { headers: { Authorization: token } },
     )
   } catch (error) {
     console.error('Error logging Quick Quote attempt:', error)
@@ -232,17 +240,19 @@ const AboveSix = ({
 
   const handleSubmit = async () => {
     const id = JSON.parse(sessionStorage.getItem('dataModel'))
+    const LoggedInUser = JSON.parse(sessionStorage.getItem('profile'))
     const userToken2 = sessionStorage.getItem('authToken')
+    const companyId = LoggedInUser.companyId || null
     setIsLoading(true)
-
     const warrantyRange = extractWarrantyRange(qna)
     const accessories = extractAccessories(qna)
     const finalPayload = buildFinalPayload(
       id,
       qna,
+      companyId,
       profile,
       warrantyRange,
-      accessories
+      accessories,
     )
 
     saveBillData(finalPayload)
@@ -252,13 +262,13 @@ const AboveSix = ({
         import.meta.env.VITE_REACT_APP_ENDPOINT
       }/api/questionnaires/calculatePrice`,
       finalPayload,
-      { headers: { Authorization: userToken2 } }
+      { headers: { Authorization: userToken2 } },
     )
 
     const adjustedResponse = calculateAdjustedPrice(
       response,
       warrantyRange,
-      accessories
+      accessories,
     )
     await logQuickQuoteAttempt(response.data.data, id)
 

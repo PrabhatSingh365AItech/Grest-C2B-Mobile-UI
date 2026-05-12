@@ -6,6 +6,7 @@ import CustomerImageDetails from "../CustomerImageDetails";
 import CustomerFormDetails from "../CustomerFormDetails";
 import PurchaseReceipt from "../PurchaseReceipt";
 import { fetchSignatureAsBase64 } from "../../utils/fetchSignatureAsBase64";
+import SecureField from "../SecureField";
 
 const getUserName = (val) => {
   if (val?.userId?.firstName) {
@@ -105,7 +106,7 @@ const TableRow = ({ val, index, onDetailsClick, onImageClick, onPDFClick }) => (
       {val?.price}
     </td>
     <td className="p-2 text-sm text-center md:p-3 md:text-base">
-      {val?.documentId?.IMEI}
+      <SecureField value={val?.documentId?.IMEI} type="imei" />
     </td>
     <td className="p-2 text-sm text-center md:p-3 md:text-base">
       {val?.uniqueCode}
@@ -114,10 +115,10 @@ const TableRow = ({ val, index, onDetailsClick, onImageClick, onPDFClick }) => (
       {val?.name}
     </td>
     <td className="p-2 text-sm text-center md:p-3 md:text-base min-w-[160px]">
-      {val?.phoneNumber}
+      <SecureField value={val?.phoneNumber} type="phone" />
     </td>
     <td className="p-2 text-sm text-center md:p-3 md:text-base">
-      {val?.emailId}
+      <SecureField value={val?.emailId} type="email" />
     </td>
     <td className="p-2 text-sm text-center md:p-3 md:text-base">
       <p onClick={() => onDetailsClick(val)} className="cursor-pointer ">
@@ -172,7 +173,7 @@ const LeadsCompletedTable = ({ data }) => {
       year: "numeric",
     });
 
-    const maskInfo = data[index].companyInfo.maskInfo;
+    const maskInfo = data[index]?.companyInfo?.maskInfo;
 
     const signatureUrl = data[index]?.documentId?.signature;
     const signatureBase64 = signatureUrl

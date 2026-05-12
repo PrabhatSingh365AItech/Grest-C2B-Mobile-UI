@@ -1,4 +1,5 @@
 import React from 'react'
+import SecureField from '../SecureField'
 
 const StoreWiseTable = ({ currentPage, tableData }) => {
   const currentDomain = window.location.origin
@@ -59,7 +60,7 @@ const StoreWiseTable = ({ currentPage, tableData }) => {
                     {data.categoryInfo?.categoryName}
                   </td>
                   <td className='p-2 text-sm text-center md:p-3 md:text-base'>
-                    {data.documentId?.IMEI}
+                    <SecureField value={data.documentId?.IMEI} type="imei" />
                   </td>
                   <td className='p-2 text-sm text-center md:p-3 md:text-base'>
                     {data.modelId?.name}

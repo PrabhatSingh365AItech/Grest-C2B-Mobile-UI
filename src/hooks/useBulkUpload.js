@@ -35,7 +35,7 @@ export const useBulkUpload = (isOpen) => {
   }, [isOpen, resetState])
 
   const handlePreview = (inputFile) => {
-    generatePreview(inputFile, setPreviewHeaders, setPreviewData, setError)
+    generatePreview(inputFile, setPreviewHeaders, setPreviewData, setError, 5)
   }
 
   const handleFileChange = (e) => {

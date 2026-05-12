@@ -123,7 +123,7 @@ const EditCompany = ({ companyData, setEditBoxOpen, setEditSuccess }) => {
       .put(
         `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/company/edit`,
         formData,
-        { headers: { Authorization: token } }
+        { headers: { Authorization: token } },
       )
       .then((res) => {
         setIsTableLoading(false)

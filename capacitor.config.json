@@ -32,6 +32,10 @@
     },
     "BarcodeScanner": {
       "cameraDirection": "back"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
     }
   }
 }
