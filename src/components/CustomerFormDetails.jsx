@@ -22,7 +22,7 @@ const CustomerFormDetails = ({ QNAData, closeModal }) => {
       <div className='p-4 rounded-lg bg-[#F5F4F9] shadow-md w-full md:max-w-lg  overflow-y-auto max-h-96 md:max-h-[90%]  relative'>
         <IoCloseOutline
           onClick={closeModal}
-          className='cursor-pointer sticky top-0 left-[700px] text-gray-500 hover:text-gray-700'
+          className='cursor-pointer absolute top-4 right-4 text-gray-500 hover:text-gray-700'
           size={24}
         />
         <h2 className='text-2xl font-semibold mb-4'>Details</h2>

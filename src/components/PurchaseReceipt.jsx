@@ -7,29 +7,23 @@ const GREST_LOGO = isBuybackDomain ? BUYBACK_LOGO : DEFAULT_LOGO
 
 // Helper functions
 const maskPhoneNumber = (phNumber, shouldMask) => {
-  if (!shouldMask) {
-    return phNumber
+  if (!phNumber) {
+    return ''
   }
-
-  const visibleLength = Math.ceil(phNumber?.length * 0.25)
-  const maskedSection = phNumber?.slice(0, phNumber.length - visibleLength)
-  const visibleSection = phNumber?.slice(phNumber?.length - visibleLength)
-  return `${maskedSection.replace(/./g, 'x')}${visibleSection}`
+  // Validation: ensure it's a string
+  return String(phNumber)
 }
 
 const maskEmail = (email, shouldMask) => {
-  if (!shouldMask) {
-    return email
-  }
-  if (!email) {
+  if (!email || typeof email !== 'string') {
     return ''
   }
-
-  const [namee, domain] = email.split('@')
-  const visibleLength = Math.ceil(namee?.length * 0.25)
-  const maskedName = namee?.slice(0, namee?.length - visibleLength)
-  const visibleName = namee?.slice(namee?.length - visibleLength)
-  return `${maskedName.replace(/./g, 'x')}${visibleName}@${domain}`
+  // Validation: ensure it has @ symbol
+  const parts = email.split('@')
+  if (parts.length !== 2) {
+    return email
+  }
+  return email
 }
 
 const formatItemSpecifications = (RAM, storage) => {

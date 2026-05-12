@@ -6,6 +6,7 @@
   width: 100vw;
   height: 100dvh;
   overflow: scroll;
+  z-index: 1000;
 }
 
 .view_btn {

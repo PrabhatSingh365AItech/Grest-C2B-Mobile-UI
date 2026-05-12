@@ -27,6 +27,7 @@ const DevicePickupDashboard = () => {
   const [confMod, setConfMod] = useState(false);
   const [storeName, setStoreName] = useState(userProfile.selStore);
   const [region, setRegion] = useState(userProfile.selRegion);
+  const [currentPage, setCurrentPage] = useState(0);
   const firsttime = useRef(true);
   const isSuperAdmin = LoggedInUser?.role === "Super Admin";
 
@@ -47,13 +48,13 @@ const DevicePickupDashboard = () => {
   const { storeData, regionData, allStore, getStore, setStoreData } =
     useStoreData(token);
 
-  const getDataBySearch = () => {
+  const getDataBySearch = (page = 0) => {
     setIsTableLoaded(true);
     const config = {
       method: "get",
       url: `${
         import.meta.env.VITE_REACT_APP_ENDPOINT
-      }/api/pendingDevices/search?rid=${searchValue}&date=${dateValue}&status=${statusValue}&region=${region}&storeName=${storeName}`,
+      }/api/pendingDevices/search?rid=${searchValue}&date=${dateValue}&status=${statusValue}&region=${region}&storeName=${storeName}&page=${page}&limit=10`,
       headers: { Authorization: token },
     };
     axios
@@ -66,7 +67,7 @@ const DevicePickupDashboard = () => {
         } else {
           setPendingTableData(response.data.data[0]?.documents || []);
           setDevicesPrice(
-            response.data.data[0]?.totalPrices?.toString() || "0"
+            response.data.data[0]?.totalPrices?.toString() || "0",
           );
           setDevicesCount(response.data.data[0]?.count || 0);
         }
@@ -81,13 +82,24 @@ const DevicePickupDashboard = () => {
 
   useEffect(() => {
     if (firsttime.current) {
-      getData();
+      getData(0);
       getStore();
       firsttime.current = false;
     } else {
-      getDataBySearch();
+      setCurrentPage(0);
+      getDataBySearch(0);
     }
   }, [statusValue, dateValue, storeName, region, searchValue]);
+
+  // Fetch new page when currentPage changes (skip on first mount — handled above)
+  const isFirstPageChange = useRef(true);
+  useEffect(() => {
+    if (isFirstPageChange.current) {
+      isFirstPageChange.current = false;
+      return;
+    }
+    getDataBySearch(currentPage);
+  }, [currentPage]);
 
   return (
     <div className="min-h-screen bg-white pb-8">
@@ -164,6 +176,9 @@ const DevicePickupDashboard = () => {
         setSuccessMod={setSuccessMod}
         getData={getData}
         userRole={userRole}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalCount={devicesCount}
       />
     </div>
   );

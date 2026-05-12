@@ -2,14 +2,14 @@ import React, { useState } from 'react'
 import axios from 'axios'
 import ViewPickupTable from '../../../components/ViewPickupTable/ViewPickupTable'
 import UserAdminContent from './UserAdminContent'
+import PaginationControls from './PaginationControls'
+import PickedUpDevicesTableView from './PickedUpDevicesTableView'
 import styles from '../PickedUpDevices.module.css'
 import { StatusReasonModal } from './StatusReasonModal'
 import {
   userRoles,
-  TABLE_CELL_BASE,
   TABLE_CELL_CENTER,
   FLEX_COL_GAP_1,
-  checkOnPkd,
   PendingConf,
   PickConf,
   PickDelivered,
@@ -20,22 +20,7 @@ import {
   OutForPickup,
 } from '../constants'
 import NoDataMessage from '../../../components/NoDataMessage'
-
-const renderTableRow = (val, index, renderActionCell) => (
-  <tr key={index} className={index % 2 === 0 ? 'bg-gray-200' : ''}>
-    {renderActionCell(val)}
-    <td className={TABLE_CELL_CENTER}>{val?.status}</td>
-    <td className={TABLE_CELL_CENTER}>
-      {new Date(val.createdAt).toLocaleDateString('en-GB')}
-    </td>
-    <td className={TABLE_CELL_CENTER}>{val?.uniqueCode || val?._id}</td>
-    <td className={TABLE_CELL_CENTER}>{val?.totalDevice}</td>
-    <td className={TABLE_CELL_CENTER}>{val?.totalAmount}</td>
-    <td className={TABLE_CELL_CENTER}>{val?.remarks || ''}</td>
-    {/* Added Location Data Cell */}
-    <td className={TABLE_CELL_CENTER}>{val?.location || ''}</td>
-  </tr>
-)
+import { getStatusUpdateMessages } from '../utils/statusMessageUtils'
 
 const PickedUpDevicesTable = ({
   data,
@@ -48,14 +33,15 @@ const PickedUpDevicesTable = ({
   setErrorMsg2,
   setSuccessMod,
   setFailMode,
+  currentPage,
+  setCurrentPage,
+  totalCount,
 }) => {
   const LoggedInUser = JSON.parse(sessionStorage.getItem('profile'))
   const userRole = LoggedInUser?.role || ''
   const token2 = sessionStorage.getItem('authToken')
-
   const [showView, setShowView] = useState(false)
   const [viewRef, setViewRef] = useState('')
-
   const [activeModal, setActiveModal] = useState(null)
   const [tempRefId, setTempRefId] = useState('')
   const [tempUniqueCode, setTempUniqueCode] = useState('')
@@ -95,24 +81,13 @@ const PickedUpDevicesTable = ({
       .post(
         `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/pickupDevices/update`,
         { refIDs: [refID], newStatus, reason },
-        { headers: { Authorization: token2 } }
+        { headers: { Authorization: token2 } },
       )
       .then(() => {
-        // Success messages
-        let msg = `Successfully Updated Status to ${newStatus}`
-        let msg1 = `Lot No. :- ${uniqueCode}`
-        let msg2 = checkOnPkd
-
-        if (newStatus === PickConf) {
-          msg = `Pickup Confirmed Successfully, Lot No. ${uniqueCode}`
-          msg1 = `Status Pending for Delivery at Warehouse`
-        } else if (newStatus === PickDelivered) {
-          msg1 = `Pending Admin Approval for Delivery for Lot No. :- ${uniqueCode}`
-          msg2 = 'Check it On History'
-        } else if (newStatus === ApprovDelivery) {
-          msg2 = 'Check it On History'
-        }
-
+        const { msg, msg1, msg2 } = getStatusUpdateMessages(
+          newStatus,
+          uniqueCode,
+        )
         setErrorMsg(msg)
         setErrorMsg1(msg1)
         setErrorMsg2(msg2)
@@ -122,7 +97,7 @@ const PickedUpDevicesTable = ({
       })
       .catch(() => {
         setErrorMsg(
-          `Failed to update the status of lot ${uniqueCode} to ${newStatus}`
+          `Failed to update the status of lot ${uniqueCode} to ${newStatus}`,
         )
         setFailMode(true)
         setIsTableLoaded(false)
@@ -182,7 +157,6 @@ const PickedUpDevicesTable = ({
     </td>
   )
 
-  // Check if there's no data
   const hasData = data && data.length > 0
 
   return (
@@ -197,28 +171,18 @@ const PickedUpDevicesTable = ({
         {!hasData && <NoDataMessage />}
 
         {hasData && (
-          <table className='w-full border border-primary'>
-            <thead className='bg-primary text-white'>
-              <tr>
-                <th className={TABLE_CELL_BASE}>Action</th>
-                <th className={TABLE_CELL_BASE}>Status</th>
-                <th className={TABLE_CELL_BASE}>Date</th>
-                <th className={TABLE_CELL_BASE}>Lot Number</th>
-                <th className={TABLE_CELL_BASE}>Number Of Device</th>
-                <th className={TABLE_CELL_BASE}>Amount</th>
-                <th className={TABLE_CELL_BASE}>Reason</th>
-                <th className={TABLE_CELL_BASE}>Location</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((val, index) =>
-                renderTableRow(val, index, renderActionCell)
-              )}
-            </tbody>
-          </table>
+          <PickedUpDevicesTableView
+            data={data}
+            renderActionCell={renderActionCell}
+          />
         )}
       </div>
 
+      <PaginationControls
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalCount={totalCount}
+      />
       <StatusReasonModal
         statusKey={activeModal}
         isOpen={!!activeModal}

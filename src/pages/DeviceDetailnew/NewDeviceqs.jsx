@@ -112,8 +112,6 @@ const NewDeviceqs = () => {
   const [NDstate, dispatch] = useReducer(qnaReducer, initialState)
   const qna = useSelector((state) => state.qna)
 
-  console.log(profile, 'arijit')
-
   const fetchData = async () => {
     try {
       const apiUrl = `${

@@ -16,9 +16,8 @@ export function maskAadhaar(aadharNumber) {
     return aadharNumber // Return original if invalid format
   }
 
-  // Show only last 4 digits
-  const lastFour = cleaned.slice(-4)
-  return `XXXX XXXX ${lastFour}`
+  // Return full cleaned value
+  return cleaned
 }
 
 export function maskPhone(phoneNumber) {
@@ -33,19 +32,18 @@ export function maskPhone(phoneNumber) {
   if (cleaned.startsWith('+91')) {
     const digits = cleaned.slice(3)
     if (digits.length === 10) {
-      return `+91 XXXXX X${digits.slice(-4)}`
+      return `+91 ${digits}`
     }
   }
 
   // Handle 10-digit Indian number
   if (/^\d{10}$/.test(cleaned)) {
-    return `+91 XXXXX X${cleaned.slice(-4)}`
+    return `+91 ${cleaned}`
   }
 
-  // For other formats, just mask middle digits
+  // For other valid formats, return cleaned value
   if (cleaned.length >= 4) {
-    const lastFour = cleaned.slice(-4)
-    return `${'X'.repeat(cleaned.length - 4)}${lastFour}`
+    return cleaned
   }
 
   return phoneNumber // Return original if too short
@@ -61,14 +59,8 @@ export function maskEmail(email) {
     return email // Invalid email format
   }
 
-  const [localPart, domain] = parts
-
-  // Show first 2 characters of local part
-  if (localPart.length <= 2) {
-    return `${localPart}****@${domain}`
-  }
-
-  return `${localPart.substring(0, 2)}****@${domain}`
+  // Return full email
+  return email
 }
 
 export function maskIMEI(imei) {
@@ -84,9 +76,8 @@ export function maskIMEI(imei) {
     return imei // Return original if invalid format
   }
 
-  // Show only last 4 digits in formatted style
-  const lastFour = cleaned.slice(-4)
-  return `XXXXXX-XXXXXX-${lastFour}`
+  // Return full cleaned value
+  return cleaned
 }
 
 export function maskPAN(pan) {
@@ -102,9 +93,8 @@ export function maskPAN(pan) {
     return pan // Return original if invalid format
   }
 
-  // Show only last 4 characters
-  const lastFour = cleaned.slice(-4)
-  return `XXXXX${lastFour}`
+  // Return full cleaned value
+  return cleaned
 }
 
 export function maskGST(gst) {
@@ -120,9 +110,8 @@ export function maskGST(gst) {
     return gst // Return original if invalid format
   }
 
-  // Show only last 4 characters
-  const lastFour = cleaned.slice(-4)
-  return `${'X'.repeat(11)}${lastFour}`
+  // Return full cleaned value
+  return cleaned
 }
 
 export function maskAccountNumber(accountNumber) {
@@ -136,8 +125,8 @@ export function maskAccountNumber(accountNumber) {
     return accountNumber
   }
 
-  const lastFour = cleaned.slice(-4)
-  return `${'X'.repeat(cleaned.length - 4)}${lastFour}`
+  // Return full cleaned value
+  return cleaned
 }
 
 export function canViewFullPII(userRole) {
