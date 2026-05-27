@@ -64,7 +64,18 @@ const RegisterUserEdit = ({ userData, setEditBoxOpen, setEditSuccess }) => {
 
   const [isGrest, setIsGrest] = useState(userData.grestMember ? "yes" : "no");
   const [isTableLoaded, setIsTableLoaded] = useState(false);
-  const [formData, setFormData] = useState(userData);
+  const [formData, setFormData] = useState(() => {
+    const initialData = { ...userData };
+    // The backend might return assignedStores as [{}] due to aggregation quirks.
+    // We should reconstruct the array of IDs using the populated assignedStoresData.
+    if (initialData.assignedStoresData && Array.isArray(initialData.assignedStoresData)) {
+      initialData.assignedStores = initialData.assignedStoresData.map((store) => store._id);
+    } else {
+      initialData.assignedStores = initialData.assignedStores || [];
+    }
+    initialData.storeId = initialData.storeId || "";
+    return initialData;
+  });
   const [apiMessage, setApiMessage] = useState("");
   const [storeData, setStoreData] = useState([]);
   const [companyData, setCompanyData] = useState([]);
@@ -139,10 +150,19 @@ const RegisterUserEdit = ({ userData, setEditBoxOpen, setEditSuccess }) => {
     const { name, value, type, checked } = e.target;
     const newValue = type === "checkbox" ? checked : value;
 
-    setFormData({
-      ...formData,
-      [name]: newValue,
-    });
+    if (name === "role") {
+      setFormData({
+        ...formData,
+        [name]: newValue,
+        assignedStores: [],
+        storeId: "",
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: newValue,
+      });
+    }
   };
 
   const submitHandler = (event) => {
@@ -174,11 +194,16 @@ const RegisterUserEdit = ({ userData, setEditBoxOpen, setEditSuccess }) => {
       formData.role === USER_ROLES.TECHNICIAN
     ) {
       payload.assignedStores = formData.assignedStores || [];
+      payload.storeId = "";
     } else if (
       formData.role !== USER_ROLES.SUPER_ADMIN &&
       formData.role !== USER_ROLES.COMPANY_ADMIN
     ) {
-      payload.storeId = formData.storeId;
+      payload.storeId = formData.storeId || "";
+      payload.assignedStores = [];
+    } else {
+      payload.storeId = "";
+      payload.assignedStores = [];
     }
 
     const config = {
@@ -384,7 +409,7 @@ const StoreFields = ({
 
   if (showAssignedStores) {
     return (
-      <label className="flex flex-col w-[70%] gap-2">
+      <div className="flex flex-col w-[70%] gap-2">
         <span className="font-medium text-xl">Assigned Stores*</span>
         <div className="relative" ref={dropdownRef}>
           <div
@@ -401,21 +426,20 @@ const StoreFields = ({
             <div className="absolute z-10 w-full mt-1 bg-white border-2 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {storeData.length > 0 ? (
                 storeData.map((store) => (
-                  <div
+                  <label
                     key={store._id}
                     className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => handleStoreToggle(store._id)}
                   >
                     <input
                       type="checkbox"
                       checked={(formData.assignedStores || []).includes(
                         store._id
                       )}
-                      onChange={() => {}}
+                      onChange={() => handleStoreToggle(store._id)}
                       className="cursor-pointer"
                     />
                     <span>{`${store.storeName} - ${store.region}`}</span>
-                  </div>
+                  </label>
                 ))
               ) : (
                 <div className="px-3 py-2 text-gray-500">
@@ -425,7 +449,7 @@ const StoreFields = ({
             </div>
           )}
         </div>
-      </label>
+      </div>
     );
   }
 

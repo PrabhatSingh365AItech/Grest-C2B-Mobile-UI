@@ -149,8 +149,12 @@ const usePickupHistory = () => {
   }
 
   const viewHandler = (refID) => {
-    setViewRef(refID)
-    setShowView(true)
+    if (refID) {
+      setViewRef(refID)
+      setShowView(true)
+    } else {
+      setShowView(false)
+    }
   }
 
   const handleSearch = (e) => {

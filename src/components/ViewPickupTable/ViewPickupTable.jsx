@@ -181,7 +181,7 @@ const ViewPickupTable = ({ refNo, setShowView, fromOutStand = false }) => {
         <p className='font-medium opacity-0'>{'Ref No: ' + refNo}</p>
         <IoClose
           size={25}
-          className='absolute right-3 text-primary transition ease hover:rotate-[360deg] duration-500'
+          className='absolute right-3 top-4 text-primary transition ease hover:rotate-[360deg] duration-500'
           onClick={closeHandler}
         />
       </div>

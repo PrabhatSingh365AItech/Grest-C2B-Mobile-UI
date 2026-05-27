@@ -99,11 +99,11 @@ const AdminManagerMenu = ({
 }) => (
   <div
     className={
-      'menu fixed justify-center left-[-200px] top-0 w-[200px] h-full bg-slate-300 z-50 flex items-center transition-all duration-950 ease-in ' +
+      'menu fixed justify-center left-[-200px] top-0 w-[200px] h-full bg-slate-300 z-50 flex items-start overflow-y-auto transition-all duration-950 ease-in ' +
       (sideMenu && 'left-[0]')
     }
   >
-    <ul className='list-none flex flex-col h-full pl-[6%] pt-[10%] justify-start gap-[2vh]'>
+    <ul className='list-none flex flex-col pl-[6%] pt-[10%] pb-10 justify-start gap-[2vh] w-full'>
       <MenuItem onClick={handleHome}>Home</MenuItem>
       <MenuItem onClick={handleProfile}>Profile</MenuItem>
       <MenuItem onClick={handleRegister}>Register User</MenuItem>
@@ -120,11 +120,11 @@ const AdminManagerMenu = ({
 const TechnicianMenu = ({ sideMenu, handleHome, handleProfile, handleLogout }) => (
   <div
     className={
-      'menu fixed left-[-200px] top-0 w-[200px] h-full bg-slate-300 z-50 flex items-center justify-center transition-all duration-950 ease-in ' +
+      'menu fixed left-[-200px] top-0 w-[200px] h-full bg-slate-300 z-50 flex items-start justify-center overflow-y-auto transition-all duration-950 ease-in ' +
       (sideMenu && 'left-[0]')
     }
   >
-    <ul className='list-none flex flex-col h-full pl-[6%] pt-[10%] justify-start gap-[2vh]'>
+    <ul className='list-none flex flex-col pl-[6%] pt-[10%] pb-10 justify-start gap-[2vh] w-full'>
       <MenuItem onClick={handleHome}>Home</MenuItem>
       <MenuItem onClick={handleProfile}>Profile</MenuItem>
       <MenuItem onClick={handleLogout}>Logout</MenuItem>
@@ -155,11 +155,11 @@ const SuperAdminProfile = ({
   return (
     <div
       className={
-        'menu fixed left-[-200px] top-0 w-[200px] h-full bg-slate-300 z-50 flex items-start justify-center transition-all duration-950 ease-in ' +
+        'menu fixed left-[-200px] top-0 w-[200px] h-full bg-slate-300 z-50 flex items-start justify-center overflow-y-auto transition-all duration-950 ease-in ' +
         (sideMenu && 'left-[0]')
       }
     >
-      <ul className='list-none flex flex-col h-full pl-[6%] pt-[10%] justify-start gap-[2vh]'>
+      <ul className='list-none flex flex-col pl-[6%] pt-[10%] pb-10 justify-start gap-[2vh] w-full'>
         <MenuItem onClick={handleHome}>Home</MenuItem>
         <MenuItem onClick={handleProfile}>Profile</MenuItem>
         {!isCompanyAdmin && <MenuItem onClick={handleGrade}>Grade Pricing</MenuItem>}

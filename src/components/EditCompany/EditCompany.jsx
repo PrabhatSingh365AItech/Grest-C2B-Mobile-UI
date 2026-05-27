@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { BeatLoader } from 'react-spinners'
 import axios from 'axios'
 import { IoClose } from 'react-icons/io5'
+import EmailConfiguration from '../EmailConfiguration/EmailConfiguration'
 
 const LoadingSpinner = ({ isLoading }) => {
   if (!isLoading) {
@@ -73,7 +74,14 @@ const SelectField = ({ label, name, value, onChange, options }) => (
 
 const EditCompany = ({ companyData, setEditBoxOpen, setEditSuccess }) => {
   const [isTableLoading, setIsTableLoading] = useState(false)
-  const [formValues, setFormValues] = useState(companyData)
+  const [formValues, setFormValues] = useState({
+    ...companyData,
+    emailConfiguration: companyData.emailConfiguration || {
+      enabled: false,
+      recipients: [],
+      notificationTypes: ['paymentReceipt']
+    }
+  })
 
   const closeHandler = () => {
     setEditBoxOpen(false)
@@ -113,6 +121,7 @@ const EditCompany = ({ companyData, setEditBoxOpen, setEditSuccess }) => {
     formData.append('remarks', formValues.remarks)
     formData.append('showPrice', formValues.showPrice)
     formData.append('maskInfo', formValues.maskInfo)
+    formData.append('emailConfiguration', JSON.stringify(formValues.emailConfiguration))
     formData.append('id', formValues._id)
     if (formValues.documents && formValues.documents.length > 0) {
       for (let i = 0; i < formValues.documents.length; i++) {
@@ -211,6 +220,12 @@ const EditCompany = ({ companyData, setEditBoxOpen, setEditSuccess }) => {
               onChange={handleChange}
               options={booleanOptions}
             />
+            <div className='w-[70%]'>
+              <EmailConfiguration
+                value={formValues.emailConfiguration}
+                onChange={(config) => setFormValues({ ...formValues, emailConfiguration: config })}
+              />
+            </div>
             <div className='flex flex-col w-[70%] gap-2'>
               <span className='font-medium text-xl'>Attach New Documents</span>
               <input

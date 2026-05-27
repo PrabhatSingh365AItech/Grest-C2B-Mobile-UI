@@ -214,21 +214,20 @@ const MultiStoreDropdown = ({ formData, stores, showStoreDropdown, setShowStoreD
             </div>
           ) : (
             stores.map((store) => (
-              <div
+              <label
                 key={store._id}
-                onClick={() => handleStoreToggle(store._id)}
                 className='p-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2'
               >
                 <input
                   type='checkbox'
                   checked={(formData.assignedStores || []).includes(store._id)}
-                  onChange={() => {}}
+                  onChange={() => handleStoreToggle(store._id)}
                   className='w-4 h-4 cursor-pointer'
                 />
                 <span className='text-base'>
                   {store.storeName} - {store.region}
                 </span>
-              </div>
+              </label>
             ))
           )}
         </div>
@@ -237,9 +236,11 @@ const MultiStoreDropdown = ({ formData, stores, showStoreDropdown, setShowStoreD
     {(formData.assignedStores || []).length === 0 && (
       <input
         type='text'
-        className='hidden'
+        className='opacity-0 absolute w-0 h-0'
         required
         value={(formData.assignedStores || []).length > 0 ? 'valid' : ''}
+        onChange={() => {}}
+        tabIndex={-1}
       />
     )}
   </div>

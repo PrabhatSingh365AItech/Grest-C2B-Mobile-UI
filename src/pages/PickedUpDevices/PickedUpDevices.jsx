@@ -15,6 +15,7 @@ const PickedUpDevices = () => {
   const isSuperAdmin = userRole === "Super Admin";
   const userProfile = useSelector((state) => state.user);
   const [data, setData] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [isTableLoaded, setIsTableLoaded] = useState(false);
   const [dateValue, setDateValue] = useState("");
   const [searchValue, setSearchValue] = useState("");
@@ -30,23 +31,25 @@ const PickedUpDevices = () => {
   const [storeName, setStoreName] = useState(userProfile.selStore);
   const [regionData, setRegionData] = useState([]);
   const [storeData, setStoreData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
   const firsttime = useRef(true);
   const [allStore, setAllStore] = useState([]);
   const [uploadReceiptMod, setUploadReceiptMod] = useState(false);
 
-  const getData = () => {
+  const getData = (page = 0) => {
     setIsTableLoaded(true);
     const configuration = {
       method: "get",
       url: `${
         import.meta.env.VITE_REACT_APP_ENDPOINT
-      }/api/pickupDevices/all?region=${region}&storeName=${storeName}&userRole=${QRole}`,
+      }/api/pickupDevices/all?region=${region}&storeName=${storeName}&userRole=${QRole}&page=${page}&limit=10`,
       headers: { Authorization: token },
     };
     axios
       .request(configuration)
       .then((res) => {
         setData(res.data.data);
+        setTotalCount(res.data.count || 0);
         setIsTableLoaded(false);
       })
       .catch((error) => {
@@ -97,20 +100,21 @@ const PickedUpDevices = () => {
       });
   };
 
-  const getDataBySearch = () => {
+  const getDataBySearch = (page = 0) => {
     setIsTableLoaded(true);
     const configuration = {
       method: "get",
       url: `${
         import.meta.env.VITE_REACT_APP_ENDPOINT
-      }/api/pickupDevices/search?rid=${searchValue}&date=${dateValue}&region=${region}&storeName=${storeName}&userRole=${QRole}`,
+      }/api/pickupDevices/search?rid=${searchValue}&date=${dateValue}&region=${region}&storeName=${storeName}&userRole=${QRole}&page=${page}&limit=10`,
       headers: { Authorization: token },
     };
     axios
       .request(configuration)
       .then((response) => {
-        console.log("pickupdevices-data",response.data.data)
+        console.log("pickupdevices-data", response.data.data);
         setData(response.data.data);
+        setTotalCount(response.data.count || 0);
         setIsTableLoaded(false);
       })
       .catch((error) => {
@@ -124,15 +128,26 @@ const PickedUpDevices = () => {
   // This ensures data and stores are fetched even if filters are empty (All)
   useEffect(() => {
     if (firsttime.current) {
-      getData();
+      getData(0);
       if (isSuperAdmin) {
         getStore();
       }
       firsttime.current = false;
     } else {
-      getDataBySearch();
+      setCurrentPage(0);
+      getDataBySearch(0);
     }
   }, [dateValue, storeName, region, searchValue]);
+
+  // Fetch new page when currentPage changes (skip first mount — handled above)
+  const isFirstPageChange = useRef(true);
+  useEffect(() => {
+    if (isFirstPageChange.current) {
+      isFirstPageChange.current = false;
+      return;
+    }
+    getDataBySearch(currentPage);
+  }, [currentPage]);
 
   const confHandler = (id, uniqueCode) => {
     console.log(id);
@@ -194,6 +209,9 @@ const PickedUpDevices = () => {
         setErrorMsg2={setErrorMsg2}
         setSuccessMod={setSuccessMod}
         setFailMode={setFailMode}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalCount={totalCount}
       />
     </div>
   );

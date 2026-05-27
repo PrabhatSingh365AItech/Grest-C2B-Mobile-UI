@@ -5,6 +5,7 @@ import { AiOutlineFile } from "react-icons/ai";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import EmailConfiguration from "../../components/EmailConfiguration/EmailConfiguration";
 
 // Extracted complex upload logic to a helper function
 const uploadDocumentsToS3 = async (attachedFiles, userToken) => {
@@ -90,6 +91,11 @@ const CompanyListing = () => {
 
   const [showPrice, setShowPrice] = useState(false);
   const [maskInfo, setMaskInfo] = useState(false);
+  const [emailConfiguration, setEmailConfiguration] = useState({
+    enabled: false,
+    recipients: [],
+    notificationTypes: ['paymentReceipt']
+  });
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [generatedCompanyCode, setGeneratedCompanyCode] = useState("");
@@ -120,6 +126,7 @@ const CompanyListing = () => {
         remarks: remarks,
         showPrice: showPrice, // Added to payload
         maskInfo: maskInfo, // Added to payload
+        emailConfiguration: emailConfiguration, // Added email configuration
         attachedDocuments: uploadedDocuments,
       };
 
@@ -164,6 +171,7 @@ const CompanyListing = () => {
     remarks,
     showPrice,
     maskInfo,
+    emailConfiguration,
     attachedFiles,
   };
 
@@ -176,6 +184,7 @@ const CompanyListing = () => {
     setRemarks,
     setShowPrice,
     setMaskInfo,
+    setEmailConfiguration,
   };
 
   return (
@@ -252,6 +261,7 @@ const CompanyListingForm = ({
     remarks,
     showPrice,
     maskInfo,
+    emailConfiguration,
     attachedFiles,
   } = formData;
 
@@ -264,6 +274,7 @@ const CompanyListingForm = ({
     setRemarks,
     setShowPrice,
     setMaskInfo,
+    setEmailConfiguration,
   } = setters;
 
   return (
@@ -306,6 +317,13 @@ const CompanyListingForm = ({
           <option value="true">True</option>
           <option value="false">False</option>
         </select>
+      </div>
+
+      <div className="w-[70%]">
+        <EmailConfiguration
+          value={emailConfiguration}
+          onChange={setEmailConfiguration}
+        />
       </div>
 
       <div className="flex flex-col w-[70%] gap-2">
