@@ -14,6 +14,9 @@ const PriceFormFields = ({
   handleFileChange,
   handleCameraButtonClick,
   uploadIndividualFile,
+  imei2,
+  setImei2,
+  onImeiVerificationComplete,
 }) => {
   const {
     file,
@@ -34,12 +37,12 @@ const PriceFormFields = ({
     setPhoneLeft,
     phoneRight,
     setPhoneRight,
-    signatureFile, // new signature state
-    setSignatureFile, // <-- new signature state set function
+    signatureFile,
+    setSignatureFile,
     customerPhoto,
     setCustomerPhoto,
-    ceirImage, // new CEIR image state
-    setCeirImage, // <-- new CEIR image state set function
+    ceirImage,
+    setCeirImage,
     aadharNumber,
     setAadharNumber,
     imeinumber,
@@ -67,6 +70,9 @@ const PriceFormFields = ({
         setImeiNumber={setImeiNumber}
         imeinumber={imeinumber}
         prod={prod}
+        imei2={imei2}
+        setImei2={setImei2}
+        onImeiVerificationComplete={onImeiVerificationComplete}
       />
       <AadharNumberField
         setAadharNumber={setAadharNumber}
@@ -132,7 +138,6 @@ const PriceFormFields = ({
         prod={prod}
         uploadStatus={uploadStatus}
       />
-      {/* Added New Signature Filed */}
       <DigitalSignatureField
         signatureFile={signatureFile}
         setSignatureFile={setSignatureFile}
@@ -141,15 +146,15 @@ const PriceFormFields = ({
         imeinumber={imeinumber}
         prod={prod}
       />
-      {/* 7. Customer Photo Field */}
       <CustomerPhotoField
-        handleChange={handleFileChange}
-        setCustomerPhoto={setCustomerPhoto}
-        handleCameraButtonClick={handleCameraButtonClick}
-        customerPhotoRef={customerPhotoRef}
         customerPhoto={customerPhoto}
+        setCustomerPhoto={setCustomerPhoto}
         uploadStatus={uploadStatus}
+        uploadIndividualFile={uploadIndividualFile}
+        imeinumber={imeinumber}
         prod={prod}
+        fileInputRef={customerPhotoRef}
+        handleCameraButtonClick={handleCameraButtonClick}
       />
     </div>
   )
