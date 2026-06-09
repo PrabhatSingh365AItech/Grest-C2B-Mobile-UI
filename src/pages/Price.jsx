@@ -36,24 +36,29 @@ const Price = () => {
     ceirImage,
     isAadharVerified,
     handleCameraButtonClick,
+    prod,
   } = formState
+
+  const isMobile = prod?.[0]?.categoryCode === 'CTG1'
 
   const [imei2, setImei2] = useState('')
   const [imeiVerificationResult, setImeiVerificationResult] = useState(null)
 
   const isImeiBlocked =
+    isMobile &&
     imeiVerificationResult &&
     (imeiVerificationResult.imei1Status === IVS_STATUS.BLOCKED ||
       imeiVerificationResult.imei1Status === IVS_STATUS.STOLEN)
 
   const imeiVerified =
-    imeiVerificationResult &&
-    (imeiVerificationResult.allowTransaction ||
-      imeiVerificationResult.imei1Status === IVS_STATUS.UNKNOWN ||
-      imeiVerificationResult.imei1Status === IVS_STATUS.ERROR)
+    !isMobile ||
+    (imeiVerificationResult &&
+      (imeiVerificationResult.allowTransaction ||
+        imeiVerificationResult.imei1Status === IVS_STATUS.UNKNOWN ||
+        imeiVerificationResult.imei1Status === IVS_STATUS.ERROR))
 
   const canSubmit =
-    imeinumber &&
+    (isMobile ? imeinumber : true) &&
     phoneFront &&
     phoneBack &&
     phoneLeft &&
@@ -62,8 +67,8 @@ const Price = () => {
     phoneBottom &&
     signatureFile &&
     customerPhoto &&
-    ceirImage &&
-    isAadharVerified &&
+    ceirImage
+    && isAadharVerified &&
     imeiVerified &&
     !isImeiBlocked
 
@@ -103,7 +108,7 @@ const Price = () => {
             Please verify your Aadhar number before submitting
           </p>
         )}
-        {isImeiBlocked && (
+        {isMobile && isImeiBlocked && (
           <p className='text-sm text-center text-red-500'>
             This device IMEI is reported as{' '}
             {imeiVerificationResult.imei1Status === IVS_STATUS.BLOCKED
@@ -112,7 +117,7 @@ const Price = () => {
             . Transaction cannot proceed.
           </p>
         )}
-        {imeinumber && !imeiVerificationResult && (
+        {isMobile && imeinumber && !imeiVerificationResult && (
           <p className='text-sm text-center text-amber-500'>
             Please verify IMEI with Sanchar Saathi before submitting
           </p>

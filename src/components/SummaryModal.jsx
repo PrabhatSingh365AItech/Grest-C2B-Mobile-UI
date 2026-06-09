@@ -1,6 +1,7 @@
 import React from "react";
 import { IoCloseCircle } from "react-icons/io5";
-const SummaryModal = ({ show, onClose, price, bonus, sellingPrice }) => {
+const SummaryModal = ({ show, onClose, price, bonus, sellingPrice,  conversionFee }) => {
+  const total = Number(sellingPrice) - Number(conversionFee)
   return (
     <div
       className={`fixed bg-white rounded-l-3xl rounded-r-3xl bottom-0 left-0 w-full p-4 transition-all 
@@ -30,13 +31,21 @@ const SummaryModal = ({ show, onClose, price, bonus, sellingPrice }) => {
                 <p className="line-through">₹100</p>
               </div>
             </div>
+            {Number(conversionFee) > 0 && (
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-1">
+                  <p>Authentication Fee</p>
+                </div>
+                <p className="text-red-500">-₹{conversionFee}</p>
+              </div>
+            )}
             <div className="flex justify-between">
               <p>Extra Bonus</p>
               <p>+₹{bonus}</p>
             </div>
             <div className="flex justify-between text-lg font-semibold">
               <p>Total Amount</p>
-              <p>{sellingPrice}</p>
+              <p>₹{total}</p>
             </div>
           </div>
         </div>

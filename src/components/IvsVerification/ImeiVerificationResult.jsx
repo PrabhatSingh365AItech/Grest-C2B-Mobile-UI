@@ -1,9 +1,5 @@
 import React, { useState } from 'react'
-import {
-  verifyIMEI,
-  IVS_STATUS,
-  STATUS_CONFIG,
-} from '../../services/ivsService'
+import { verifyIMEI, IVS_STATUS, STATUS_CONFIG } from '../../services/ivsService'
 import { CgSpinner } from 'react-icons/cg'
 
 const ImeiVerificationResult = ({
@@ -59,24 +55,20 @@ const ImeiVerificationResult = ({
         onVerificationComplete(verificationResult)
       }
     } catch (err) {
-      const isTimeout =
-        err.code === 'ECONNABORTED' || err.message?.includes('timeout')
+      const isTimeout = err.code === 'ECONNABORTED' || err.message?.includes('timeout')
       if (isTimeout) {
         const fallbackResult = {
           imei1Status: IVS_STATUS.ERROR,
           imei2Status: null,
           allowTransaction: false,
-          message:
-            'IMEI verification timed out after 30 seconds. Use supervisor override to proceed.',
+          message: 'IMEI verification timed out after 30 seconds. Use supervisor override to proceed.',
           referenceId: `TMOUT-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
           verifiedAt: new Date().toISOString(),
         }
         setResult(fallbackResult)
         if (onVerificationComplete) onVerificationComplete(fallbackResult)
       } else {
-        setError(
-          err.response?.data?.message || err.message || 'Verification failed',
-        )
+        setError(err.response?.data?.message || err.message || 'Verification failed')
       }
     } finally {
       setIsVerifying(false)
@@ -106,7 +98,8 @@ const ImeiVerificationResult = ({
     )
   }
 
-  const canProceed = result?.allowTransaction || overrideMode
+  const canProceed =
+    result?.allowTransaction || overrideMode
 
   return (
     <div className='w-full'>
@@ -117,8 +110,8 @@ const ImeiVerificationResult = ({
           isVerifying || !imei1
             ? 'bg-gray-400 cursor-not-allowed'
             : result
-              ? 'bg-green-600 hover:bg-green-700'
-              : 'bg-primary hover:bg-primary-dark'
+            ? 'bg-green-600 hover:bg-green-700'
+            : 'bg-primary hover:bg-primary-dark'
         }`}
       >
         {isVerifying ? (
@@ -133,7 +126,9 @@ const ImeiVerificationResult = ({
         )}
       </button>
 
-      {error && <p className='mt-2 text-sm text-red-600'>{error}</p>}
+      {error && (
+        <p className='mt-2 text-sm text-red-600'>{error}</p>
+      )}
 
       {result && (
         <div className='mt-4 p-4 border rounded-lg bg-gray-50'>
@@ -170,13 +165,17 @@ const ImeiVerificationResult = ({
             <span>Convenience fee for device verification is Rs10</span>
           </div>
 
+          
+
           {needsSupervisorOverride && !overrideMode && (
             <div className='mt-4'>
               <button
                 onClick={() => setShowOverride(!showOverride)}
                 className='text-sm text-amber-600 underline hover:text-amber-800'
               >
-                {showOverride ? 'Cancel' : 'Supervisor override available'}
+                {showOverride
+                  ? 'Cancel'
+                  : 'Supervisor override available'}
               </button>
 
               {showOverride && (

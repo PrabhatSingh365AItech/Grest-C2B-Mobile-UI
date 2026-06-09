@@ -147,11 +147,10 @@ const PriceFormFields = ({
         prod={prod}
       />
       <CustomerPhotoField
+        handleChange={handleFileChange}
         customerPhoto={customerPhoto}
         setCustomerPhoto={setCustomerPhoto}
         uploadStatus={uploadStatus}
-        uploadIndividualFile={uploadIndividualFile}
-        imeinumber={imeinumber}
         prod={prod}
         fileInputRef={customerPhotoRef}
         handleCameraButtonClick={handleCameraButtonClick}

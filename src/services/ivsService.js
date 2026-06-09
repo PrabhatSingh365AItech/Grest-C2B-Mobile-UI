@@ -58,14 +58,7 @@ export const STATUS_CONFIG = {
   },
 }
 
-export async function verifyIMEI({
-  imei1,
-  imei2,
-  deviceModel,
-  storeId,
-  agentId,
-  leadId,
-}) {
+export async function verifyIMEI({ imei1, imei2, deviceModel, storeId, agentId, leadId }) {
   const token = sessionStorage.getItem('authToken')
   if (!token) {
     throw new Error('Authentication token not found')
@@ -95,3 +88,4 @@ export async function verifyIMEI({
 
   return response.data?.data
 }
+

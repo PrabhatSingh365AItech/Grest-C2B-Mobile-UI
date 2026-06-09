@@ -8,6 +8,7 @@ const responseSlice = createSlice({
     grade: "",
     uniqueCode: "",
     bonus: 0,
+    conversionFee: 10,
     name: "",
     email: "",
     phone: "",
@@ -15,12 +16,13 @@ const responseSlice = createSlice({
 
   reducers: {
     setResponseData: (state, action) => {
-      const { id, price, grade, uniqueCode, bonus } = action.payload;
+      const { id, price, grade, uniqueCode, bonus, conversionFee } = action.payload;
       state.id = id;
       state.price = price;
       state.grade = grade;
       state.uniqueCode = uniqueCode;
       state.bonus = bonus;
+      state.conversionFee = conversionFee ?? 10;
     },
     setLeadOTPData: (state, action) => {
       const { name, email, phone } = action.payload;
