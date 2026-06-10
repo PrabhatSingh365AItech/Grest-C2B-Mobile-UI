@@ -160,10 +160,6 @@ const ImeiVerificationResult = ({
             {result.message}
           </div>
 
-          <div className='mt-2 flex items-center gap-1 text-sm text-gray-700'>
-            <span className='text-red-500 font-bold'>*</span>
-            <span>Authentication fee for device verification is Rs10</span>
-          </div>
 
           
 
