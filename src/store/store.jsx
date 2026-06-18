@@ -22,4 +22,10 @@ const store = configureStore({
   reducer: rootReducer,
 });
 
+store.subscribe(() => {
+  const { otpVerified } = store.getState().otpVerification;
+  localStorage.setItem("otpVerified", JSON.stringify(otpVerified));
+  console.log(`[store.subscribe] otpVerified = ${otpVerified} → localStorage`);
+});
+
 export default store;

@@ -1,13 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+const savedState = localStorage.getItem("otpVerified");
+const initialOtpVerified = savedState ? JSON.parse(savedState) : false;
+console.log(`[otpSlice] INIT: localStorage("otpVerified") = ${savedState}, initialOtpVerified = ${initialOtpVerified}`);
+
 const otpSlice = createSlice({
   name: "otpVerification",
   initialState: {
-    otpVerified: false,
+    otpVerified: initialOtpVerified,
   },
 
   reducers: {
     setOtpVerified: (state, action) => {
+      console.log(`[otpSlice] setOtpVerified: ${state.otpVerified} → ${action.payload}`);
       state.otpVerified = action.payload;
     },
   },
