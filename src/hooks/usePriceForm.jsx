@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Camera } from '@capacitor/camera'
+import { dataURLtoFile } from '../utils/fileUtils'
 
 export const usePriceForm = () => {
   // Form state
@@ -15,9 +16,9 @@ export const usePriceForm = () => {
   const [signatureFile, setSignatureFile] = useState(null) // Added new signature file state
   const [customerPhoto, setCustomerPhoto] = useState(null) // Added new customer photo
   const [ceirImage, setCeirImage] = useState(null) // Added new CEIR image state
-  const [aadharNumber, setAadharNumber] = useState('')
-  const [isAadharVerified, setIsAadharVerified] = useState(false) // Aadhar verification status
-  const [imeinumber, setImeiNumber] = useState('')
+  const [aadharNumber, setAadharNumber] = useState(() => localStorage.getItem('price_aadharNumber') || '')
+  const [isAadharVerified, setIsAadharVerified] = useState(() => localStorage.getItem('price_isAadharVerified') === 'true')
+  const [imeinumber, setImeiNumber] = useState(() => localStorage.getItem('price_imeinumber') || '')
   const [isLoading, setIsLoading] = useState(false)
   const [isBillRequired, setIsBillRequired] = useState(false)
 
@@ -46,6 +47,33 @@ export const usePriceForm = () => {
     const billData = JSON.parse(sessionStorage.getItem('billData'))
     if (billData && billData?.selected[0] === false) {
       setIsBillRequired(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('price_aadharNumber', aadharNumber)
+  }, [aadharNumber])
+
+  useEffect(() => {
+    localStorage.setItem('price_isAadharVerified', isAadharVerified.toString())
+  }, [isAadharVerified])
+
+  useEffect(() => {
+    localStorage.setItem('price_imeinumber', imeinumber)
+  }, [imeinumber])
+
+  // Restore signature base64 from sessionStorage on mount
+  useEffect(() => {
+    const savedSigBase64 = sessionStorage.getItem('signatureBase64')
+    if (savedSigBase64 && !signatureFile) {
+      try {
+        const fileObj = dataURLtoFile(savedSigBase64, 'signature.png')
+        if (fileObj) {
+          setSignatureFile(fileObj)
+        }
+      } catch (e) {
+        console.error('Failed to restore signature file from base64:', e)
+      }
     }
   }, [])
 

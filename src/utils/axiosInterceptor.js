@@ -114,7 +114,7 @@ const handleResponseError = (error) => {
 
 // Request interceptor
 const handleRequest = (config) => {
-  const token = sessionStorage.getItem('authToken')
+  const token = sessionStorage.getItem('authToken') || localStorage.getItem('authToken')
   if (token) {
     config.headers.Authorization = token
   }

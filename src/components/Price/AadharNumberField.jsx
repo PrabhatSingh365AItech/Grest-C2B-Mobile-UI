@@ -16,11 +16,17 @@ const AadharNumberField = ({
   const [error, setError] = useState(true)
   const [isSendingOtp, setIsSendingOtp] = useState(false)
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
-  const [aadhaarConsent, setAadhaarConsent] = useState(false)
+  const [aadhaarConsent, setAadhaarConsent] = useState(() => {
+    return localStorage.getItem('price_isAadharVerified') === 'true' || localStorage.getItem('price_aadhaarConsent') === 'true'
+  })
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [clientId, setClientId] = useState('')
   const pink = 'bg-primary'
+
+  useEffect(() => {
+    localStorage.setItem('price_aadhaarConsent', aadhaarConsent.toString())
+  }, [aadhaarConsent])
 
   useEffect(() => {
     if (aadharNumber) {
@@ -226,6 +232,7 @@ const AadharNumberField = ({
           consentType='aadhaar_collection'
           onConsentChange={setAadhaarConsent}
           required={true}
+          initialValue={aadhaarConsent}
         />
       </div>
     </div>

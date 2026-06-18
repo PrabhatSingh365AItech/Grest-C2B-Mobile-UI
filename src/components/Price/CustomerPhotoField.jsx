@@ -40,19 +40,19 @@ const CustomerPhotoField = ({
             ref={fileInputRef}
           />
           <button onClick={() => handleCameraButtonClick(fileInputRef)}>
-            {!customerPhoto ? (
-              <FaCamera className='text-3xl text-gray-500' />
-            ) : (
+            {customerPhoto || uploadStatus.customerPhoto?.url ? (
               <div className='relative'>
                 <img
-                  className='w-full h-[60px]'
-                  src={URL.createObjectURL(customerPhoto)}
+                  className='w-full h-[60px] object-cover'
+                  src={customerPhoto ? URL.createObjectURL(customerPhoto) : uploadStatus.customerPhoto.url}
                   alt='Uploaded file'
                 />
-                <div className='absolute top-1 right-1'>
+                <div className='absolute top-1 right-1 bg-white rounded-full p-0.5 shadow'>
                   {getStatusIcon(uploadStatus.customerPhoto?.status)}
                 </div>
               </div>
+            ) : (
+              <FaCamera className='text-3xl text-gray-500' />
             )}
           </button>
         </div>

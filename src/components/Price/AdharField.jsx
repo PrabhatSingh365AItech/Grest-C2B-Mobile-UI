@@ -39,19 +39,19 @@ const AdharField = ({
             ref={fileInputRef}
           />
           <button onClick={() => handleCameraButtonClick(fileInputRef)}>
-            {!file ? (
-              <FaCamera className='text-3xl text-gray-500' />
-            ) : (
+            {file || uploadStatus.adhaarFront?.url ? (
               <div className='relative'>
                 <img
-                  className='w-full h-[60px]'
-                  src={URL.createObjectURL(file)}
+                  className='w-full h-[60px] object-cover'
+                  src={file ? URL.createObjectURL(file) : uploadStatus.adhaarFront.url}
                   alt='Uploaded file'
                 />
-                <div className='absolute top-1 right-1'>
+                <div className='absolute top-1 right-1 bg-white rounded-full p-0.5 shadow'>
                   {getStatusIcon(uploadStatus.adhaarFront?.status)}
                 </div>
               </div>
+            ) : (
+              <FaCamera className='text-3xl text-gray-500' />
             )}
           </button>
         </div>
@@ -67,19 +67,19 @@ const AdharField = ({
             ref={idproofBackRef}
           />
           <button onClick={() => handleCameraButtonClick(idproofBackRef)}>
-            {!idProofBack ? (
-              <FaCamera className='text-3xl text-gray-500' />
-            ) : (
+            {idProofBack || uploadStatus.adhaarBack?.url ? (
               <div className='relative'>
                 <img
-                  className='w-full h-[60px]'
-                  src={URL.createObjectURL(idProofBack)}
+                  className='w-full h-[60px] object-cover'
+                  src={idProofBack ? URL.createObjectURL(idProofBack) : uploadStatus.adhaarBack.url}
                   alt='Uploaded file'
                 />
-                <div className='absolute top-1 right-1'>
+                <div className='absolute top-1 right-1 bg-white rounded-full p-0.5 shadow'>
                   {getStatusIcon(uploadStatus.adhaarBack?.status)}
                 </div>
               </div>
+            ) : (
+              <FaCamera className='text-3xl text-gray-500' />
             )}
           </button>
         </div>

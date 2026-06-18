@@ -14,6 +14,7 @@ const otpSlice = createSlice({
     setOtpVerified: (state, action) => {
       console.log(`[otpSlice] setOtpVerified: ${state.otpVerified} → ${action.payload}`);
       state.otpVerified = action.payload;
+      localStorage.setItem("otpVerified", JSON.stringify(action.payload));
     },
   },
 });

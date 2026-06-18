@@ -25,19 +25,19 @@ const PhotoUploadBox = ({
         ref={fileRef}
       />
       <button onClick={() => handleCameraButtonClick(fileRef)}>
-        {!file ? (
-          <FaCamera className='text-3xl text-gray-500' />
-        ) : (
+        {file || uploadStatus[statusKey]?.url ? (
           <div className='relative'>
             <img
-              src={URL.createObjectURL(file)}
-              className='h-[60px] w-full'
+              className='w-full h-[60px] object-cover'
+              src={file ? URL.createObjectURL(file) : uploadStatus[statusKey].url}
               alt='Uploaded file'
             />
-            <div className='absolute top-1 right-1'>
+            <div className='absolute top-1 right-1 bg-white rounded-full p-0.5 shadow'>
               {getStatusIcon(uploadStatus[statusKey]?.status)}
             </div>
           </div>
+        ) : (
+          <FaCamera className='text-3xl text-gray-500' />
         )}
       </button>
     </div>

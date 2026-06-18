@@ -3,7 +3,7 @@ import { validateFormData, getRequiredFiles, getFailedUploads } from '../utils/v
 import { submitFormData } from '../utils/formSubmissionUtils'
 import { retryFailedUploads } from '../utils/retryUtils'
 import toast from 'react-hot-toast'
-import { FILE_KEYS } from '../constants/priceConstants'
+import { FILE_KEYS, UPLOAD_STATUS } from '../constants/priceConstants'
 
 export const usePriceUpload = (formState) => {
   const {
@@ -38,16 +38,16 @@ export const usePriceUpload = (formState) => {
     const formData = {
       aadharNumber,
       imeinumber,
-      phoneFront,
-      phoneBack,
-      phoneLeft,
-      phoneRight,
-      phoneTop,
-      phoneBottom,
-      phoneBill,
+      phoneFront: phoneFront || uploadStatus[FILE_KEYS.PHONE_FRONT]?.status === UPLOAD_STATUS.SUCCESS,
+      phoneBack: phoneBack || uploadStatus[FILE_KEYS.PHONE_BACK]?.status === UPLOAD_STATUS.SUCCESS,
+      phoneLeft: phoneLeft || uploadStatus[FILE_KEYS.PHONE_LEFT]?.status === UPLOAD_STATUS.SUCCESS,
+      phoneRight: phoneRight || uploadStatus[FILE_KEYS.PHONE_RIGHT]?.status === UPLOAD_STATUS.SUCCESS,
+      phoneTop: phoneTop || uploadStatus[FILE_KEYS.PHONE_TOP]?.status === UPLOAD_STATUS.SUCCESS,
+      phoneBottom: phoneBottom || uploadStatus[FILE_KEYS.PHONE_BOTTOM]?.status === UPLOAD_STATUS.SUCCESS,
+      phoneBill: phoneBill || uploadStatus[FILE_KEYS.PHONE_BILL]?.status === UPLOAD_STATUS.SUCCESS,
       isBillRequired,
-      signatureFile, // add signature state to validation
-      ceirImage, // add CEIR image state to validation
+      signatureFile: signatureFile || uploadStatus[FILE_KEYS.SIGNATURE]?.status === UPLOAD_STATUS.SUCCESS, // add signature state to validation
+      ceirImage: ceirImage || uploadStatus[FILE_KEYS.CEIR]?.status === UPLOAD_STATUS.SUCCESS, // add CEIR image state to validation
     }
 
     if (!validateFormData(formData)) {
@@ -117,7 +117,15 @@ export const usePriceUpload = (formState) => {
       aadharNumber
     }
 
-    await submitFormData(submissionData, token, navigate)
+    const success = await submitFormData(submissionData, token, navigate)
+    if (success) {
+      localStorage.removeItem('price_aadharNumber')
+      localStorage.removeItem('price_isAadharVerified')
+      localStorage.removeItem('price_imeinumber')
+      localStorage.removeItem('price_uploadStatus')
+      localStorage.removeItem('signatureBase64')
+      localStorage.removeItem('price_aadhaarConsent')
+    }
     setIsLoading(false)
   }
 

@@ -42,19 +42,19 @@ const PhoneBill = ({
             ref={phoneBillRef}
           />
           <button onClick={() => handleCameraButtonClick(phoneBillRef)}>
-            {!phoneBill ? (
-              <FaCamera className='text-3xl text-gray-500' />
-            ) : (
+            {phoneBill || uploadStatus.phoneBill?.url ? (
               <div className='relative'>
                 <img
-                  className='w-full h-[60px]'
-                  src={URL.createObjectURL(phoneBill)}
+                  className='w-full h-[60px] object-cover'
+                  src={phoneBill ? URL.createObjectURL(phoneBill) : uploadStatus.phoneBill.url}
                   alt='Uploaded file'
                 />
-                <div className='absolute top-1 right-1'>
+                <div className='absolute top-1 right-1 bg-white rounded-full p-0.5 shadow'>
                   {getStatusIcon(uploadStatus.phoneBill?.status)}
                 </div>
               </div>
+            ) : (
+              <FaCamera className='text-3xl text-gray-500' />
             )}
           </button>
         </div>

@@ -1,24 +1,40 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { FILE_KEYS, UPLOAD_STATUS } from '../constants/priceConstants'
 import { fileUploader } from '../utils/priceUtils.jsx'
 import imageCompression from 'browser-image-compression'
 
 export const useFileUpload = (token, imeinumber) => {
-  const [uploadStatus, setUploadStatus] = useState({
-    [FILE_KEYS.ADHAAR_FRONT]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
-    [FILE_KEYS.ADHAAR_BACK]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
-    [FILE_KEYS.PHONE_BILL]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
-    [FILE_KEYS.PHONE_FRONT]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
-    [FILE_KEYS.PHONE_BACK]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
-    [FILE_KEYS.PHONE_LEFT]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
-    [FILE_KEYS.PHONE_RIGHT]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
-    [FILE_KEYS.PHONE_TOP]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
-    [FILE_KEYS.PHONE_BOTTOM]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
-    [FILE_KEYS.SIGNATURE]: { status: UPLOAD_STATUS.PENDING, progress: 0 }, // <-- Added new signature
-    [FILE_KEYS.CUSTOMER_PHOTO]: { status: UPLOAD_STATUS.PENDING, progress: 0 }, // <-- Added customer photo
-    [FILE_KEYS.CEIR]: { status: UPLOAD_STATUS.PENDING, progress: 0 }, // <-- Added new CEIR
-  })
+  const getInitialUploadStatus = () => {
+    const saved = localStorage.getItem('price_uploadStatus')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch (e) {
+        console.error('Failed to parse saved uploadStatus:', e)
+      }
+    }
+    return {
+      [FILE_KEYS.ADHAAR_FRONT]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
+      [FILE_KEYS.ADHAAR_BACK]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
+      [FILE_KEYS.PHONE_BILL]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
+      [FILE_KEYS.PHONE_FRONT]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
+      [FILE_KEYS.PHONE_BACK]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
+      [FILE_KEYS.PHONE_LEFT]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
+      [FILE_KEYS.PHONE_RIGHT]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
+      [FILE_KEYS.PHONE_TOP]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
+      [FILE_KEYS.PHONE_BOTTOM]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
+      [FILE_KEYS.SIGNATURE]: { status: UPLOAD_STATUS.PENDING, progress: 0 }, // <-- Added new signature
+      [FILE_KEYS.CUSTOMER_PHOTO]: { status: UPLOAD_STATUS.PENDING, progress: 0 }, // <-- Added customer photo
+      [FILE_KEYS.CEIR]: { status: UPLOAD_STATUS.PENDING, progress: 0 }, // <-- Added new CEIR
+    }
+  }
+
+  const [uploadStatus, setUploadStatus] = useState(getInitialUploadStatus)
+
+  useEffect(() => {
+    localStorage.setItem('price_uploadStatus', JSON.stringify(uploadStatus))
+  }, [uploadStatus])
 
   const uploadIndividualFile = async (
     fileToUpload,
@@ -86,12 +102,12 @@ export const useFileUpload = (token, imeinumber) => {
       }
 
       const fullFileName = `${imeinumber}-${fileName}`
-      await fileUploader(token, fileToProcess, fullFileName, finalFileType)
+      const fileUrl = await fileUploader(token, fileToProcess, fullFileName, finalFileType)
 
       // Update status to success
       setUploadStatus((prev) => ({
         ...prev,
-        [fileKey]: { status: UPLOAD_STATUS.SUCCESS, progress: 100 },
+        [fileKey]: { status: UPLOAD_STATUS.SUCCESS, progress: 100, url: fileUrl },
       }))
 
       console.log(`${fileName} uploaded successfully!`)
