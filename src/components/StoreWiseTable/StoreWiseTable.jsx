@@ -26,6 +26,9 @@ const StoreWiseTable = ({ currentPage, tableData }) => {
               <th className='p-2 text-sm  '>Company</th>
               <th className='p-2 text-sm  '>Grade</th>
               <th className='p-2 text-sm  '>Price</th>
+              <th className='p-2 text-sm  '>Negotiation Amt</th>
+              <th className='p-2 text-sm  '>Coupon Amt</th>
+              <th className='p-2 text-sm  '>Bonus Amt</th>
               <th className='p-2 text-sm  '>Price Offered to Customer</th>
               <th className='p-2 text-sm  '>Unique ID</th>
               <th className='p-2 text-sm  '>{WEBSITE_SHORT_NAME} Received</th>
@@ -78,7 +81,16 @@ const StoreWiseTable = ({ currentPage, tableData }) => {
                     {data.actualPrice}
                   </td>
                   <td className='p-2 text-sm text-center md:p-3 md:text-base'>
-                    {data.price}
+                    {data.negotiatedAmount ?? 0}
+                  </td>
+                  <td className='p-2 text-sm text-center md:p-3 md:text-base'>
+                    {data.couponDiscount ?? 0}
+                  </td>
+                  <td className='p-2 text-sm text-center md:p-3 md:text-base'>
+                    {data.slabApplied ? data.slabBonusAmount : 0}
+                  </td>
+                  <td className='p-2 text-sm text-center md:p-3 md:text-base'>
+                    {data.finalPrice ?? data.price}
                   </td>
                   <td className='p-2 text-sm text-center md:p-3 md:text-base'>
                     {data.uniqueCode}

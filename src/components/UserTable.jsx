@@ -58,6 +58,9 @@ const UserTable = ({ data }) => {
             <th className="p-2 text-sm md:p-3 md:text-base">Product name</th>
             <th className="p-2 text-sm md:p-3 md:text-base">Variant</th>
             <th className="p-2 text-sm md:p-3 md:text-base">Price</th>
+            <th className="p-2 text-sm md:p-3 md:text-base">Negotiation Amt</th>
+            <th className="p-2 text-sm md:p-3 md:text-base">Coupon Amt</th>
+            <th className="p-2 text-sm md:p-3 md:text-base">Bonus Amt</th>
             <th className="p-2 text-sm md:p-3 md:text-base min-w-[160px]">
               Final Price Offered to Customer
             </th>
@@ -94,10 +97,19 @@ const UserTable = ({ data }) => {
                 {getDeviceDetails(val)}
               </td>
               <td className="p-2 text-sm text-center md:p-3 md:text-base">
-                {val?.lead?.actualPrice}
+                  {val?.lead?.slabApplied ? Number(val?.lead?.price || 0) - Number(val?.lead?.slabBonusAmount || 0) : val?.lead?.price}
               </td>
               <td className="p-2 text-sm text-center md:p-3 md:text-base">
-                {val?.lead?.price}
+                {val?.lead?.negotiatedAmount ?? 0}
+              </td>
+              <td className="p-2 text-sm text-center md:p-3 md:text-base">
+                {val?.lead?.couponDiscount ?? 0}
+              </td>
+              <td className="p-2 text-sm text-center md:p-3 md:text-base">
+                {val?.lead?.slabApplied ? val?.lead?.slabBonusAmount : 0}
+              </td>
+              <td className="p-2 text-sm text-center md:p-3 md:text-base">
+                {Number(val?.lead?.price || 0) + Number(val?.lead?.negotiatedAmount || 0) + Number(val?.lead?.couponDiscount || 0)}
               </td>
               <td className="p-2 text-sm text-center md:p-3 md:text-base">
                 {val?.lead?.uniqueCode}

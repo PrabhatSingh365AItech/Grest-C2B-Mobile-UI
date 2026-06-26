@@ -130,7 +130,7 @@ const OrdersCompleted = ({ daysfilters, head }) => {
               savedBy={item.user?.name}
               deviceRam={item.model?.config?.RAM}
               deviceStorage={item.model?.config?.storage}
-              price={item.price}
+              price={item.finalPrice}
               quoteId={item.uniqueCode}
               phonePhoto={
                 item.model?.phonePhotos?.front

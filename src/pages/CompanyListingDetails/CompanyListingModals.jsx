@@ -40,7 +40,6 @@ const CompanyListingModals = ({
   selectedCompanyForPricing,
   categories,
 }) => {
-  console.log(selectedCompany, 'arijit')
   const token = sessionStorage.getItem('authToken')
   const [sideMenu, setsideMenu] = useState(false)
   const [isFileUploading, setIsFileUploading] = useState(false)
@@ -104,12 +103,14 @@ const CompanyListingModals = ({
   return (
     <React.Fragment>
       {editBoxOpen && (
-        <div className={`${styles.edit_page}`}>
-          <EditCompany
-            companyData={companyEditData}
-            setEditBoxOpen={setEditBoxOpen}
-            setEditSuccess={setEditSuccess}
-          />
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
+          <div className='bg-white rounded-xl shadow-2xl max-w-[900px] w-[95%] max-h-[90vh] overflow-y-auto'>
+            <EditCompany
+              companyData={companyEditData}
+              setEditBoxOpen={setEditBoxOpen}
+              setEditSuccess={setEditSuccess}
+            />
+          </div>
         </div>
       )}
       {isTableLoading && (

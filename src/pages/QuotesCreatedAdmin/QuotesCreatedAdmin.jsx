@@ -178,7 +178,7 @@ const downloadExcelQuotesAdminCreated = (apiData) => {
       'Date Created': new Date(item.createdAt).toLocaleDateString('en-IN'),
       'User Name': item.user?.name,
       'Product Name': item.lead?.model?.name,
-      'Final Price Offered to Custoemr': item.lead?.price,
+      'Final Price Offered to Customer': item.lead?.bonusPrice || item.lead?.price,
       'Unique Id': item.lead?.uniqueCode,
       'Customer Name': item.lead?.name,
       'Phone Number': item.lead?.phoneNumber,
