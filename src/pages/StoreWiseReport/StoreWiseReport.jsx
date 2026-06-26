@@ -53,7 +53,7 @@ const downloadExcelStoreWise = (apiData) => {
       Grade: item?.grade,
       'Device Issues': deviceReportSummary,
       Price: item?.actualPrice,
-      'Price Offered To Customer': item?.price,
+      'Price Offered To Customer': item?.finalPrice,
       'Unique ID': item?.uniqueCode,
       [`${import.meta.env.VITE_WEBSITE_TITLE} Received`]:
         item?.grestReceived || 'NA',

@@ -17,6 +17,14 @@ const QuoteModal = ({
   setQuoteSaved,
   quoteId,
   bonusPrice,
+  exactValue,
+  apiQuotedPrice,
+  slabBonusAmount,
+  slabApplied,
+  dynamicPricingEnabled,
+  isSlabApplied,
+  manualBonus,
+  couponDiscount,
 }) => {
   const leadData = JSON.parse(sessionStorage.getItem("responsedatadata"));
   const ExactQuote = sessionStorage.getItem("ExactQuote");
@@ -176,6 +184,14 @@ useEffect(() => {
         dispatch={dispatch}
         userData={userData}
         handleClose={handleClose}
+        exactValue={exactValue}
+        apiQuotedPrice={apiQuotedPrice}
+        slabBonusAmount={slabBonusAmount}
+        slabApplied={slabApplied}
+        dynamicPricingEnabled={dynamicPricingEnabled}
+        isSlabApplied={isSlabApplied}
+        manualBonus={manualBonus}
+        couponDiscount={couponDiscount}
       />
     </>
   );
@@ -212,11 +228,19 @@ const OTPCOmp = ({
   reason,
   bonusPrice,
   setUserData,
+  couponDiscount,
   ExactQuote,
   userToken,
   setQuoteSaved,
   dispatch,
   userData,
+  exactValue,
+  apiQuotedPrice,
+  slabBonusAmount,
+  slabApplied,
+  dynamicPricingEnabled,
+  isSlabApplied,
+  manualBonus,
 }) => {
   const [otp, setOtp] = useState("");
   return (
@@ -262,6 +286,14 @@ const OTPCOmp = ({
                 dispatch={dispatch}
                 userData={userData}
                 handleClose={handleClose}
+                exactValue={exactValue}
+                apiQuotedPrice={apiQuotedPrice}
+                slabBonusAmount={slabBonusAmount}
+                slabApplied={slabApplied}
+                dynamicPricingEnabled={dynamicPricingEnabled}
+                isSlabApplied={isSlabApplied}
+                manualBonus={manualBonus}
+                couponDiscount={couponDiscount}
               />
             </div>
           ) : (
@@ -358,6 +390,14 @@ const OTPCompSub = ({
   dispatch,
   userData,
   handleClose,
+  exactValue,
+  apiQuotedPrice,
+  slabBonusAmount,
+  slabApplied,
+  dynamicPricingEnabled,
+  isSlabApplied,
+  manualBonus,
+  couponDiscount,
 }) => {
   const onSignupDup = () => {
     setLoading(true);
@@ -367,7 +407,14 @@ const OTPCompSub = ({
       name: name,
       emailId: userEmail,
       reason: reason,
-      bonusPrice: bonusPrice,
+      bonusPrice: 0,
+      couponDiscount: couponDiscount || 0,
+      negotiatedAmount: dynamicPricingEnabled ? (manualBonus || 0) : 0,
+      slabBonusAmount: isSlabApplied ? (slabBonusAmount || 0) : 0,
+      slabApplied: isSlabApplied ? (slabApplied || '') : '',
+      exactValue: exactValue || leadData.price || 0,
+      quotedPrice: apiQuotedPrice || leadData.price || 0,
+      sellingPrice: (apiQuotedPrice || leadData.price || 0) + (isSlabApplied ? (Number(slabBonusAmount) || 0) : 0),
     };
     setUserData(data);
     console.log(data);

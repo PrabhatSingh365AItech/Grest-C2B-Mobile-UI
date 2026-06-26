@@ -27,7 +27,7 @@ const uploadDocumentsToS3 = async (attachedFiles, userToken) => {
               fileType: file.type,
             },
             headers: { Authorization: userToken },
-          }
+          },
         );
 
         if (presignedUrlResponse?.data?.url) {
@@ -64,7 +64,7 @@ const uploadDocumentsToS3 = async (attachedFiles, userToken) => {
 };
 
 const FormInput = ({ label, value, onChange, required = false }) => (
-  <div className="flex flex-col w-[70%] gap-2">
+   <div className="flex flex-col w-[70%] gap-2">
     <span className="font-medium text-xl">
       {label}
       {required && "*"}
@@ -78,6 +78,9 @@ const FormInput = ({ label, value, onChange, required = false }) => (
     />
   </div>
 );
+  const sectionTitle = (text) => (
+    <span className='font-semibold text-base text-gray-800'>{text}</span>
+  )
 
 const CompanyListing = () => {
   const [sideMenu, setsideMenu] = useState(false);
@@ -94,8 +97,20 @@ const CompanyListing = () => {
   const [emailConfiguration, setEmailConfiguration] = useState({
     enabled: false,
     recipients: [],
-    notificationTypes: ['paymentReceipt']
+    notificationTypes: ["paymentReceipt"],
   });
+
+  const [dynamicPricingEnabled, setDynamicPricingEnabled] = useState(false);
+  const [slabs, setSlabs] = useState([
+    { minValue: 0, maxValue: 2999, bonusAmount: 0 },
+    { minValue: 3000, maxValue: 9999, bonusAmount: 3000 },
+    { minValue: 10000, maxValue: 14999, bonusAmount: 4000 },
+    { minValue: 15000, maxValue: 19999, bonusAmount: 6000 },
+    { minValue: 20000, maxValue: 34999, bonusAmount: 8000 },
+    { minValue: 35000, maxValue: 999999, bonusAmount: 10000 },
+  ]);
+  const [effectiveFrom, setEffectiveFrom] = useState('');
+  const [pricingNotes, setPricingNotes] = useState('');
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [generatedCompanyCode, setGeneratedCompanyCode] = useState("");
@@ -105,18 +120,69 @@ const CompanyListing = () => {
     setAttachedFiles((prevFiles) => [...prevFiles, ...Array.from(files)]);
   };
 
+  const handleSlabChange = (index, field, value) => {
+    const updated = [...slabs];
+    updated[index][field] = Number(value);
+    setSlabs(updated);
+  };
+
+  const addSlab = () => {
+    setSlabs([...slabs, { minValue: 0, maxValue: 0, bonusAmount: 0 }]);
+  };
+
+  const removeSlab = (index) => {
+    if (slabs.length <= 1) return;
+    setSlabs(slabs.filter((_, i) => i !== index));
+  };
+
+  const validatePricing = () => {
+    if (dynamicPricingEnabled) {
+      if (slabs.length === 0) {
+        toast.error('Please add at least one pricing slab before saving.');
+        return false;
+      }
+      for (let i = 0; i < slabs.length; i++) {
+        const s = slabs[i];
+        if (Number(s.maxValue) <= Number(s.minValue)) {
+          toast.error('Max Value must be greater than Min Value in every slab row.');
+          return false;
+        }
+        if (Number(s.bonusAmount) > Number(s.maxValue)) {
+          toast.error('Bonus Amount cannot exceed the Exact Value for this slab range.');
+          return false;
+        }
+        if (i > 0 && Number(s.minValue) <= Number(slabs[i - 1].maxValue)) {
+          toast.error('Slab ranges overlap. Please ensure slabs are contiguous with no gaps.');
+          return false;
+        }
+      }
+      if (!effectiveFrom) {
+        toast.error('Effective From Date is required');
+        return false;
+      }
+      const selectedDate = new Date(effectiveFrom);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        toast.error('Effective From Date cannot be set in the past.');
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validatePricing()) return;
+    if (!validatePricing()) return;
     const userToken = sessionStorage.getItem("authToken");
 
     try {
-      // Step 1: Upload files to S3 using presigned URLs
       const uploadedDocuments = await uploadDocumentsToS3(
         attachedFiles,
-        userToken
+        userToken,
       );
 
-      // Step 2: Create company with uploaded file URLs
       const payload = {
         name: companyName,
         contactNumber: contactNumber,
@@ -124,9 +190,12 @@ const CompanyListing = () => {
         gstNumber: gstNumber.toUpperCase(),
         panNumber: panNumber.toUpperCase(),
         remarks: remarks,
-        showPrice: showPrice, // Added to payload
-        maskInfo: maskInfo, // Added to payload
-        emailConfiguration: emailConfiguration, // Added email configuration
+        showPrice: showPrice,
+        maskInfo: maskInfo,
+        emailConfiguration: emailConfiguration,
+        showPrice: showPrice,
+        maskInfo: maskInfo,
+        emailConfiguration: emailConfiguration,
         attachedDocuments: uploadedDocuments,
       };
 
@@ -138,10 +207,27 @@ const CompanyListing = () => {
             Authorization: userToken,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
-      console.log("res is ", response);
+      const companyId = response.data.result._id;
+
+      await axios.post(
+        `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/dynamic-pricing/config`,
+        {
+          companyId,
+          isEnabled: dynamicPricingEnabled,
+          slabs: slabs.map(s => ({
+            minValue: Number(s.minValue),
+            maxValue: Number(s.maxValue),
+            bonusAmount: Number(s.bonusAmount)
+          })),
+          effectiveFrom: effectiveFrom || new Date().toISOString().split('T')[0],
+          notes: pricingNotes
+        },
+        { headers: { Authorization: userToken } }
+      );
+
       toast.success("Company Added Successfully!");
 
       if (response.data.result && response.data.result.companyCode) {
@@ -153,7 +239,6 @@ const CompanyListing = () => {
         navigate("/companylistingdetails");
       }, 3000);
     } catch (err) {
-      console.log(err);
       if (err.response && err.response.data && err.response.data.errors) {
         err.response.data.errors.forEach((error) => toast.error(error));
       } else {
@@ -173,6 +258,14 @@ const CompanyListing = () => {
     maskInfo,
     emailConfiguration,
     attachedFiles,
+    dynamicPricingEnabled,
+    slabs,
+    effectiveFrom,
+    pricingNotes,
+    dynamicPricingEnabled,
+    slabs,
+    effectiveFrom,
+    pricingNotes,
   };
 
   const setters = {
@@ -185,6 +278,14 @@ const CompanyListing = () => {
     setShowPrice,
     setMaskInfo,
     setEmailConfiguration,
+    setDynamicPricingEnabled,
+    setSlabs,
+    setEffectiveFrom,
+    setPricingNotes,
+    setDynamicPricingEnabled,
+    setSlabs,
+    setEffectiveFrom,
+    setPricingNotes,
   };
 
   return (
@@ -246,6 +347,44 @@ export default CompanyListing;
 
 // [FIX 2: BRAIN OVERLOAD]
 // Extracted the UI Form into a sub-component to reduce line count of main component
+const AddSlabRow = ({ slab, index, onChange, onRemove }) => (
+  <div className="flex flex-col gap-1">
+    <div className="flex gap-2 items-center">
+      <input
+        type="number"
+        placeholder="Min"
+        className="border border-gray-300 px-2 py-1.5 rounded-lg outline-none w-[100px] text-sm  transition"
+        value={slab.minValue}
+        onChange={(e) => onChange(index, 'minValue', e.target.value)}
+      />
+      <span className="text-gray-400">-</span>
+      <input
+        type="number"
+        placeholder="Max"
+        className="border border-gray-300 px-2 py-1.5 rounded-lg outline-none w-[100px] text-sm  transition"
+        value={slab.maxValue}
+        onChange={(e) => onChange(index, 'maxValue', e.target.value)}
+      />
+      <input
+        type="number"
+        placeholder="Bonus"
+        className="border border-gray-300 px-2 py-1.5 rounded-lg outline-none w-[100px] text-sm transition"
+        value={slab.bonusAmount}
+        onChange={(e) => onChange(index, 'bonusAmount', e.target.value)}
+      />
+      <button
+        type="button"
+        onClick={() => onRemove(index)}
+        className="text-red-500 hover:text-red-700 font-bold px-2 text-lg transition"
+        title="Remove slab"
+      >
+        &times;
+      </button>
+    </div>
+    <div className="text-xs text-gray-400 ml-1">Quoted Price = Exact Value - ₹{slab.bonusAmount || 0}</div>
+  </div>
+);
+
 const CompanyListingForm = ({
   formData,
   setters,
@@ -263,6 +402,10 @@ const CompanyListingForm = ({
     maskInfo,
     emailConfiguration,
     attachedFiles,
+    dynamicPricingEnabled,
+    slabs,
+    effectiveFrom,
+    pricingNotes,
   } = formData;
 
   const {
@@ -275,7 +418,26 @@ const CompanyListingForm = ({
     setShowPrice,
     setMaskInfo,
     setEmailConfiguration,
+    setDynamicPricingEnabled,
+    setSlabs,
+    setEffectiveFrom,
+    setPricingNotes,
   } = setters;
+
+  const handleSlabChange = (index, field, value) => {
+    const updated = [...slabs];
+    updated[index] = { ...updated[index], [field]: Number(value) };
+    setSlabs(updated);
+  };
+
+  const addSlab = () => {
+    setSlabs([...slabs, { minValue: 0, maxValue: 0, bonusAmount: 0 }]);
+  };
+
+  const removeSlab = (index) => {
+    if (slabs.length <= 1) return;
+    setSlabs(slabs.filter((_, i) => i !== index));
+  };
 
   return (
     <form onSubmit={handleSubmit} className="ml-10 flex flex-col gap-4">
@@ -319,17 +481,17 @@ const CompanyListingForm = ({
         </select>
       </div>
 
-      <div className="w-[70%]">
+     <div className="w-[70%]">
         <EmailConfiguration
           value={emailConfiguration}
           onChange={setEmailConfiguration}
         />
       </div>
 
-      <div className="flex flex-col w-[70%] gap-2">
-        <span className="font-medium text-xl">Attach Documents</span>
+      <div className="flex flex-col w-[70%] gap-1.5">
+        <span className="font-medium text-sm text-gray-700">Attach Documents</span>
         <input
-          className=" py-2 rounded-lg w-[250px] outline-none"
+          className="py-2 rounded-lg outline-none text-sm"
           onChange={handleFileUpload}
           type="file"
           multiple
@@ -346,7 +508,85 @@ const CompanyListingForm = ({
           ))}
       </div>
 
-      <div className="mt-8">
+      <div className="w-[70%] mt-2 p-4 border border-gray-200 rounded-lg">
+         <div className='flex items-center justify-between mb-3'>
+            {sectionTitle('Dynamic Pricing & Bonus Settings')}
+          </div>
+
+        <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+          Configure bonus amount slabs and pricing rules for this company. When enabled, the system automatically deducts a fixed Bonus Amount from the device Exact Value to calculate the final Quoted Price shown to the customer.
+        </p>
+
+        <div className="flex flex-col gap-1.5 mb-4">
+          <span className="font-medium text-sm text-gray-700">Enable Dynamic Pricing</span>
+          <select
+            className="border border-gray-300 px-3 py-2 rounded-lg outline-none bg-white transition text-sm w-[120px]"
+            value={dynamicPricingEnabled.toString()}
+            onChange={(e) => setDynamicPricingEnabled(e.target.value === "true")}
+          >
+            <option value="true">ON</option>
+            <option value="false">OFF</option>
+          </select>
+        </div>
+
+        {dynamicPricingEnabled && (
+        <div className="flex flex-col gap-4 border-t border-gray-100 pt-4">
+          <div>
+            <span className="font-semibold text-sm text-gray-800">Bonus Amount Slab Table</span>
+          </div>
+          <div className="flex gap-2 text-xs font-medium text-gray-500">
+            <span className="w-[100px]">Min Value (Rs.)</span>
+            <span className="w-[30px]"></span>
+            <span className="w-[100px]">Max Value (Rs.)</span>
+            <span className="w-[100px]">Bonus Amount (Rs.)</span>
+          </div>
+          <div className="flex flex-col gap-3">
+            {slabs.map((slab, index) => (
+              <AddSlabRow
+                key={index}
+                slab={slab}
+                index={index}
+                onChange={handleSlabChange}
+                onRemove={removeSlab}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={addSlab}
+            className="self-start bg-gray-50 border-2 border-dashed border-gray-300 px-4 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:border-gray-400 transition"
+          >
+            + Add Slab
+          </button>
+
+          <div className="grid grid-row-1 md:grid-row-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <span className="font-medium text-sm text-gray-700">Effective From Date</span>
+              <p className="text-xs text-gray-400">Set when pricing rules take effect. Must be today or future.</p>
+              <input
+                type="date"
+                className="border border-gray-300 px-3 py-2 rounded-lg outline-none  transition text-sm"
+                value={effectiveFrom}
+                min={new Date().toISOString().split('T')[0]}
+                onChange={(e) => setEffectiveFrom(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <span className="font-medium text-sm text-gray-700">Notes / Remarks</span>
+              <textarea
+                className="border border-gray-300 px-3 py-2 rounded-lg outline-none  transition text-sm resize-none"
+                rows={2}
+                value={pricingNotes}
+                onChange={(e) => setPricingNotes(e.target.value)}
+                placeholder="Internal notes for this pricing configuration..."
+              />
+            </div>
+          </div>
+          </div>
+        )}
+        </div>
+
+        <div className="mt-8">
         <button className="font-medium text-sm text-white p-3 rounded bg-primary">
           Submit Form
         </button>

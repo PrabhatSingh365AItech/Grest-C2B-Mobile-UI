@@ -340,7 +340,7 @@ const OrdersCard = ({
       const responseData = {
         grade: '',
         id: itemData.lead_id,
-        price: Number(itemData.lead?.price) - Number(itemData.lead?.bonusPrice),
+        price: Number(itemData.lead?.exactValue ?? itemData.lead?.price),
         uniqueCode: quoteId,
         bonus: Number(itemData.lead?.bonusPrice),
       }

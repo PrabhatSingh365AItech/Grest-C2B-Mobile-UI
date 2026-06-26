@@ -11,13 +11,33 @@ const CompanyTable = ({
   setCurrentPage,
   currentPage,
   maxPages,
+  selectedIds,
+  onSelectId,
+  onSelectAll,
 }) => {
+  const allSelected = tableData && tableData.length > 0 && selectedIds.length === tableData.length
+
   return (
     <React.Fragment>
+      {selectedIds.length > 0 && (
+        <div className='flex items-center justify-between px-4 py-2  mt-3 mb-2 bg-blue-50 border border-blue-200 rounded-lg mx-2 md:mx-5'>
+          <span className='text-sm font-medium text-blue-800'>
+            {selectedIds.length} {selectedIds.length === 1 ? 'company' : 'companies'} selected
+          </span>
+        </div>
+      )}
       <div className='m-2 overflow-x-auto md:m-5'>
         <table className='w-full border border-primary'>
           <thead className='bg-primary text-white'>
             <tr>
+              <th className='p-2 text-sm md:p-3 md:text-base w-10'>
+                <input
+                  type='checkbox'
+                  checked={allSelected}
+                  onChange={() => onSelectAll(allSelected ? [] : (tableData || []).map(d => d._id))}
+                  className='cursor-pointer'
+                />
+              </th>
               <th className='p-2 text-sm md:p-3 md:text-base'>Action</th>
               <th className='p-2 text-sm md:p-3 md:text-base'>Company Name</th>
               <th className='p-2 text-sm md:p-3 md:text-base'>Company Code</th>
@@ -28,6 +48,7 @@ const CompanyTable = ({
               <th className='p-2 text-sm md:p-3 md:text-base'>GST Number</th>
               <th className='p-2 text-sm md:p-3 md:text-base'>PAN Number</th>
               <th className='p-2 text-sm md:p-3 md:text-base'>Remarks</th>
+              <th className='p-2 text-sm md:p-3 md:text-base'>Dynamic Pricing</th>
               <th className='p-2 text-sm md:p-3 md:text-base'>Documents</th>
               <th className='p-2 text-sm md:p-3 md:text-base'>Price Sheets</th>
             </tr>
@@ -38,9 +59,17 @@ const CompanyTable = ({
                 .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
                 .map((data, index) => (
                   <tr
-                    key={index}
-                    className={index % 2 === 0 ? 'bg-gray-200' : ''}
+                    key={data._id || index}
+                    className={`${index % 2 === 0 ? 'bg-gray-200' : ''} ${selectedIds.includes(data._id) ? 'bg-blue-100' : ''}`}
                   >
+                    <td className='p-2 text-sm text-center md:p-3 md:text-base'>
+                      <input
+                        type='checkbox'
+                        checked={selectedIds.includes(data._id)}
+                        onChange={() => onSelectId(data._id)}
+                        className='cursor-pointer'
+                      />
+                    </td>
                     <td className='p-2 text-sm text-center md:p-3 md:text-base'>
                       <div className='flex flex-col gap-1'>
                         <button
@@ -89,6 +118,16 @@ const CompanyTable = ({
                     </td>
                     <td className='p-2 text-sm text-center md:p-3 md:text-base'>
                       {data.remarks}
+                    </td>
+                    <td className='p-2 text-sm text-center md:p-3 md:text-base'>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                        data.dynamicPricingStatus === 'ON' ? 'bg-green-100 text-green-700' :
+                        data.dynamicPricingStatus === 'Config Pending' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-gray-100 text-gray-500'
+                      }`}>
+                        {data.dynamicPricingStatus === 'ON' ? 'ON' :
+                         data.dynamicPricingStatus === 'Config Pending' ? 'Config Pending' : 'OFF'}
+                      </span>
                     </td>
                     <td
                       className='p-2 text-sm text-center md:p-3 md:text-base'

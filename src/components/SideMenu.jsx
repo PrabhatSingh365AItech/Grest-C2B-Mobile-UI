@@ -51,6 +51,7 @@ const useNavigationHandlers = (setsideMenu, sideMenu, profile) => {
     handleBulkUploadHistory: createNavigationHandler('/bulkuploadhistory'),
     handleQuoteTracking: createNavigationHandler('/quotetrackingdashboard'),
     handleCouponManagement: createNavigationHandler('/coupondetails'),
+    handleDynamicPricing: createNavigationHandler('/dynamic-pricing'),
     handleLogout,
   }
 }
@@ -150,6 +151,7 @@ const SuperAdminProfile = ({
   handleBulkUploadHistory,
   handleQuoteTracking,
   handleCouponManagement,
+  handleDynamicPricing,
 }) => {
   const isCompanyAdmin = profile.role === USER_ROLES.COMPANY_ADMIN
   return (
@@ -171,6 +173,7 @@ const SuperAdminProfile = ({
         {!isCompanyAdmin && <MenuItem onClick={handleCouponManagement}>Coupon Management</MenuItem>}
         <MenuItem onClick={handleTable}>Customer Table</MenuItem>
         {!isCompanyAdmin && <MenuItem onClick={handleCompanyListing}>Company Listing</MenuItem>}
+        {!isCompanyAdmin && <MenuItem onClick={handleDynamicPricing}>Dynamic Pricing</MenuItem>}
         <MenuItem onClick={handlpickup}>Pickup & Cancel Device</MenuItem>
         <MenuItem onClick={handleTechnician}>Technician Report</MenuItem>
         <MenuItem onClick={adminDashboard}>Admin Dashboard</MenuItem>

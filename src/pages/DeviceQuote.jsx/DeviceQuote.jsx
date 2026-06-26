@@ -22,30 +22,6 @@ const buyback = import.meta.env.VITE_BUYBACK_URL
 const switchKart = import.meta.env.VITE_SWITCHKART_URL
 const deviceTypePage = '/selectdevicetype'
 
-const calculateDisplayPrice = ({
-  quoteSaved,
-  savedBonus,
-  Price,
-  bonus,
-  appliedCoupon,
-}) => {
-  const basePrice = Number(Price)
-  const bonusValue = Number(bonus) || 0
-  const savedBonusValue = Number(savedBonus) || 0
-  const couponDiscount = appliedCoupon
-    ? Number(appliedCoupon.calculatedDiscount) || 0
-    : 0
-
-  if (quoteSaved) {
-    if (savedBonus) {
-      return basePrice + bonusValue - savedBonusValue + couponDiscount
-    }
-    return basePrice + bonusValue + couponDiscount
-  }
-
-  return basePrice + couponDiscount
-}
-
 const getDeviceDisplayName = (deviceModalInfo) => {
   const models = deviceModalInfo.models
   const isCTG1 = models?.type === 'CTG1'
@@ -78,7 +54,7 @@ const useDeviceQuoteData = () => {
   const ResponseData = useSelector((state) => state.responseData)
   const Price = useSelector((state) => state.responseData.price)
   const uniqueCode = useSelector((state) => state.responseData.uniqueCode)
-  const savedBonus = useSelector((state) => state.responseData?.bonus) || null
+  const savedBonus = useSelector((state) => state.responseData?.bonus) ?? null
 
   return {
     dispatch,
@@ -95,17 +71,19 @@ const useDeviceQuoteData = () => {
   }
 }
 
-const useCouponHandlers = (setMode, setIsCouponApplied, setBonus, setSelectedCoupon, setIsCouponApplied2) => {
+const useCouponHandlers = (setMode, setIsCouponApplied, setBonus, setSelectedCoupon, setIsSlabApplied, isSlabApplied) => {
   const handleModeSwitch = (newMode) => {
     setMode(newMode)
     if (newMode === 'bonus') {
       setIsCouponApplied(false)
-    } else if (newMode === 'coupon') {
-      setBonus(null)
     }
   }
 
   const handleApplyCoupon = (selectedCoupon) => {
+    if (isSlabApplied) {
+      toast.error('Please remove bonus amount first to apply a coupon')
+      return
+    }
     if (!selectedCoupon) {
       toast.error('Please select a coupon first.')
       return
@@ -115,13 +93,18 @@ const useCouponHandlers = (setMode, setIsCouponApplied, setBonus, setSelectedCou
   }
 
   const handleCouponSelect = (coupon) => {
+    if (isSlabApplied) {
+      toast.error('Please remove bonus amount first to apply a coupon')
+      return
+    }
     setSelectedCoupon(coupon)
-    setIsCouponApplied2(true)
+    setIsCouponApplied(true)
     toast.success(`Coupon "${coupon.couponCode}" applied!`)
   }
 
   const handleRemoveCoupon = () => {
     setIsCouponApplied(false)
+    setSelectedCoupon(null)
     toast.success('Coupon removed.')
   }
 
@@ -141,11 +124,19 @@ const DeviceQuote = () => {
   const [termsChecked, setTermsChecked] = useState(false)
   const hasShownError = useRef(false)
 
+  const [slabBonusAmount, setSlabBonusAmount] = useState(0)
+  const [slabApplied, setSlabApplied] = useState('')
+  const [dynamicPricingEnabled, setDynamicPricingEnabled] = useState(false)
+  const [isSlabApplied, setIsSlabApplied] = useState(false)
+  const [exactValue, setExactValue] = useState(Number(Price))
+  const [apiQuotedPrice, setApiQuotedPrice] = useState(Number(Price))
+
   const [mode, setMode] = useState('bonus')
   const [eligibleCoupons, setEligibleCoupons] = useState([])
   const [selectedCoupon, setSelectedCoupon] = useState(null)
   const [isCouponApplied, setIsCouponApplied] = useState(false)
   const [isLoadingCoupon, setIsLoadingCoupon] = useState(true)
+  const initialDpFetchDone = useRef(false)
 
   useEffect(() => {
     setQuoteId(uniqueCode)
@@ -153,27 +144,32 @@ const DeviceQuote = () => {
   }, [uniqueCode, savedBonus])
 
   const calculateFinalBonus = () => {
-    if (mode === 'bonus') {
-      return Number(bonus) || 0
-    }
-
+    const bonusVal = Number(bonus) || 0
+    let couponVal = 0
     if (mode === 'coupon' && isCouponApplied && selectedCoupon) {
-      if (selectedCoupon.discountType === 'Fixed') {
-        return selectedCoupon.discountValue
-      }
-      return Math.round((Number(Price) * selectedCoupon.discountValue) / 100)
+      couponVal = selectedCoupon.discountType === 'Fixed'
+        ? selectedCoupon.discountValue
+        : Math.round((Number(Price) * selectedCoupon.discountValue) / 100)
     }
-
-    return 0
+    return bonusVal + couponVal
   }
 
-  const displayPrice = calculateDisplayPrice({
-    quoteSaved,
-    savedBonus,
-    Price,
-    bonus: calculateFinalBonus(),
-    appliedCoupon: null,
-  })
+  const couponDiscount = (() => {
+    if (mode === 'coupon' && isCouponApplied && selectedCoupon) {
+      return selectedCoupon.discountType === 'Fixed'
+        ? selectedCoupon.discountValue
+        : Math.round((Number(Price) * selectedCoupon.discountValue) / 100)
+    }
+    return 0
+  })()
+
+  const displayPrice = dynamicPricingEnabled
+    ? Math.round(apiQuotedPrice)
+    : Number(Price)
+
+  const quotedPrice = dynamicPricingEnabled
+    ? Math.round(apiQuotedPrice + (isSlabApplied ? Number(slabBonusAmount) : 0) + Number(calculateFinalBonus()))
+    : Math.round(Number(Price) + Number(calculateFinalBonus()))
 
   useEffect(() => {
     const fetchCoupons = async () => {
@@ -215,7 +211,49 @@ const DeviceQuote = () => {
     fetchCoupons()
   }, [leadId, token])
 
-  const couponHandlers = useCouponHandlers(setMode, setIsCouponApplied, setBonus, setSelectedCoupon, setIsCouponApplied)
+  const handleSlabToggle = (value) => {
+    if (value) {
+      if (isCouponApplied) {
+        toast.error('Please remove coupon first to apply bonus amount')
+        return
+      }
+      setMode('bonus')
+      setIsCouponApplied(false)
+    }
+    setIsSlabApplied(value)
+  }
+
+  const couponHandlers = useCouponHandlers(setMode, setIsCouponApplied, setBonus, setSelectedCoupon, setIsSlabApplied, isSlabApplied)
+
+  useEffect(() => {
+    const fetchDynamicPricing = async () => {
+      const profile = JSON.parse(sessionStorage.getItem('profile'))
+      const companyId = profile?.companyId
+      if (!companyId || !leadId) return
+      try {
+        const initialEV = Number(Price) + (ResponseData.bonus || 0)
+        const res = await axios.post(
+          `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/dynamic-pricing/calculate-bonus`,
+          { companyId, exactValue: initialEV, applyNegotiatedAmount: false, negotiatedAmount: 0, couponDiscount: 0 },
+          { headers: { Authorization: token } }
+        )
+        if (res.data.success && res.data.data.isDynamicPricingEnabled) {
+          setSlabBonusAmount(res.data.data.slabBonusAmount)
+          setSlabApplied(res.data.data.slabApplied || '')
+          setExactValue(res.data.data.exactValue)
+          setApiQuotedPrice(res.data.data.quotedPrice)
+          setDynamicPricingEnabled(true)
+          if (!initialDpFetchDone.current) {
+            setIsSlabApplied(true)
+            initialDpFetchDone.current = true
+          }
+        }
+      } catch (err) {
+        console.log('Dynamic pricing not available')
+      }
+    }
+    fetchDynamicPricing()
+  }, [Price, ResponseData, leadId, token])
 
   useEffect(() => {
     const shouldShowError = !hasShownError.current && quoteSaved === false && exactQuoteValue === 'true' && currentDomain !== buyback
@@ -227,12 +265,26 @@ const DeviceQuote = () => {
   }, [quoteSaved, exactQuoteValue])
 
   const continueOTPHandler = () => {
+    const couponVal = mode === 'coupon' && isCouponApplied && selectedCoupon
+      ? (selectedCoupon.discountType === 'Fixed'
+          ? selectedCoupon.discountValue
+          : Math.round((Number(Price) * selectedCoupon.discountValue) / 100))
+      : 0
     const resData = {
       grade: ResponseData.grade,
       price: Number(ResponseData.price),
-      bonus: calculateFinalBonus(),
+      bonus: Number(bonus) || 0,
+      couponDiscount: couponVal,
+      slabBonusAmount: Number(slabBonusAmount),
+      isSlabApplied: isSlabApplied,
+      slabApplied: isSlabApplied ? slabApplied : '',
+      exactValue: Number(exactValue),
+      quotedPrice: Number(apiQuotedPrice),
+      dynamicPricingEnabled: dynamicPricingEnabled,
       uniqueCode: ResponseData.uniqueCode,
       id: ResponseData.id,
+      mode: mode,
+      couponCode: mode === 'coupon' && isCouponApplied && selectedCoupon ? selectedCoupon.couponCode : '',
     }
     sessionStorage.setItem('responsedatadata', JSON.stringify(resData))
     dispatch(setResponseData(resData))
@@ -273,6 +325,7 @@ const DeviceQuote = () => {
               setBonus={setBonus}
               exactQuoteValue={exactQuoteValue}
               showDeviceReportHandler={showDeviceReportHandler}
+              finalBonus={calculateFinalBonus()}
               mode={mode}
               handleModeSwitch={couponHandlers.handleModeSwitch}
               eligibleCoupons={eligibleCoupons}
@@ -282,6 +335,16 @@ const DeviceQuote = () => {
               handleApplyCoupon={() => couponHandlers.handleApplyCoupon(selectedCoupon)}
               handleRemoveCoupon={couponHandlers.handleRemoveCoupon}
               handleCouponSelect={couponHandlers.handleCouponSelect}
+              slabBonusAmount={slabBonusAmount}
+              slabApplied={slabApplied}
+              setMode={setMode}
+              isSlabApplied={isSlabApplied}
+              setIsSlabApplied={handleSlabToggle}
+              dynamicPricingEnabled={dynamicPricingEnabled}
+              exactValue={exactValue}
+              quotedPrice={quotedPrice}
+              apiQuotedPrice={apiQuotedPrice}
+              couponDiscount={couponDiscount}
             />
           </div>
           <div className='fixed bottom-0 flex flex-col w-full gap-2 p-4 border-t-2 bg-white'>
@@ -295,11 +358,18 @@ const DeviceQuote = () => {
               savedBonus={savedBonus}
               Price={Price}
               bonus={bonus}
+              setBonus={setBonus}
+              setMode={setMode}
               quoteSaved={quoteSaved}
               exactQuoteValue={exactQuoteValue}
               termsChecked={termsChecked}
               continueOTPHandler={continueOTPHandler}
               finalBonus={calculateFinalBonus()}
+              slabBonusAmount={slabBonusAmount}
+              slabApplied={slabApplied}
+              isSlabApplied={isSlabApplied}
+              dynamicPricingEnabled={dynamicPricingEnabled}
+              apiQuotedPrice={apiQuotedPrice}
             />
           </div>
         </>
@@ -377,8 +447,10 @@ const QuoteCard = ({
   quoteId,
   bonus,
   setBonus,
+  setMode,
   exactQuoteValue,
   showDeviceReportHandler,
+  finalBonus,
   mode,
   handleModeSwitch,
   eligibleCoupons,
@@ -388,6 +460,15 @@ const QuoteCard = ({
   handleApplyCoupon,
   handleRemoveCoupon,
   handleCouponSelect,
+  slabBonusAmount,
+  slabApplied,
+  isSlabApplied,
+  setIsSlabApplied,
+  dynamicPricingEnabled,
+  exactValue,
+  quotedPrice,
+  apiQuotedPrice,
+  couponDiscount,
 }) => (
   <div
     className={`${styles.QuoteCardShadow} rounded-md p-4 w-full max-w-[600px]`}
@@ -404,9 +485,34 @@ const QuoteCard = ({
         <p className='font-medium text-gray-700'>
           {getDeviceDisplayName(deviceModalInfo)}
         </p>
-        <p className='text-primary font-semibold'>
-          ₹{Math.round(displayPrice).toLocaleString('en-IN')}
-        </p>
+        <div className='text-primary font-semibold leading-tight'>
+          <p className='flex justify-between gap-4'>
+            <span className='text-gray-700 text-sm font-normal'>Actual Value</span>
+            <span>₹{Math.round(displayPrice).toLocaleString('en-IN')}</span>
+          </p>
+          {dynamicPricingEnabled && isSlabApplied && Number(slabBonusAmount) > 0 && (
+            <p className='flex justify-between gap-4 text-green-600 text-sm'>
+              <span className='text-gray-700 font-normal'>Bonus Amount</span>
+              <span>+ ₹{Number(slabBonusAmount).toLocaleString('en-IN')}</span>
+            </p>
+          )}
+          {mode === 'coupon' && isCouponApplied && Number(finalBonus) > 0 && (
+            <p className='flex justify-between gap-4 text-green-600 text-sm'>
+              <span className='text-gray-700 font-normal'>Coupon Discount</span>
+              <span>+ ₹{Number(finalBonus).toLocaleString('en-IN')}</span>
+            </p>
+          )}
+          {(dynamicPricingEnabled && isSlabApplied && Number(slabBonusAmount) > 0) || (mode === 'coupon' && isCouponApplied && Number(finalBonus) > 0) ? (
+            <>
+              <div className='border-t border-gray-400 my-0.5'></div>
+              <p className='flex justify-between gap-4 text-sm'>
+                <span className='text-gray-700 font-normal'>Total</span>
+                <span className='text-gray-800'>₹{(Math.round(displayPrice + (dynamicPricingEnabled && isSlabApplied ? Number(slabBonusAmount) : 0) + (mode === 'coupon' && isCouponApplied ? Number(finalBonus) : 0))).toLocaleString('en-IN')}</span>
+              </p>
+            </>
+          ) : null}
+        </div>
+
       </div>
     </div>
 
@@ -415,7 +521,15 @@ const QuoteCard = ({
       handleClose={toggleModal}
       setQuoteSaved={setQuoteSaved}
       quoteId={quoteId}
-      bonusPrice={bonus}
+      bonusPrice={quotedPrice}
+      exactValue={exactValue}
+      apiQuotedPrice={apiQuotedPrice}
+      slabBonusAmount={slabBonusAmount}
+      slabApplied={slabApplied}
+      dynamicPricingEnabled={dynamicPricingEnabled}
+      isSlabApplied={isSlabApplied}
+      manualBonus={bonus || 0}
+      couponDiscount={couponDiscount}
     />
 
     {quoteSaved === false &&
@@ -425,6 +539,8 @@ const QuoteCard = ({
           mode={mode}
           bonus={bonus}
           setBonus={setBonus}
+          setMode={setMode}
+          setMode={setMode}
           eligibleCoupons={eligibleCoupons}
           selectedCoupon={selectedCoupon}
           isCouponApplied={isCouponApplied}
@@ -432,6 +548,16 @@ const QuoteCard = ({
           handleApplyCoupon={handleApplyCoupon}
           handleRemoveCoupon={handleRemoveCoupon}
           handleCouponSelect={handleCouponSelect}
+          slabBonusAmount={slabBonusAmount}
+          slabApplied={slabApplied}
+          isSlabApplied={isSlabApplied}
+          setIsSlabApplied={setIsSlabApplied}
+          dynamicPricingEnabled={dynamicPricingEnabled}
+          slabBonusAmount={slabBonusAmount}
+          slabApplied={slabApplied}
+          isSlabApplied={isSlabApplied}
+          setIsSlabApplied={setIsSlabApplied}
+          dynamicPricingEnabled={dynamicPricingEnabled}
         />
       )}
 
@@ -460,16 +586,6 @@ const QuoteCard = ({
                 Coupon code
               </button>
               <button
-                className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded whitespace-nowrap ${
-                  mode === 'bonus'
-                    ? 'bg-primary text-white'
-                    : 'text-primary border border-primary'
-                }`}
-                onClick={() => handleModeSwitch('bonus')}
-              >
-                Bonus amount
-              </button>
-              <button
                 className='text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded text-primary border border-primary whitespace-nowrap sm:hidden'
                 onClick={toggleModal}
               >
@@ -494,6 +610,7 @@ const CouponBonusToggle = ({
   mode,
   bonus,
   setBonus,
+  setMode,
   eligibleCoupons,
   selectedCoupon,
   isCouponApplied,
@@ -501,9 +618,21 @@ const CouponBonusToggle = ({
   handleApplyCoupon,
   handleRemoveCoupon,
   handleCouponSelect,
+  slabBonusAmount,
+  slabApplied,
+  isSlabApplied,
+  setIsSlabApplied,
+  dynamicPricingEnabled,
 }) => (
   <div className='px-2 my-2'>
-    {mode === 'bonus' && <BonusInput bonus={bonus} setBonus={setBonus} />}
+    {dynamicPricingEnabled && Number(slabBonusAmount) > 0 && (
+      <SlabBonusCard
+        slabBonusAmount={slabBonusAmount}
+        slabApplied={slabApplied}
+        isSlabApplied={isSlabApplied}
+        setIsSlabApplied={setIsSlabApplied}
+      />
+    )}
     {mode === 'coupon' && (
       <CouponDisplay
         eligibleCoupons={eligibleCoupons}
@@ -515,13 +644,43 @@ const CouponBonusToggle = ({
         handleCouponSelect={handleCouponSelect}
       />
     )}
+    <BonusInput bonus={bonus} setBonus={setBonus} />
+  </div>
+)
+
+const SlabBonusCard = ({ slabBonusAmount, slabApplied, isSlabApplied, setIsSlabApplied }) => (
+  <div className='px-2 my-3 h-12 flex items-center justify-center'>
+    <div className={`flex items-center justify-between w-full p-2 rounded-md ${
+      isSlabApplied
+        ? 'bg-green-100 border border-green-400'
+        : 'bg-gray-100 border border-gray-300'
+    }`}>
+      <p className={`text-sm font-medium ${isSlabApplied ? 'text-green-800' : 'text-gray-800'}`}>
+        Bonus Amount (₹{slabBonusAmount})
+      </p>
+      {isSlabApplied ? (
+        <button
+          onClick={() => setIsSlabApplied(false)}
+          className='px-3 py-1 text-xs font-semibold text-white bg-red-600 rounded-md'
+        >
+          Remove
+        </button>
+      ) : (
+        <button
+          onClick={() => setIsSlabApplied(true)}
+          className='px-3 py-1 text-xs font-semibold text-white bg-primary rounded-md'
+        >
+          Apply
+        </button>
+      )}
+    </div>
   </div>
 )
 
 const BonusInput = ({ bonus, setBonus }) => (
   <div className='flex flex-row items-center justify-between px-2 my-2'>
     <div className='w-[50%] font-medium text-gray-700 text-sm sm:text-base'>
-      {currentDomain === switchKart && 'SwitchKart'} Bonus Amount :
+      {currentDomain === switchKart && 'SwitchKart'} Negotiated Amount :
     </div>
     <div className='rounded-md bg-[#f6f6f6] py-1 sm:py-2 w-[45%]  border-2 border-primary flex flex-col items-center justify-center'>
       <input
@@ -529,8 +688,8 @@ const BonusInput = ({ bonus, setBonus }) => (
         name='bonus'
         id='bonus'
         type='number'
-        placeholder='Enter Bonus Amount'
-        value={bonus}
+        placeholder='Enter Negotiated Amount'
+        value={bonus ?? ''}
         maxLength={6}
         onKeyDown={(e) => {
           if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
@@ -595,7 +754,7 @@ const CouponDisplay = ({
           </p>
           {!isCouponApplied ? (
             <button
-              onClick={handleApplyCoupon}
+              onClick={() => handleCouponSelect(coupon)}
               className='px-3 py-1 text-xs font-semibold text-white bg-primary rounded-md'
             >
               Apply
@@ -686,14 +845,21 @@ const SubDeviceQuote = ({
   savedBonus,
   Price,
   bonus,
+  setBonus,
+  setMode,
   quoteSaved,
   exactQuoteValue,
   termsChecked,
   continueOTPHandler,
   finalBonus,
+  slabBonusAmount,
+  slabApplied,
+  isSlabApplied,
+  dynamicPricingEnabled,
+  apiQuotedPrice,
 }) => {
   const navigate = useNavigate()
-  const [countdown, setCountdown] = useState(10) // 10 seconds countdown
+  const [countdown, setCountdown] = useState(10)
 
   useEffect(() => {
     let timer
@@ -707,11 +873,16 @@ const SubDeviceQuote = ({
     return () => clearInterval(timer)
   }, [quoteSaved, countdown, navigate])
 
+  const quotedPrice = dynamicPricingEnabled
+    ? Math.round(Number(apiQuotedPrice) + (isSlabApplied ? Number(slabBonusAmount) : 0) + Number(finalBonus))
+    : Math.round(Number(Price) + Number(finalBonus))
+
   return (
-    <div className='flex items-center justify-between gap-2'>
-      <div className='flex flex-col w-1/2 text-xl font-medium'>
-        <p>₹{Math.round(Number(Price) + finalBonus)}</p>
-      </div>
+    <div className='flex flex-col gap-1'>
+      <div className='flex items-center justify-between gap-2'>
+        <div className='flex flex-col w-1/2 text-xl font-medium'>
+          <p>₹{quotedPrice.toLocaleString('en-IN')}</p>
+        </div>
       {quoteSaved === false && exactQuoteValue === 'true' && (
         <div
           onClick={termsChecked ? continueOTPHandler : undefined}
@@ -740,6 +911,7 @@ const SubDeviceQuote = ({
           </p>
         </div>
       )}
+      </div>
     </div>
   )
 }
