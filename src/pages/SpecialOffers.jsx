@@ -115,6 +115,9 @@ function hanldlejsx_pdf(leadData, setReceipt) {
       storage={leadData?.storage}
       RAM={leadData?.ram}
       formattedDate={formattedDate}
+      companyName={leadData?.companyInfo?.name}
+      companyGstin={leadData?.companyInfo?.gstNumber}
+      companyAddress={leadData?.companyInfo?.address}
     />
   );
 
@@ -174,17 +177,14 @@ const SpecialOffers = () => {
     : Number(Price);
 
   // Same calculation as DeviceQuote quotedPrice (bottom bar)
+  const slabDeduction = isSlabApplied ? 0 : Number(slabBonusAmount);
   const quotedPrice = dynamicPricingEnabled
-    ? Math.round(Number(exactValue) - (isSlabApplied ? 0 : Number(slabBonusAmount)) + Number(negotiatedAmount) + Number(couponDiscount))
+    ? Math.round(Number(exactValue) - slabDeduction + Number(negotiatedAmount) + Number(couponDiscount))
     : Math.round(Number(Price) + Number(negotiatedAmount) + Number(couponDiscount));
 
   // Total = quotedPrice from DeviceQuote + any new coupon selected here
-  const calcTotalPrice = () => {
-    const couponVal = isSelected ? (isSelected === "GRU250" ? 250 : isSelected === "GRU500" ? 500 : Number(isSelected)) : 0;
-    return Math.round(Math.max(0, quotedPrice + couponVal));
-  };
-
-  const totalPrice = calcTotalPrice();
+  const couponVal = getCouponVal(isSelected);
+  const totalPrice = Math.round(Math.max(0, quotedPrice + couponVal));
 
   useEffect(() => {
     dispatch(setOtpVerified(false));
@@ -261,7 +261,7 @@ const SpecialOffers = () => {
     const formData = new FormData();
     formData.append("id", LeadId);
     const deviceType = sessionStorage.getItem("DeviceType");
-    const newCouponVal = isSelected ? (isSelected === "GRU250" ? 250 : isSelected === "GRU500" ? 500 : Number(isSelected)) : 0;
+    const newCouponVal = getCouponVal(isSelected);
     const totalCouponDiscount = Number(couponDiscount) + newCouponVal;
     if (dynamicPricingEnabled) {
       const baseVal = isSlabApplied ? Number(exactValue) : Number(exactValue) - Number(slabBonusAmount);
@@ -465,7 +465,7 @@ const SubSpecialOffers = ({
         exactValue={exactValue}
         slabBonusAmount={slabBonusAmount}
         negotiatedAmount={negotiatedAmount}
-        couponDiscount={Number(couponDiscount) + (isSelected ? (isSelected === "GRU250" ? 250 : isSelected === "GRU500" ? 500 : Number(isSelected)) : 0)}
+        couponDiscount={Number(couponDiscount) + getCouponVal(isSelected)}
         bonusMode={bonusMode}
         couponCode={couponCode}
         isSlabApplied={isSlabApplied}
@@ -473,5 +473,18 @@ const SubSpecialOffers = ({
     </div>
   );
 };
+
+const getCouponVal = (val) => {
+  if (!val) {
+    return 0
+  }
+  if (val === "GRU250") {
+    return 250
+  }
+  if (val === "GRU500") {
+    return 500
+  }
+  return Number(val)
+}
 
 export default SpecialOffers;

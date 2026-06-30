@@ -70,9 +70,15 @@ export async function verifyIMEI({ imei1, imei2, deviceModel, storeId, agentId, 
     agentId,
   }
 
-  if (imei2) payload.imei2 = imei2
-  if (deviceModel) payload.deviceModel = deviceModel
-  if (leadId) payload.leadId = leadId
+  if (imei2) {
+    payload.imei2 = imei2
+  }
+  if (deviceModel) {
+    payload.deviceModel = deviceModel
+  }
+  if (leadId) {
+    payload.leadId = leadId
+  }
 
   const response = await axios.post(
     `${API_BASE_URL}/api/imei/verify`,

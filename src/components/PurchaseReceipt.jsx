@@ -40,32 +40,40 @@ const formatItemSpecifications = (RAM, storage) => {
 }
 
 // Sub-components
-const CompanyHeader = ({ COMPANY_EMAIL }) => (
-  <>
-    <div className='flex items-center justify-center bg-white p-[1vh] mx-[2vh] my-[1vh]'>
-      <img src={GREST_LOGO} alt='App logo' className='w-80 h-24' />
-    </div>
-    <div className='flex flex-col items-center justify-between mb-2'>
-      <p className='text-sm text-[#1b0d6c]'>
-        {import.meta.env.VITE_COMPANY_NAME} ,
-        <span className='text-primary'> GSTIN/UIN:</span>
-        {import.meta.env.VITE_COMPANY_GSTIN}
-      </p>
-      <p className='text-sm text-[#1b0d6c]'>
-        <span className='text-primary'> Address:</span>{' '}
-        {import.meta.env.VITE_COMPANY_ADDRESS}
-      </p>
-      <p className='text-sm text-[#1b0d6c]'>
-        <span className='text-primary'> Contact:</span>{' '}
-        {import.meta.env.VITE_COMPANY_CONTACT} ,
-        <span className='text-primary'> E-mail:</span> {COMPANY_EMAIL}
-      </p>
-    </div>
-    <div className='text-center'>
-      <p className='font-bold text-xl'>PURCHASE RECEIPT</p>
-    </div>
-  </>
-)
+const CompanyHeader = ({ COMPANY_EMAIL, companyName, companyGstin, companyAddress }) => {
+  const isRadicalRetail = companyName === 'Radical Retail Pvt Ltd'
+  const name = isRadicalRetail ? 'Radical Retail Pvt Ltd' : (companyName || import.meta.env.VITE_COMPANY_NAME)
+  const gstin = isRadicalRetail ? '29ABCDE1234F1Z5' : (companyGstin || import.meta.env.VITE_COMPANY_GSTIN)
+  const addr = isRadicalRetail
+    ? 'Khasra No. 34/22, Ground Floor, NK Tower, Kanhai Road, Sector-45, Gurugram, Haryana - 122003'
+    : (companyAddress || import.meta.env.VITE_COMPANY_ADDRESS)
+  return (
+    <>
+      <div className='flex items-center justify-center bg-white p-[1vh] mx-[2vh] my-[1vh]'>
+        <img src={GREST_LOGO} alt='App logo' className='w-80 h-24' />
+      </div>
+      <div className='flex flex-col items-center justify-between mb-2'>
+        <p className='text-sm text-[#1b0d6c]'>
+          {name} ,
+          <span className='text-primary'> GSTIN/UIN:</span>
+          {gstin}
+        </p>
+        <p className='text-sm text-[#1b0d6c]'>
+          <span className='text-primary'> Address:</span>{' '}
+          {addr}
+        </p>
+        <p className='text-sm text-[#1b0d6c]'>
+          <span className='text-primary'> Contact:</span>{' '}
+          {import.meta.env.VITE_COMPANY_CONTACT} ,
+          <span className='text-primary'> E-mail:</span> {COMPANY_EMAIL}
+        </p>
+      </div>
+      <div className='text-center'>
+        <p className='font-bold text-xl'>PURCHASE RECEIPT</p>
+      </div>
+    </>
+  )
+}
 
 const TransactionInfo = ({
   uniqueCode,
@@ -278,6 +286,9 @@ const PurchaseReceipt = ({
   price,
   signatureUrl,
   maskInfo,
+  companyName,
+  companyGstin,
+  companyAddress,
 }) => {
   const WEBSITE_SHORT_NAME =
     currentDomain === import.meta.env.VITE_BUYBACK_URL
@@ -295,7 +306,12 @@ const PurchaseReceipt = ({
     width: 100%;
   }
 }`}</style>
-      <CompanyHeader COMPANY_EMAIL={COMPANY_EMAIL} />
+      <CompanyHeader
+        COMPANY_EMAIL={COMPANY_EMAIL}
+        companyName={companyName}
+        companyGstin={companyGstin}
+        companyAddress={companyAddress}
+      />
       <TransactionInfo
         uniqueCode={uniqueCode}
         formattedDate={formattedDate}

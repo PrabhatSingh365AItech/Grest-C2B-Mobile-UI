@@ -8,9 +8,7 @@ const ImeiField = ({ imeinumber, setImeiNumber, prod, imei2, setImei2, onImeiVer
   const [error, setError] = useState('')
   const [imei2Error, setImei2Error] = useState('')
   const [isScanOpen, setIsScanOpen] = useState(false)
-  const [verificationResult, setVerificationResult] = useState(null)
   const [deviceModelInput, setDeviceModelInput] = useState('')
-  const pink = 'bg-primary'
 
   const isMobile = prod?.[0]?.categoryCode === 'CTG1'
 
@@ -45,10 +43,6 @@ const ImeiField = ({ imeinumber, setImeiNumber, prod, imei2, setImei2, onImeiVer
   }
 
   const canVerify = imeinumber && imeinumber.length === IMEI_LENGTH && /^\d{15}$/.test(imeinumber)
-
-  const handleVerificationComplete = (result) => {
-    setVerificationResult(result)
-  }
 
   return (
     <div className='flex flex-col gap-4'>
@@ -149,8 +143,9 @@ const ImeiField = ({ imeinumber, setImeiNumber, prod, imei2, setImei2, onImeiVer
             agentId={agentId}
             leadId={leadId}
             onVerificationComplete={(result) => {
-              handleVerificationComplete(result)
-              if (onImeiVerificationComplete) onImeiVerificationComplete(result)
+              if (onImeiVerificationComplete) {
+                onImeiVerificationComplete(result)
+              }
             }}
           />
         </div>

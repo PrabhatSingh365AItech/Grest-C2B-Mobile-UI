@@ -24,7 +24,11 @@ const responseSlice = createSlice({
 
   reducers: {
     setResponseData: (state, action) => {
-      const { id, price, grade, uniqueCode, bonus, slabBonusAmount, slabApplied, exactValue, dynamicPricingEnabled, isSlabApplied, conversionFee, mode, couponCode, couponDiscount } = action.payload;
+      const {
+        id, price, grade, uniqueCode, bonus, slabBonusAmount, slabApplied,
+        exactValue, dynamicPricingEnabled, isSlabApplied, conversionFee,
+        mode, couponCode, couponDiscount
+      } = action.payload;
       state.id = id;
       state.price = price;
       state.grade = grade;
