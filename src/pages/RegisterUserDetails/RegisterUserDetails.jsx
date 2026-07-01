@@ -485,6 +485,66 @@ const TableFilters = ({
   )
 }
 
+const getStores = (val) => {
+  if (val?.assignedStoresData?.length > 0) {
+    return val.assignedStoresData
+  }
+  if (val?.stores) {
+    return [val.stores]
+  }
+  return []
+}
+
+const UserRow = ({ val, index, store, stores, sIdx, editHandler, deleteConfHandler }) => {
+  const rowBg = index % 2 === 0 ? 'bg-gray-200' : ''
+  return (
+    <tr key={`${index}-${sIdx}`} className={rowBg}>
+      {sIdx === 0 && (
+        <>
+          <td rowSpan={stores.length} className='p-2 text-sm text-center md:p-3 md:text-base align-middle'>
+            <div className='flex flex-row gap-1 justify-center'>
+              <button className={`${styles.view_btn}`} onClick={() => editHandler(val)}>Edit</button>
+              <button className={`${styles.acpt_btn}`} onClick={() => deleteConfHandler(val?._id, val?.email)}>Delete</button>
+            </div>
+          </td>
+          <td rowSpan={stores.length} className='p-2 text-sm text-center md:p-3 md:text-base align-middle'>{`${val?.firstName} ${val?.lastName || ''}`}</td>
+          <td rowSpan={stores.length} className='p-2 text-sm text-center md:p-3 md:text-base align-middle'>{val?.email}</td>
+          <td rowSpan={stores.length} className='p-2 text-sm text-center md:p-3 md:text-base align-middle'>{val?.phoneNumber}</td>
+          <td rowSpan={stores.length} className='p-2 min-w-[200px] text-sm text-center md:p-3 md:text-base align-middle'>{val?.companyData?.name || 'N/A'}</td>
+          <td rowSpan={stores.length} className='p-2 text-sm text-center md:p-3 md:text-base align-middle'>{val?.companyData?.companyCode || 'N/A'}</td>
+          <td rowSpan={stores.length} className='p-2 text-sm text-center md:p-3 md:text-base align-middle'>{val?.role}</td>
+        </>
+      )}
+      <td className='p-2 text-sm text-center md:p-3 md:text-base'>{store.storeName || 'N/A'}</td>
+      <td className='p-2 text-sm text-center md:p-3 md:text-base'>{store.region || 'N/A'}</td>
+      <td className='p-2 text-sm text-center md:p-3 md:text-base'>{store.address || 'N/A'}</td>
+    </tr>
+  )
+}
+
+const NoStoreRow = ({ val, index, editHandler, deleteConfHandler }) => {
+  const rowBg = index % 2 === 0 ? 'bg-gray-200' : ''
+  return (
+    <tr key={index} className={rowBg}>
+      <td className='p-2 text-sm text-center md:p-3 md:text-base'>
+        <div className='flex flex-row gap-1 justify-center'>
+          <button className={`${styles.view_btn}`} onClick={() => editHandler(val)}>Edit</button>
+          <button className={`${styles.acpt_btn}`} onClick={() => deleteConfHandler(val?._id, val?.email)}>Delete</button>
+        </div>
+      </td>
+      <td className='p-2 text-sm text-center md:p-3 md:text-base'>{`${val?.firstName} ${val?.lastName || ''}`}</td>
+      <td className='p-2 text-sm text-center md:p-3 md:text-base'>{val?.email}</td>
+      <td className='p-2 text-sm text-center md:p-3 md:text-base'>{val?.phoneNumber}</td>
+      <td className='p-2 min-w-[200px] text-sm text-center md:p-3 md:text-base'>{val?.companyData?.name || 'N/A'}</td>
+      <td className='p-2 text-sm text-center md:p-3 md:text-base'>{val?.companyData?.companyCode || 'N/A'}</td>
+      <td className='p-2 text-sm text-center md:p-3 md:text-base'>{val?.role}</td>
+      <td className='p-2 text-sm text-center md:p-3 md:text-base'>N/A</td>
+      <td className='p-2 text-sm text-center md:p-3 md:text-base'>N/A</td>
+      <td className='p-2 text-sm text-center md:p-3 md:text-base'>N/A</td>
+    </tr>
+  )
+}
+
 const RegisterUserTable = ({ data, editHandler, deleteConfHandler }) => {
   return (
     <div className='m-2 overflow-x-auto md:m-5'>
@@ -512,58 +572,21 @@ const RegisterUserTable = ({ data, editHandler, deleteConfHandler }) => {
 
         <tbody>
           {data.map((val, index) => {
-            const stores = val?.assignedStoresData?.length > 0
-              ? val.assignedStoresData
-              : val?.stores
-                ? [val.stores]
-                : []
-
+            const stores = getStores(val)
             if (stores.length === 0) {
-              return (
-                <tr key={index} className={index % 2 === 0 ? 'bg-gray-200' : ''}>
-                  <td className='p-2 text-sm text-center md:p-3 md:text-base'>
-                    <div className='flex flex-row gap-1 justify-center'>
-                      <button className={`${styles.view_btn}`} onClick={() => editHandler(val)}>Edit</button>
-                      <button className={`${styles.acpt_btn}`} onClick={() => deleteConfHandler(val?._id, val?.email)}>Delete</button>
-                    </div>
-                  </td>
-                  <td className='p-2 text-sm text-center md:p-3 md:text-base'>{`${val?.firstName} ${val?.lastName || ''}`}</td>
-                  <td className='p-2 text-sm text-center md:p-3 md:text-base'>{val?.email}</td>
-                  <td className='p-2 text-sm text-center md:p-3 md:text-base'>{val?.phoneNumber}</td>
-                  <td className='p-2 min-w-[200px] text-sm text-center md:p-3 md:text-base'>{val?.companyData?.name || 'N/A'}</td>
-                  <td className='p-2 text-sm text-center md:p-3 md:text-base'>{val?.companyData?.companyCode || 'N/A'}</td>
-                  <td className='p-2 text-sm text-center md:p-3 md:text-base'>{val?.role}</td>
-                  <td className='p-2 text-sm text-center md:p-3 md:text-base'>N/A</td>
-                  <td className='p-2 text-sm text-center md:p-3 md:text-base'>N/A</td>
-                  <td className='p-2 text-sm text-center md:p-3 md:text-base'>N/A</td>
-                </tr>
-              )
+              return <NoStoreRow val={val} index={index} editHandler={editHandler} deleteConfHandler={deleteConfHandler} />
             }
-
-            const rowBg = index % 2 === 0 ? 'bg-gray-200' : ''
-
             return stores.map((store, sIdx) => (
-              <tr key={`${index}-${sIdx}`} className={rowBg}>
-                {sIdx === 0 && (
-                  <>
-                    <td rowSpan={stores.length} className='p-2 text-sm text-center md:p-3 md:text-base align-middle'>
-                      <div className='flex flex-row gap-1 justify-center'>
-                        <button className={`${styles.view_btn}`} onClick={() => editHandler(val)}>Edit</button>
-                        <button className={`${styles.acpt_btn}`} onClick={() => deleteConfHandler(val?._id, val?.email)}>Delete</button>
-                      </div>
-                    </td>
-                    <td rowSpan={stores.length} className='p-2 text-sm text-center md:p-3 md:text-base align-middle'>{`${val?.firstName} ${val?.lastName || ''}`}</td>
-                    <td rowSpan={stores.length} className='p-2 text-sm text-center md:p-3 md:text-base align-middle'>{val?.email}</td>
-                    <td rowSpan={stores.length} className='p-2 text-sm text-center md:p-3 md:text-base align-middle'>{val?.phoneNumber}</td>
-                    <td rowSpan={stores.length} className='p-2 min-w-[200px] text-sm text-center md:p-3 md:text-base align-middle'>{val?.companyData?.name || 'N/A'}</td>
-                    <td rowSpan={stores.length} className='p-2 text-sm text-center md:p-3 md:text-base align-middle'>{val?.companyData?.companyCode || 'N/A'}</td>
-                    <td rowSpan={stores.length} className='p-2 text-sm text-center md:p-3 md:text-base align-middle'>{val?.role}</td>
-                  </>
-                )}
-                <td className='p-2 text-sm text-center md:p-3 md:text-base'>{store.storeName || 'N/A'}</td>
-                <td className='p-2 text-sm text-center md:p-3 md:text-base'>{store.region || 'N/A'}</td>
-                <td className='p-2 text-sm text-center md:p-3 md:text-base'>{store.address || 'N/A'}</td>
-              </tr>
+              <UserRow
+                key={`${index}-${sIdx}`}
+                val={val}
+                index={index}
+                store={store}
+                stores={stores}
+                sIdx={sIdx}
+                editHandler={editHandler}
+                deleteConfHandler={deleteConfHandler}
+              />
             ))
           })}
         </tbody>

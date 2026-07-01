@@ -35,7 +35,9 @@ const DiffRow = ({ label, before, after, render }) => (
 )
 
 const SlabDiff = ({ before, after }) => {
-  if (!before?.length && !after?.length) return null
+  if (!before?.length && !after?.length) {
+    return null
+  }
   return (
     <details className='mt-2'>
       <summary className='cursor-pointer text-xs text-gray-500 font-medium hover:text-gray-700'>
@@ -142,7 +144,9 @@ const AuditLogEntry = ({ entry }) => {
 }
 
 const AuditLogModal = ({ isOpen, onClose, title, subtitle, entries }) => {
-  if (!isOpen) return null
+  if (!isOpen) {
+    return null
+  }
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4'>
@@ -172,7 +176,12 @@ const AuditLogModal = ({ isOpen, onClose, title, subtitle, entries }) => {
           {!entries || entries.length === 0 ? (
             <div className='flex flex-col items-center justify-center py-12 border-2 border-dashed border-gray-200 rounded-lg'>
               <svg className='w-10 h-10 text-gray-300 mb-2' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={1.5} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={1.5}
+                  d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+                />
               </svg>
               <p className='text-sm text-gray-400'>No audit log entries found</p>
             </div>

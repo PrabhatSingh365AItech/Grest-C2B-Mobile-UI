@@ -82,6 +82,69 @@ const FormInput = ({ label, value, onChange, required = false }) => (
     <span className='font-semibold text-base text-gray-800'>{text}</span>
   )
 
+const validateSlab = (slab, index, allSlabs) => {
+  if (Number(slab.maxValue) <= Number(slab.minValue)) {
+    toast.error('Max Value must be greater than Min Value in every slab row.');
+    return false;
+  }
+  if (Number(slab.bonusAmount) > Number(slab.maxValue)) {
+    toast.error('Bonus Amount cannot exceed the Exact Value for this slab range.');
+    return false;
+  }
+  if (index > 0 && Number(slab.minValue) <= Number(allSlabs[index - 1].maxValue)) {
+    toast.error('Slab ranges overlap. Please ensure slabs are contiguous with no gaps.');
+    return false;
+  }
+  return true;
+};
+
+const validatePricing = (dynamicPricingEnabled, slabs, effectiveFrom) => {
+  if (!dynamicPricingEnabled) {
+    return true;
+  }
+  if (slabs.length === 0) {
+    toast.error('Please add at least one pricing slab before saving.');
+    return false;
+  }
+  for (let i = 0; i < slabs.length; i++) {
+    if (!validateSlab(slabs[i], i, slabs)) {
+      return false;
+    }
+  }
+  if (!effectiveFrom) {
+    toast.error('Effective From Date is required');
+    return false;
+  }
+  const selectedDate = new Date(effectiveFrom);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (selectedDate < today) {
+    toast.error('Effective From Date cannot be set in the past.');
+    return false;
+  }
+  return true;
+};
+
+const SuccessNotification = ({ show, companyCode }) => {
+  if (!show || !companyCode) {
+    return null;
+  }
+  return (
+    <div className="ml-10 mr-10 mb-6 p-4 bg-green-100 border-2 border-green-500 rounded-lg">
+      <p className="text-green-800 font-semibold">
+        ✓ Company Created Successfully!
+      </p>
+      <p className="text-green-700 mt-2">
+        Generated Company Code:{" "}
+        <span className="font-bold">{companyCode}</span>
+      </p>
+      <p className="text-green-600 text-sm mt-1">
+        Redirecting to company details...
+      </p>
+    </div>
+  );
+};
+
 const CompanyListing = () => {
   const [sideMenu, setsideMenu] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState([]);
@@ -120,61 +183,11 @@ const CompanyListing = () => {
     setAttachedFiles((prevFiles) => [...prevFiles, ...Array.from(files)]);
   };
 
-  const handleSlabChange = (index, field, value) => {
-    const updated = [...slabs];
-    updated[index][field] = Number(value);
-    setSlabs(updated);
-  };
-
-  const addSlab = () => {
-    setSlabs([...slabs, { minValue: 0, maxValue: 0, bonusAmount: 0 }]);
-  };
-
-  const removeSlab = (index) => {
-    if (slabs.length <= 1) return;
-    setSlabs(slabs.filter((_, i) => i !== index));
-  };
-
-  const validatePricing = () => {
-    if (dynamicPricingEnabled) {
-      if (slabs.length === 0) {
-        toast.error('Please add at least one pricing slab before saving.');
-        return false;
-      }
-      for (let i = 0; i < slabs.length; i++) {
-        const s = slabs[i];
-        if (Number(s.maxValue) <= Number(s.minValue)) {
-          toast.error('Max Value must be greater than Min Value in every slab row.');
-          return false;
-        }
-        if (Number(s.bonusAmount) > Number(s.maxValue)) {
-          toast.error('Bonus Amount cannot exceed the Exact Value for this slab range.');
-          return false;
-        }
-        if (i > 0 && Number(s.minValue) <= Number(slabs[i - 1].maxValue)) {
-          toast.error('Slab ranges overlap. Please ensure slabs are contiguous with no gaps.');
-          return false;
-        }
-      }
-      if (!effectiveFrom) {
-        toast.error('Effective From Date is required');
-        return false;
-      }
-      const selectedDate = new Date(effectiveFrom);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selectedDate < today) {
-        toast.error('Effective From Date cannot be set in the past.');
-        return false;
-      }
-    }
-    return true;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validatePricing()) return;
-    if (!validatePricing()) return;
+    if (!validatePricing(dynamicPricingEnabled, slabs, effectiveFrom)) {
+      return;
+    }
     const userToken = sessionStorage.getItem("authToken");
 
     try {
@@ -190,9 +203,6 @@ const CompanyListing = () => {
         gstNumber: gstNumber.toUpperCase(),
         panNumber: panNumber.toUpperCase(),
         remarks: remarks,
-        showPrice: showPrice,
-        maskInfo: maskInfo,
-        emailConfiguration: emailConfiguration,
         showPrice: showPrice,
         maskInfo: maskInfo,
         emailConfiguration: emailConfiguration,
@@ -262,10 +272,6 @@ const CompanyListing = () => {
     slabs,
     effectiveFrom,
     pricingNotes,
-    dynamicPricingEnabled,
-    slabs,
-    effectiveFrom,
-    pricingNotes,
   };
 
   const setters = {
@@ -278,10 +284,6 @@ const CompanyListing = () => {
     setShowPrice,
     setMaskInfo,
     setEmailConfiguration,
-    setDynamicPricingEnabled,
-    setSlabs,
-    setEffectiveFrom,
-    setPricingNotes,
     setDynamicPricingEnabled,
     setSlabs,
     setEffectiveFrom,
@@ -316,20 +318,7 @@ const CompanyListing = () => {
             </Link>
           </div>
 
-          {showSuccess && generatedCompanyCode && (
-            <div className="ml-10 mr-10 mb-6 p-4 bg-green-100 border-2 border-green-500 rounded-lg">
-              <p className="text-green-800 font-semibold">
-                ✓ Company Created Successfully!
-              </p>
-              <p className="text-green-700 mt-2">
-                Generated Company Code:{" "}
-                <span className="font-bold">{generatedCompanyCode}</span>
-              </p>
-              <p className="text-green-600 text-sm mt-1">
-                Redirecting to company details...
-              </p>
-            </div>
-          )}
+          <SuccessNotification show={showSuccess} companyCode={generatedCompanyCode} />
 
           <CompanyListingForm
             formData={formData}
@@ -435,7 +424,9 @@ const CompanyListingForm = ({
   };
 
   const removeSlab = (index) => {
-    if (slabs.length <= 1) return;
+    if (slabs.length <= 1) {
+      return;
+    }
     setSlabs(slabs.filter((_, i) => i !== index));
   };
 
@@ -514,7 +505,9 @@ const CompanyListingForm = ({
           </div>
 
         <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-          Configure bonus amount slabs and pricing rules for this company. When enabled, the system automatically deducts a fixed Bonus Amount from the device Exact Value to calculate the final Quoted Price shown to the customer.
+          Configure bonus amount slabs and pricing rules for this company. When enabled,
+          the system automatically deducts a fixed Bonus Amount from the device Exact Value
+          to calculate the final Quoted Price shown to the customer.
         </p>
 
         <div className="flex flex-col gap-1.5 mb-4">

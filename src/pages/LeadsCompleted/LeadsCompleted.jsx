@@ -93,6 +93,61 @@ const getVariantInfo = (val) => {
   return '-'
 }
 
+const handleBulkDownloadReceipts = async (fromDate, toDate, tableData) => {
+  if (!fromDate || !toDate) {
+    alert('Please select and search valid date range Leads.')
+    return
+  }
+
+  for (const item of tableData) {
+    const dateString = item?.updatedAt
+    const formattedDate = new Date(dateString).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+    const signatureUrl = item?.documentId?.signature
+    const signatureBase64 = signatureUrl
+      ? await fetchSignatureAsBase64(signatureUrl)
+      : null
+
+    const printElement = ReactDOMServer.renderToString(
+      <PurchaseReceipt
+        phoneNumber={item?.phoneNumber}
+        aadharNumber={item?.aadharNumber}
+        uniqueCode={item?.uniqueCode}
+        emailId={item?.emailId}
+        name={item?.name}
+        imeiNumber={item?.documentId?.IMEI}
+        phoneName={item?.modelId?.name}
+        type={item?.categoryInfo?.categoryName}
+        storeName={item?.store?.storeName}
+        region={item?.store?.region}
+        address={item?.store?.address}
+        storage={item?.storage}
+        RAM={item?.ram}
+        formattedDate={formattedDate}
+        price={item?.price}
+        signatureUrl={signatureBase64 || signatureUrl}
+        companyName={item?.companyInfo?.name}
+        companyGstin={item?.companyInfo?.gstNumber}
+        companyAddress={item?.companyInfo?.address}
+      />,
+    )
+    html2pdf()
+      .set({
+        margin: 10,
+        filename: `purchase_receipt_${tableData.indexOf(item) + 1}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] },
+      })
+      .from(printElement)
+      .save()
+  }
+}
+
 // Refactored main function with reduced complexity
 const downloadExcelLeadsompleted = (apiData) => {
   const fileType =
@@ -516,58 +571,6 @@ const SubLeadsCompletedBtns = ({
   setDownloading,
   downloading,
 }) => {
-  const handleBulkDownloadReceipts = () => {
-    if (!fromDate || !toDate) {
-      alert('Please select and search valid date range Leads.')
-      return
-    }
-
-    tableData.forEach(async (item, index) => {
-      const dateString = item?.updatedAt
-      const formattedDate = new Date(dateString).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      })
-      const signatureUrl = item?.documentId?.signature
-      const signatureBase64 = signatureUrl
-        ? await fetchSignatureAsBase64(signatureUrl)
-        : null
-
-      const printElement = ReactDOMServer.renderToString(
-        <PurchaseReceipt
-          phoneNumber={item?.phoneNumber}
-          aadharNumber={item?.aadharNumber}
-          uniqueCode={item?.uniqueCode}
-          emailId={item?.emailId}
-          name={item?.name}
-          imeiNumber={item?.documentId?.IMEI}
-          phoneName={item?.modelId?.name}
-          type={item?.categoryInfo?.categoryName}
-          storeName={item?.store?.storeName}
-          region={item?.store?.region}
-          address={item?.store?.address}
-          storage={item?.storage}
-          RAM={item?.ram}
-          formattedDate={formattedDate}
-          price={item?.price}
-          signatureUrl={signatureBase64 || signatureUrl}
-        />,
-      )
-      html2pdf()
-        .set({
-          margin: 10,
-          filename: `purchase_receipt_${index + 1}.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, logging: false },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['css', 'legacy'] },
-        })
-        .from(printElement)
-        .save()
-    })
-  }
-
   return (
     <div className='flex gap-2 items-center justify-center outline-none mt-5 w-[100%]'>
       <div className='flex gap-4'>
@@ -596,7 +599,7 @@ const SubLeadsCompletedBtns = ({
         <div className='mt-2 ml-4'>
           <button
             className={`${styles.bulkdown_button}`}
-            onClick={handleBulkDownloadReceipts}
+            onClick={() => handleBulkDownloadReceipts(fromDate, toDate, tableData)}
           >
             <FaDownload /> Download Receipts
           </button>

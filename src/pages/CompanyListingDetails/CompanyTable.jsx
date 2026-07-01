@@ -2,6 +2,28 @@ import React from 'react'
 import { FaDownload, FaUpload } from 'react-icons/fa6'
 import styles from './CompanyListingDetails.module.css'
 
+const CONFIG_PENDING = 'Config Pending'
+
+const getStatusBadgeClass = (status) => {
+  if (status === 'ON') {
+    return 'bg-green-100 text-green-700'
+  }
+  if (status === CONFIG_PENDING) {
+    return 'bg-yellow-100 text-yellow-700'
+  }
+  return 'bg-gray-100 text-gray-500'
+}
+
+const getStatusLabel = (status) => {
+  if (status === 'ON') {
+    return 'ON'
+  }
+  if (status === CONFIG_PENDING) {
+    return CONFIG_PENDING
+  }
+  return 'OFF'
+}
+
 const CompanyTable = ({
   tableData,
   editHandler,
@@ -120,13 +142,8 @@ const CompanyTable = ({
                       {data.remarks}
                     </td>
                     <td className='p-2 text-sm text-center md:p-3 md:text-base'>
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        data.dynamicPricingStatus === 'ON' ? 'bg-green-100 text-green-700' :
-                        data.dynamicPricingStatus === 'Config Pending' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-gray-100 text-gray-500'
-                      }`}>
-                        {data.dynamicPricingStatus === 'ON' ? 'ON' :
-                         data.dynamicPricingStatus === 'Config Pending' ? 'Config Pending' : 'OFF'}
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusBadgeClass(data.dynamicPricingStatus)}`}>
+                        {getStatusLabel(data.dynamicPricingStatus)}
                       </span>
                     </td>
                     <td

@@ -419,42 +419,21 @@ const OTPCompSub = ({
     setUserData(data);
     console.log(data);
     if (ExactQuote === "true") {
-      if (ExactQuote === "true") {
-        axios
-          .post(
-            `${
-              import.meta.env.VITE_REACT_APP_ENDPOINT
-            }/api/leadSet/orderCreated`,
-            data,
-            { headers: { authorization: userToken } }
-          )
-          .then((res) => {
-            console.log(res);
-            toast.success(quoteText);
-            setQuoteSaved(true);
-            dispatch(setOtpVerified(true));
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      } else {
-        axios
-          .post(
-            `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/leadSet/quickQoute`,
-            userData,
-            { headers: { authorization: userToken } }
-          )
-          .then((res) => {
-            console.log(res);
-            toast.success(quoteText);
-            setQuoteSaved(true);
-            dispatch(setOtpVerified(true));
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      }
-      setLoading(false);
+      axios
+        .post(
+          `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/leadSet/orderCreated`,
+          data,
+          { headers: { authorization: userToken } }
+        )
+        .then((res) => {
+          console.log(res);
+          toast.success(quoteText);
+          setQuoteSaved(true);
+          dispatch(setOtpVerified(true));
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     } else {
       axios
         .post(
@@ -471,8 +450,8 @@ const OTPCompSub = ({
           toast.error(Failerr);
           handleClose();
         });
-      setLoading(false);
     }
+    setLoading(false);
     handleClose();
   };
   return (
