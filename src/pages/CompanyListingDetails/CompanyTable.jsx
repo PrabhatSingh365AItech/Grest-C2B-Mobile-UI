@@ -24,6 +24,13 @@ const getStatusLabel = (status) => {
   return 'OFF'
 }
 
+const AadharBadge = ({ required }) => {
+  if (required) {
+    return <span className='px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700'>ON</span>
+  }
+  return <span className='px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500'>OFF</span>
+}
+
 const CompanyTable = ({
   tableData,
   editHandler,
@@ -71,6 +78,7 @@ const CompanyTable = ({
               <th className='p-2 text-sm md:p-3 md:text-base'>PAN Number</th>
               <th className='p-2 text-sm md:p-3 md:text-base'>Remarks</th>
               <th className='p-2 text-sm md:p-3 md:text-base'>Dynamic Pricing</th>
+              <th className='p-2 text-sm md:p-3 md:text-base'>Aadhaar Verify</th>
               <th className='p-2 text-sm md:p-3 md:text-base'>Documents</th>
               <th className='p-2 text-sm md:p-3 md:text-base'>Price Sheets</th>
             </tr>
@@ -145,6 +153,9 @@ const CompanyTable = ({
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusBadgeClass(data.dynamicPricingStatus)}`}>
                         {getStatusLabel(data.dynamicPricingStatus)}
                       </span>
+                    </td>
+                    <td className='p-2 text-sm text-center md:p-3 md:text-base'>
+                      <AadharBadge required={data.aadharVerificationRequired !== false} />
                     </td>
                     <td
                       className='p-2 text-sm text-center md:p-3 md:text-base'

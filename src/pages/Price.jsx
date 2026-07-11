@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CgSpinner } from 'react-icons/cg'
+import axios from 'axios'
 
 import PriceHeader from '../components/Price/PriceHeader'
 import PriceFormFields from '../components/Price/PriceFormFields'
@@ -43,6 +44,32 @@ const Price = () => {
 
   const [imei2, setImei2] = useState('')
   const [imeiVerificationResult, setImeiVerificationResult] = useState(null)
+  const [aadharVerificationRequired, setAadharVerificationRequired] = useState(true)
+
+  useEffect(() => {
+    const fetchAadharSetting = async () => {
+      try {
+        const profile = JSON.parse(sessionStorage.getItem('profile'))
+        const companyId = profile?.companyId
+        if (!companyId) {
+          return
+        }
+
+        const token = sessionStorage.getItem('authToken')
+        const res = await axios.get(
+          `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/company/findById?id=${companyId}`,
+          { headers: { Authorization: token } }
+        )
+        const company = res.data.result
+        if (company && company.aadharVerificationRequired === false) {
+          setAadharVerificationRequired(false)
+        }
+      } catch (err) {
+        console.error('Failed to fetch Aadhaar verification setting:', err)
+      }
+    }
+    fetchAadharSetting()
+  }, [])
 
   const isImeiBlocked =
     isMobile &&
@@ -67,10 +94,10 @@ const Price = () => {
     phoneBottom &&
     signatureFile &&
     customerPhoto &&
-    ceirImage
-    && isAadharVerified &&
+    ceirImage &&
     imeiVerified &&
-    !isImeiBlocked
+    !isImeiBlocked &&
+    (aadharVerificationRequired ? isAadharVerified : true)
 
   const handleImeiVerificationComplete = (result) => {
     setImeiVerificationResult(result)
@@ -99,11 +126,12 @@ const Price = () => {
             imei2={imei2}
             setImei2={setImei2}
             onImeiVerificationComplete={handleImeiVerificationComplete}
+            aadharVerificationRequired={aadharVerificationRequired}
           />
         </div>
       </div>
       <div className='flex-shrink-0 flex flex-col w-full gap-2 p-4 bg-white border-t-2'>
-        {!isAadharVerified && (
+        {aadharVerificationRequired && !isAadharVerified && (
           <p className='text-sm text-center text-red-500'>
             Please verify your Aadhar number before submitting
           </p>

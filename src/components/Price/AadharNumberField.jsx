@@ -7,11 +7,58 @@ import {
 } from '../../services/paysprintAadhaarService'
 import ConsentCheckbox from '../ConsentCheckbox'
 
+const DISABLED_BTN = 'bg-gray-400 cursor-not-allowed'
+const PINK = 'bg-primary'
+
+const isSuccessResponse = (response) => {
+  const explicitStatus = response?.status ?? response?.success
+  if (typeof explicitStatus === 'boolean') {
+    return explicitStatus
+  }
+
+  const code =
+    response?.response_code ?? response?.status_code ?? response?.statuscode
+  if (code !== undefined) {
+    const normalized = String(code)
+    return normalized === '1' || normalized === '200'
+  }
+
+  return true
+}
+
+const OtpVerifySection = ({
+  otp,
+  setOtp,
+  isVerifyingOtp,
+  handleVerifyOtp,
+}) => (
+  <div className='flex items-center gap-4 mt-3 ml-[19px]'>
+    <input
+      type='text'
+      className='w-auto p-2 border-2 border-gray-300 rounded outline-none'
+      value={otp}
+      placeholder='Enter OTP'
+      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+      maxLength={6}
+    />
+    <button
+      className={`px-4 py-2 font-bold text-white rounded ${
+        isVerifyingOtp ? DISABLED_BTN : PINK
+      }`}
+      onClick={handleVerifyOtp}
+      disabled={isVerifyingOtp || otp.length !== 6}
+    >
+      {isVerifyingOtp ? 'Verifying...' : 'Verify OTP'}
+    </button>
+  </div>
+)
+
 const AadharNumberField = ({
   aadharNumber,
   setAadharNumber,
   isVerified,
   setIsVerified,
+  isVerificationRequired = true,
 }) => {
   const [error, setError] = useState(true)
   const [isSendingOtp, setIsSendingOtp] = useState(false)
@@ -20,8 +67,6 @@ const AadharNumberField = ({
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [clientId, setClientId] = useState('')
-  const pink = 'bg-primary'
-
   useEffect(() => {
     if (aadharNumber) {
       validateAadharNumber(aadharNumber)
@@ -48,22 +93,6 @@ const AadharNumberField = ({
     setOtpSent(false)
     setClientId('')
     validateAadharNumber(value)
-  }
-
-  const isSuccessResponse = (response) => {
-    const explicitStatus = response?.status ?? response?.success
-    if (typeof explicitStatus === 'boolean') {
-      return explicitStatus
-    }
-
-    const code =
-      response?.response_code ?? response?.status_code ?? response?.statuscode
-    if (code !== undefined) {
-      const normalized = String(code)
-      return normalized === '1' || normalized === '200'
-    }
-
-    return true
   }
 
   const handleSendOtp = async () => {
@@ -151,10 +180,13 @@ const AadharNumberField = ({
     if (isVerified) {
       return 'bg-green-500 cursor-not-allowed'
     }
-    if (!error && !isSendingOtp) {
-      return pink
+    if (!isVerificationRequired) {
+      return DISABLED_BTN
     }
-    return 'bg-gray-400 cursor-not-allowed'
+    if (!error && !isSendingOtp) {
+      return PINK
+    }
+    return DISABLED_BTN
   }
 
   const getButtonText = () => {
@@ -190,32 +222,22 @@ const AadharNumberField = ({
         <button
           className={`px-4 py-2 font-bold text-white rounded ${getButtonClass()}`}
           onClick={handleSendOtp}
-          disabled={!!error || isSendingOtp || otpSent}
+          disabled={!isVerificationRequired || !!error || isSendingOtp || otpSent}
         >
           {getButtonText()}
         </button>
+        {!isVerificationRequired && (
+          <span className='text-sm text-primary'>Note: Verification not needed. You can submit directly.</span>
+        )}
       </div>
 
       {otpSent && !isVerified && (
-        <div className='flex items-center gap-4 mt-3 ml-[19px]'>
-          <input
-            type='text'
-            className='w-auto p-2 border-2 border-gray-300 rounded outline-none'
-            value={otp}
-            placeholder='Enter OTP'
-            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-            maxLength={6}
-          />
-          <button
-            className={`px-4 py-2 font-bold text-white rounded ${
-              isVerifyingOtp ? 'bg-gray-400 cursor-not-allowed' : pink
-            }`}
-            onClick={handleVerifyOtp}
-            disabled={isVerifyingOtp || otp.length !== 6}
-          >
-            {isVerifyingOtp ? 'Verifying...' : 'Verify OTP'}
-          </button>
-        </div>
+        <OtpVerifySection
+          otp={otp}
+          setOtp={setOtp}
+          isVerifyingOtp={isVerifyingOtp}
+          handleVerifyOtp={handleVerifyOtp}
+        />
       )}
       {error && typeof error === 'string' && (
         <p className='text-primary mt-2 text-sm'>{error}</p>

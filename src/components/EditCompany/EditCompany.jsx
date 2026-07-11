@@ -298,7 +298,7 @@ const EditCompany = ({ companyData, setEditBoxOpen, setEditSuccess }) => {
   const handleChange = (e) => {
     const { name, value, type } = e.target
     let newValue = type === 'checkbox' ? e.target.checked : value
-    if (name === 'showPrice' || name === 'maskInfo') {
+    if (name === 'showPrice' || name === 'maskInfo' || name === 'aadharVerificationRequired') {
       newValue = value === 'true'
     }
     setFormValues(prev => ({ ...prev, [name]: newValue }))
@@ -336,6 +336,7 @@ const EditCompany = ({ companyData, setEditBoxOpen, setEditSuccess }) => {
       formData.append('remarks', formValues.remarks)
       formData.append('showPrice', formValues.showPrice)
       formData.append('maskInfo', formValues.maskInfo)
+      formData.append('aadharVerificationRequired', formValues.aadharVerificationRequired)
       formData.append('emailConfiguration', JSON.stringify(formValues.emailConfiguration))
       formData.append('id', formValues._id)
 
@@ -372,6 +373,13 @@ const EditCompany = ({ companyData, setEditBoxOpen, setEditSuccess }) => {
           <FormField label='Remarks' name='remarks' value={formValues.remarks} onChange={handleChange} />
           <SelectField label='Show Price' name='showPrice' value={formValues.showPrice?.toString() || 'false'} onChange={handleChange} options={booleanOptions} />
           <SelectField label='Mask Info' name='maskInfo' value={formValues.maskInfo?.toString() || 'false'} onChange={handleChange} options={booleanOptions} />
+          <SelectField
+            label='Aadhaar Verification'
+            name='aadharVerificationRequired'
+            value={formValues.aadharVerificationRequired?.toString() || 'true'}
+            onChange={handleChange}
+            options={booleanOptions}
+          />
         </div>
 
         <div className='border border-gray-200 rounded-lg p-4'>

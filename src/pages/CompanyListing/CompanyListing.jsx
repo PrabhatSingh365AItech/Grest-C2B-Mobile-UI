@@ -157,6 +157,7 @@ const CompanyListing = () => {
 
   const [showPrice, setShowPrice] = useState(false);
   const [maskInfo, setMaskInfo] = useState(false);
+  const [aadharVerificationRequired, setAadharVerificationRequired] = useState(true);
   const [emailConfiguration, setEmailConfiguration] = useState({
     enabled: false,
     recipients: [],
@@ -205,6 +206,7 @@ const CompanyListing = () => {
         remarks: remarks,
         showPrice: showPrice,
         maskInfo: maskInfo,
+        aadharVerificationRequired: aadharVerificationRequired,
         emailConfiguration: emailConfiguration,
         attachedDocuments: uploadedDocuments,
       };
@@ -238,7 +240,7 @@ const CompanyListing = () => {
         { headers: { Authorization: userToken } }
       );
 
-      toast.success("Company Added Successfully!");
+      toast.success("Company added successfully!");
 
       if (response.data.result && response.data.result.companyCode) {
         setGeneratedCompanyCode(response.data.result.companyCode);
@@ -266,6 +268,7 @@ const CompanyListing = () => {
     remarks,
     showPrice,
     maskInfo,
+    aadharVerificationRequired,
     emailConfiguration,
     attachedFiles,
     dynamicPricingEnabled,
@@ -283,6 +286,7 @@ const CompanyListing = () => {
     setRemarks,
     setShowPrice,
     setMaskInfo,
+    setAadharVerificationRequired,
     setEmailConfiguration,
     setDynamicPricingEnabled,
     setSlabs,
@@ -374,6 +378,99 @@ const AddSlabRow = ({ slab, index, onChange, onRemove }) => (
   </div>
 );
 
+const DynamicPricingConfig = ({
+  dynamicPricingEnabled,
+  setDynamicPricingEnabled,
+  slabs,
+  handleSlabChange,
+  removeSlab,
+  addSlab,
+  effectiveFrom,
+  setEffectiveFrom,
+  pricingNotes,
+  setPricingNotes,
+}) => (
+  <div className="w-[70%] mt-2 p-4 border border-gray-200 rounded-lg">
+    <div className='flex items-center justify-between mb-3'>
+      {sectionTitle('Dynamic Pricing & Bonus Settings')}
+    </div>
+
+    <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+      Configure bonus amount slabs and pricing rules for this company. When enabled,
+      the system automatically deducts a fixed Bonus Amount from the device Exact Value
+      to calculate the final Quoted Price shown to the customer.
+    </p>
+
+    <div className="flex flex-col gap-1.5 mb-4">
+      <span className="font-medium text-sm text-gray-700">Enable Dynamic Pricing</span>
+      <select
+        className="border border-gray-300 px-3 py-2 rounded-lg outline-none bg-white transition text-sm w-[120px]"
+        value={dynamicPricingEnabled.toString()}
+        onChange={(e) => setDynamicPricingEnabled(e.target.value === "true")}
+      >
+        <option value="true">ON</option>
+        <option value="false">OFF</option>
+      </select>
+    </div>
+
+    {dynamicPricingEnabled && (
+      <div className="flex flex-col gap-4 border-t border-gray-100 pt-4">
+        <div>
+          <span className="font-semibold text-sm text-gray-800">Bonus Amount Slab Table</span>
+        </div>
+        <div className="flex gap-2 text-xs font-medium text-gray-500">
+          <span className="w-[100px]">Min Value (Rs.)</span>
+          <span className="w-[30px]"></span>
+          <span className="w-[100px]">Max Value (Rs.)</span>
+          <span className="w-[100px]">Bonus Amount (Rs.)</span>
+        </div>
+        <div className="flex flex-col gap-3">
+          {slabs.map((slab, index) => (
+            <AddSlabRow
+              key={index}
+              slab={slab}
+              index={index}
+              onChange={handleSlabChange}
+              onRemove={removeSlab}
+            />
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={addSlab}
+          className="self-start bg-gray-50 border-2 border-dashed border-gray-300 px-4 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:border-gray-400 transition"
+        >
+          + Add Slab
+        </button>
+
+        <div className="grid grid-row-1 md:grid-row-2 gap-4">
+          <div className="flex flex-col gap-1.5">
+            <span className="font-medium text-sm text-gray-700">Effective From Date</span>
+            <p className="text-xs text-gray-400">Set when pricing rules take effect. Must be today or future.</p>
+            <input
+              type="date"
+              className="border border-gray-300 px-3 py-2 rounded-lg outline-none transition text-sm"
+              value={effectiveFrom}
+              min={new Date().toISOString().split('T')[0]}
+              onChange={(e) => setEffectiveFrom(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="font-medium text-sm text-gray-700">Notes / Remarks</span>
+            <textarea
+              className="border border-gray-300 px-3 py-2 rounded-lg outline-none transition text-sm resize-none"
+              rows={2}
+              value={pricingNotes}
+              onChange={(e) => setPricingNotes(e.target.value)}
+              placeholder="Internal notes for this pricing configuration..."
+            />
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+)
+
 const CompanyListingForm = ({
   formData,
   setters,
@@ -389,6 +486,7 @@ const CompanyListingForm = ({
     remarks,
     showPrice,
     maskInfo,
+    aadharVerificationRequired,
     emailConfiguration,
     attachedFiles,
     dynamicPricingEnabled,
@@ -406,6 +504,7 @@ const CompanyListingForm = ({
     setRemarks,
     setShowPrice,
     setMaskInfo,
+    setAadharVerificationRequired,
     setEmailConfiguration,
     setDynamicPricingEnabled,
     setSlabs,
@@ -472,6 +571,18 @@ const CompanyListingForm = ({
         </select>
       </div>
 
+      <div className="flex flex-col w-[70%] gap-2">
+        <span className="font-medium text-xl">Aadhaar Verification</span>
+        <select
+          className="border-2 px-2 py-2 rounded-lg outline-none bg-white"
+          value={aadharVerificationRequired.toString()}
+          onChange={(e) => setAadharVerificationRequired(e.target.value === "true")}
+        >
+          <option value="true">True</option>
+          <option value="false">False</option>
+        </select>
+      </div>
+
      <div className="w-[70%]">
         <EmailConfiguration
           value={emailConfiguration}
@@ -499,85 +610,18 @@ const CompanyListingForm = ({
           ))}
       </div>
 
-      <div className="w-[70%] mt-2 p-4 border border-gray-200 rounded-lg">
-         <div className='flex items-center justify-between mb-3'>
-            {sectionTitle('Dynamic Pricing & Bonus Settings')}
-          </div>
-
-        <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-          Configure bonus amount slabs and pricing rules for this company. When enabled,
-          the system automatically deducts a fixed Bonus Amount from the device Exact Value
-          to calculate the final Quoted Price shown to the customer.
-        </p>
-
-        <div className="flex flex-col gap-1.5 mb-4">
-          <span className="font-medium text-sm text-gray-700">Enable Dynamic Pricing</span>
-          <select
-            className="border border-gray-300 px-3 py-2 rounded-lg outline-none bg-white transition text-sm w-[120px]"
-            value={dynamicPricingEnabled.toString()}
-            onChange={(e) => setDynamicPricingEnabled(e.target.value === "true")}
-          >
-            <option value="true">ON</option>
-            <option value="false">OFF</option>
-          </select>
-        </div>
-
-        {dynamicPricingEnabled && (
-        <div className="flex flex-col gap-4 border-t border-gray-100 pt-4">
-          <div>
-            <span className="font-semibold text-sm text-gray-800">Bonus Amount Slab Table</span>
-          </div>
-          <div className="flex gap-2 text-xs font-medium text-gray-500">
-            <span className="w-[100px]">Min Value (Rs.)</span>
-            <span className="w-[30px]"></span>
-            <span className="w-[100px]">Max Value (Rs.)</span>
-            <span className="w-[100px]">Bonus Amount (Rs.)</span>
-          </div>
-          <div className="flex flex-col gap-3">
-            {slabs.map((slab, index) => (
-              <AddSlabRow
-                key={index}
-                slab={slab}
-                index={index}
-                onChange={handleSlabChange}
-                onRemove={removeSlab}
-              />
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={addSlab}
-            className="self-start bg-gray-50 border-2 border-dashed border-gray-300 px-4 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:border-gray-400 transition"
-          >
-            + Add Slab
-          </button>
-
-          <div className="grid grid-row-1 md:grid-row-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <span className="font-medium text-sm text-gray-700">Effective From Date</span>
-              <p className="text-xs text-gray-400">Set when pricing rules take effect. Must be today or future.</p>
-              <input
-                type="date"
-                className="border border-gray-300 px-3 py-2 rounded-lg outline-none  transition text-sm"
-                value={effectiveFrom}
-                min={new Date().toISOString().split('T')[0]}
-                onChange={(e) => setEffectiveFrom(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <span className="font-medium text-sm text-gray-700">Notes / Remarks</span>
-              <textarea
-                className="border border-gray-300 px-3 py-2 rounded-lg outline-none  transition text-sm resize-none"
-                rows={2}
-                value={pricingNotes}
-                onChange={(e) => setPricingNotes(e.target.value)}
-                placeholder="Internal notes for this pricing configuration..."
-              />
-            </div>
-          </div>
-          </div>
-        )}
-        </div>
+      <DynamicPricingConfig
+        dynamicPricingEnabled={dynamicPricingEnabled}
+        setDynamicPricingEnabled={setDynamicPricingEnabled}
+        slabs={slabs}
+        handleSlabChange={handleSlabChange}
+        removeSlab={removeSlab}
+        addSlab={addSlab}
+        effectiveFrom={effectiveFrom}
+        setEffectiveFrom={setEffectiveFrom}
+        pricingNotes={pricingNotes}
+        setPricingNotes={setPricingNotes}
+      />
 
         <div className="mt-8">
         <button className="font-medium text-sm text-white p-3 rounded bg-primary">

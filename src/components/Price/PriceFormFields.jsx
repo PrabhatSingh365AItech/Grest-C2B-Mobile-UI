@@ -17,6 +17,7 @@ const PriceFormFields = ({
   imei2,
   setImei2,
   onImeiVerificationComplete,
+  aadharVerificationRequired,
 }) => {
   const {
     file,
@@ -79,7 +80,7 @@ const PriceFormFields = ({
         aadharNumber={aadharNumber}
         isVerified={isAadharVerified}
         setIsVerified={setIsAadharVerified}
-        prod={prod}
+        isVerificationRequired={aadharVerificationRequired}
       />
       <AdharField
         handleChange={handleFileChange}
@@ -147,10 +148,11 @@ const PriceFormFields = ({
         prod={prod}
       />
       <CustomerPhotoField
-        handleChange={handleFileChange}
         customerPhoto={customerPhoto}
         setCustomerPhoto={setCustomerPhoto}
         uploadStatus={uploadStatus}
+        uploadIndividualFile={uploadIndividualFile}
+        imeinumber={imeinumber}
         prod={prod}
         fileInputRef={customerPhotoRef}
         handleCameraButtonClick={handleCameraButtonClick}
