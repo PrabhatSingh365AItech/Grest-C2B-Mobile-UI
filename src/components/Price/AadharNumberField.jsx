@@ -227,7 +227,7 @@ const AadharNumberField = ({
           {getButtonText()}
         </button>
         {!isVerificationRequired && (
-          <span className='text-sm text-primary'>Note: Verification not needed. You can submit directly.</span>
+          <span className='text-sm text-primary'>Note: Aadhar Verification not required at this time. Please proceed ahead.</span>
         )}
       </div>
 
