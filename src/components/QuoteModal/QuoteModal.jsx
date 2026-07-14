@@ -7,6 +7,7 @@ import { setOtpVerified } from "../../store/slices/otpSlice";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { MdEdit } from "react-icons/md";
+import { useIOSKeyboard } from "../../hooks/useIOSKeyboard";
 
 const Failerr = "Failed To Save Quote";
 const quoteText = "Quote Saved Successfully";
@@ -243,10 +244,11 @@ const OTPCOmp = ({
   manualBonus,
 }) => {
   const [otp, setOtp] = useState("");
+  const iosKeyboardVisible = useIOSKeyboard();
   return (
     <div className={showHideClassName}>
       <section
-        className={`${styles.modalMain}  ${showOtp ? styles.smallHeight : ""}`}
+        className={`${styles.modalMain}  ${showOtp ? styles.smallHeight : ""} ${iosKeyboardVisible ? styles.iosKeyboardOpen : ""}`}
       >
         <React.Fragment>
           {!showOtp ? (

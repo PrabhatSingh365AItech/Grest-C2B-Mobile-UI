@@ -10,6 +10,7 @@ import DeviceReport from '../../components/DeviceReport/DeviceReport'
 import ProfileBox from '../../components/ProfileBox/ProfileBox'
 import apple_watch from '../../assets/apple_watch.png'
 import { setResponseData } from '../../store/slices/responseSlice'
+import { useIOSKeyboard } from '../../hooks/useIOSKeyboard'
 import axios from 'axios'
 
 const currentDomain = window.location.origin
@@ -136,6 +137,7 @@ const computeQuotedPrice = (dynamicPricingEnabled, apiQuotedPrice, isSlabApplied
 const DeviceQuote = () => {
   const quoteData = useDeviceQuoteData()
   const { dispatch, DummyImg, phoneFrontPhoto, exactQuoteValue, deviceModalInfo, leadId, token, ResponseData, Price, uniqueCode, savedBonus } = quoteData
+  const iosKeyboardVisible = useIOSKeyboard()
 
   const [showModal, setShowModal] = useState(false)
   const [continueOTPOpen, setContinueOTPOpen] = useState(false)
@@ -318,7 +320,7 @@ const DeviceQuote = () => {
               }}
             />
           </div>
-          <div className='fixed bottom-0 flex flex-col w-full gap-2 p-4 border-t-2 bg-white'>
+          <div className={`fixed bottom-0 flex flex-col w-full gap-2 p-4 border-t-2 bg-white ${iosKeyboardVisible ? 'invisible' : ''}`}>
             {quoteSaved === false && exactQuoteValue === 'true' && (
               <TermsCheckbox
                 termsChecked={termsChecked}

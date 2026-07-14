@@ -72,3 +72,12 @@
 .smallHeight {
   height: 50%; /* Set the desired smaller height */
 }
+
+@media (max-width: 768px) {
+  .iosKeyboardOpen {
+    bottom: auto !important;
+    top: 16px !important;
+    height: calc(100dvh - 32px) !important;
+    max-height: calc(100dvh - 32px) !important;
+  }
+}
