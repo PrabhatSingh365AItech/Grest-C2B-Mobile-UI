@@ -137,7 +137,7 @@ const OrdersCompleted = ({ daysfilters, head }) => {
                   ? item.model?.phonePhotos?.front
                   : "https://grest-c2b-images.s3.ap-south-1.amazonaws.com/gresTest/1705473080031front.jpg"
               }
-              dateTime={item.updatedAt}
+               dateTime={item.createdAt}
             />
           ))
         ) : (

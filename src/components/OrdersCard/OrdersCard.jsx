@@ -111,7 +111,7 @@ async function hanldlejsx_pdf(item) {
 
 async function buildPrintElement(item) {
   console.log('order item', item)
-  const formattedDate = new Date(item.updatedAt).toLocaleDateString('en-IN', {
+  const formattedDate = new Date(item.createdAt).toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
