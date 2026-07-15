@@ -18,7 +18,6 @@ export const useFileUpload = (token, imeinumber) => {
     [FILE_KEYS.SIGNATURE]: { status: UPLOAD_STATUS.PENDING, progress: 0 }, // <-- Added new signature
     [FILE_KEYS.CUSTOMER_PHOTO]: { status: UPLOAD_STATUS.PENDING, progress: 0 }, // <-- Added customer photo
     [FILE_KEYS.CEIR]: { status: UPLOAD_STATUS.PENDING, progress: 0 }, // <-- Added new CEIR
-    [FILE_KEYS.CUSTOMER_PHOTO]: { status: UPLOAD_STATUS.PENDING, progress: 0 },
   })
 
   const uploadIndividualFile = async (
