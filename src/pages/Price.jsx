@@ -9,6 +9,11 @@ import PriceFormFields from '../components/Price/PriceFormFields'
 import { usePriceForm } from '../hooks/usePriceForm'
 import { usePriceUpload } from '../hooks/usePriceUpload'
 import { IVS_STATUS } from '../services/ivsService'
+import { FILE_KEYS } from '../constants/priceConstants'
+import {
+  getRequiredFiles,
+  isAllUploadsSuccessful,
+} from '../utils/validationUtils'
 
 const pink = 'bg-primary'
 
@@ -38,6 +43,7 @@ const Price = () => {
     isAadharVerified,
     handleCameraButtonClick,
     prod,
+    isBillRequired,
   } = formState
 
   const isMobile = prod?.[0]?.categoryCode === 'CTG1'
@@ -84,6 +90,18 @@ const Price = () => {
         imeiVerificationResult.imei1Status === IVS_STATUS.UNKNOWN ||
         imeiVerificationResult.imei1Status === IVS_STATUS.ERROR))
 
+  const requiredFileKeys = getRequiredFiles(isBillRequired)
+  requiredFileKeys.push(
+    FILE_KEYS.SIGNATURE,
+    FILE_KEYS.CEIR,
+    FILE_KEYS.CUSTOMER_PHOTO
+  )
+
+  const allUploadsSuccessful = isAllUploadsSuccessful(
+    requiredFileKeys,
+    uploadStatus
+  )
+
   const canSubmit =
     (isMobile ? imeinumber : true) &&
     phoneFront &&
@@ -92,6 +110,7 @@ const Price = () => {
     phoneRight &&
     phoneTop &&
     phoneBottom &&
+    allUploadsSuccessful &&
     signatureFile &&
     customerPhoto &&
     ceirImage &&

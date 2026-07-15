@@ -55,3 +55,34 @@ export const getFailedUploads = (requiredFiles, uploadStatus) => {
     (fileKey) => uploadStatus[fileKey]?.status !== UPLOAD_STATUS.SUCCESS
   )
 }
+
+const FILE_KEY_LABELS = {
+  [FILE_KEYS.ADHAAR_FRONT]: 'Aadhaar Front',
+  [FILE_KEYS.ADHAAR_BACK]: 'Aadhaar Back',
+  [FILE_KEYS.PHONE_BILL]: 'Phone Bill',
+  [FILE_KEYS.PHONE_FRONT]: 'Phone Front',
+  [FILE_KEYS.PHONE_BACK]: 'Phone Back',
+  [FILE_KEYS.PHONE_LEFT]: 'Phone Left',
+  [FILE_KEYS.PHONE_RIGHT]: 'Phone Right',
+  [FILE_KEYS.PHONE_TOP]: 'Phone Top',
+  [FILE_KEYS.PHONE_BOTTOM]: 'Phone Bottom',
+  [FILE_KEYS.SIGNATURE]: 'Signature',
+  [FILE_KEYS.CEIR]: 'CEIR Image',
+  [FILE_KEYS.CUSTOMER_PHOTO]: 'Customer Photo',
+}
+
+export const getIncompleteUploadDetails = (requiredFiles, uploadStatus) => {
+  return requiredFiles
+    .filter((fileKey) => uploadStatus[fileKey]?.status !== UPLOAD_STATUS.SUCCESS)
+    .map((fileKey) => ({
+      key: fileKey,
+      label: FILE_KEY_LABELS[fileKey] || fileKey,
+      status: uploadStatus[fileKey]?.status || UPLOAD_STATUS.PENDING,
+    }))
+}
+
+export const isAllUploadsSuccessful = (requiredFiles, uploadStatus) => {
+  return requiredFiles.every(
+    (fileKey) => uploadStatus[fileKey]?.status === UPLOAD_STATUS.SUCCESS
+  )
+}
