@@ -160,6 +160,7 @@ const DeviceQuote = () => {
   const [selectedCoupon, setSelectedCoupon] = useState(null)
   const [isCouponApplied, setIsCouponApplied] = useState(false)
   const [isLoadingCoupon, setIsLoadingCoupon] = useState(true)
+  const [maxNegotiation, setMaxNegotiation] = useState(10000)
   const initialDpFetchDone = useRef(false)
 
   useEffect(() => {
@@ -237,15 +238,18 @@ const DeviceQuote = () => {
           { companyId, exactValue: initialEV, applyNegotiatedAmount: false, negotiatedAmount: 0, couponDiscount: 0 },
           { headers: { Authorization: token } }
         )
-        if (res.data.success && res.data.data.isDynamicPricingEnabled) {
-          setSlabBonusAmount(res.data.data.slabBonusAmount)
-          setSlabApplied(res.data.data.slabApplied || '')
-          setExactValue(res.data.data.exactValue)
-          setApiQuotedPrice(res.data.data.quotedPrice)
-          setDynamicPricingEnabled(true)
-          if (!initialDpFetchDone.current) {
-            setIsSlabApplied(true)
-            initialDpFetchDone.current = true
+        if (res.data.success && res.data.data) {
+          setMaxNegotiation(Number(res.data.data.maxNegotiationAmount) || 10000)
+          if (res.data.data.isDynamicPricingEnabled) {
+            setSlabBonusAmount(res.data.data.slabBonusAmount)
+            setSlabApplied(res.data.data.slabApplied || '')
+            setExactValue(res.data.data.exactValue)
+            setApiQuotedPrice(res.data.data.quotedPrice)
+            setDynamicPricingEnabled(true)
+            if (!initialDpFetchDone.current) {
+              setIsSlabApplied(true)
+              initialDpFetchDone.current = true
+            }
           }
         }
       } catch (err) {
@@ -258,10 +262,9 @@ const DeviceQuote = () => {
     const shouldShowError = !hasShownError.current && quoteSaved === false && exactQuoteValue === 'true' && currentDomain !== buyback
 
     if (shouldShowError) {
-      toast.error('Bonus Must Be Less Than ₹2000.')
       hasShownError.current = true
     }
-  }, [quoteSaved, exactQuoteValue])
+  }, [quoteSaved, exactQuoteValue, maxNegotiation])
 
   const continueOTPHandler = () => {
     const couponVal = computeCouponDiscount(mode, isCouponApplied, selectedCoupon, Price)
@@ -317,6 +320,7 @@ const DeviceQuote = () => {
                 slabBonusAmount, slabApplied, setMode, isSlabApplied,
                 setIsSlabApplied: handleSlabToggle, dynamicPricingEnabled,
                 exactValue, quotedPrice, apiQuotedPrice, couponDiscount,
+                maxNegotiation,
               }}
             />
           </div>
@@ -407,7 +411,7 @@ const QuoteCard = ({
   isCouponApplied, isLoadingCoupon, handleApplyCoupon, handleRemoveCoupon,
   handleCouponSelect, slabBonusAmount, slabApplied, isSlabApplied,
   setIsSlabApplied, dynamicPricingEnabled, exactValue, quotedPrice,
-  apiQuotedPrice, couponDiscount,
+  apiQuotedPrice, couponDiscount, maxNegotiation,
 }) => {
   const showBonusRow = dynamicPricingEnabled && isSlabApplied && Number(slabBonusAmount) > 0
   const showCouponRow = mode === 'coupon' && isCouponApplied && Number(finalBonus) > 0
@@ -482,6 +486,7 @@ const QuoteCard = ({
             isCouponApplied, isLoadingCoupon, handleApplyCoupon,
             handleRemoveCoupon, handleCouponSelect, slabBonusAmount,
             slabApplied, isSlabApplied, setIsSlabApplied, dynamicPricingEnabled,
+            maxNegotiation,
           }}
         />
       )}
@@ -547,6 +552,7 @@ const CouponBonusToggle = ({
   isSlabApplied,
   setIsSlabApplied,
   dynamicPricingEnabled,
+  maxNegotiation,
 }) => (
   <div className='px-2 my-2'>
     {dynamicPricingEnabled && Number(slabBonusAmount) > 0 && (
@@ -568,7 +574,7 @@ const CouponBonusToggle = ({
         handleCouponSelect={handleCouponSelect}
       />
     )}
-    <BonusInput bonus={bonus} setBonus={setBonus} />
+    <BonusInput bonus={bonus} setBonus={setBonus} maxNegotiation={maxNegotiation} />
   </div>
 )
 
@@ -601,7 +607,7 @@ const SlabBonusCard = ({ slabBonusAmount, slabApplied, isSlabApplied, setIsSlabA
   </div>
 )
 
-const BonusInput = ({ bonus, setBonus }) => (
+const BonusInput = ({ bonus, setBonus, maxNegotiation }) => (
   <div className='flex flex-row items-center justify-between px-2 my-2'>
     <div className='w-[50%] font-medium text-gray-700 text-sm sm:text-base'>
       {currentDomain === switchKart && 'SwitchKart'} Negotiated Amount :
@@ -612,16 +618,17 @@ const BonusInput = ({ bonus, setBonus }) => (
         name='bonus'
         id='bonus'
         type='number'
-        placeholder='Enter Negotiated Amount'
+        placeholder={`Enter Negotiated Amount `}
         value={bonus ?? ''}
-        maxLength={6}
+        max={maxNegotiation}
+        maxLength={String(maxNegotiation).length}
         onKeyDown={(e) => {
           if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
             e.preventDefault()
           }
         }}
         onChange={(e) => {
-          if (Number(e.target.value) >= 0 && Number(e.target.value) <= 10000) {
+          if (Number(e.target.value) >= 0 && Number(e.target.value) <= maxNegotiation) {
             setBonus(e.target.value)
           }
         }}
