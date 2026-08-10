@@ -43,10 +43,10 @@ const formatItemSpecifications = (RAM, storage) => {
 const CompanyHeader = ({ COMPANY_EMAIL, companyName, companyGstin, companyAddress }) => {
   const isRadicalRetail = companyName === 'Radical Retail Pvt Ltd'
     const name = isRadicalRetail ? 'Radical Aftermarket Services Pvt. Ltd' : 'Radical Aftermarket Services Pvt. Ltd'
-  const gstin = isRadicalRetail ? '29ABCDE1234F1Z5' : (companyGstin || import.meta.env.VITE_COMPANY_GSTIN)
+  const gstin = isRadicalRetail ? '06AAJCR2110E1ZX' : ':06AAJCR2110E1ZX'
   const addr = isRadicalRetail
-    ? 'Khasra No. 34/22, Ground Floor, NK Tower, Kanhai Road, Sector-45, Gurugram, Haryana - 122003'
-    : (companyAddress || import.meta.env.VITE_COMPANY_ADDRESS)
+    ? 'Khasra No. 34/22, 1st Floor, NK Tower, Kanhai Road, Sector-45, Gurugram, Haryana - 122003'
+    : 'Khasra No. 34/22, 1st Floor, NK Tower, Kanhai Road, Sector-45, Gurugram, Haryana - 122003'
   return (
     <>
       <div className='flex items-center justify-center bg-white p-[1vh] mx-[2vh] my-[1vh]'>
