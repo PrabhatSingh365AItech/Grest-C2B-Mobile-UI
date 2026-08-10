@@ -43,7 +43,7 @@ const formatItemSpecifications = (RAM, storage) => {
 const CompanyHeader = ({ COMPANY_EMAIL, companyName, companyGstin, companyAddress }) => {
   const isRadicalRetail = companyName === 'Radical Retail Pvt Ltd'
     const name = isRadicalRetail ? 'Radical Aftermarket Services Pvt. Ltd' : 'Radical Aftermarket Services Pvt. Ltd'
-  const gstin = isRadicalRetail ? '06AAJCR2110E1ZX' : ':06AAJCR2110E1ZX'
+  const gstin = isRadicalRetail ? '06AAJCR2110E1ZX' : '06AAJCR2110E1ZX'
   const addr = isRadicalRetail
     ? 'Khasra No. 34/22, 1st Floor, NK Tower, Kanhai Road, Sector-45, Gurugram, Haryana - 122003'
     : 'Khasra No. 34/22, 1st Floor, NK Tower, Kanhai Road, Sector-45, Gurugram, Haryana - 122003'
