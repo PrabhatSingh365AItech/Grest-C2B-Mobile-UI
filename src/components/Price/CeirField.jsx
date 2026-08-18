@@ -35,7 +35,7 @@ const CeirField = ({
             style={{ display: 'none' }}
             ref={ceirImageRef}
           />
-          <button onClick={() => handleCameraButtonClick(ceirImageRef)}>
+          <button type='button' onClick={() => handleCameraButtonClick(setCeirImage, 'ceir', 'ceir', ceirImageRef)}>
             {!ceirImage ? (
               <FaCamera className='text-3xl text-gray-500' />
             ) : (

@@ -41,7 +41,7 @@ const PhoneBill = ({
             style={{ display: 'none' }}
             ref={phoneBillRef}
           />
-          <button onClick={() => handleCameraButtonClick(phoneBillRef)}>
+          <button type='button' onClick={() => handleCameraButtonClick(setPhoneBill, 'phoneBill', 'phoneBill', phoneBillRef)}>
             {!phoneBill ? (
               <FaCamera className='text-3xl text-gray-500' />
             ) : (

@@ -24,7 +24,7 @@ const PhotoUploadBox = ({
         style={{ display: 'none' }}
         ref={fileRef}
       />
-      <button onClick={() => handleCameraButtonClick(fileRef)}>
+      <button type='button' onClick={() => handleCameraButtonClick(setMethod, fileName, fileKey, fileRef)}>
         {!file ? (
           <FaCamera className='text-3xl text-gray-500' />
         ) : (

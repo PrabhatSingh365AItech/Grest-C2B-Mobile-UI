@@ -24,6 +24,7 @@ const Price = () => {
   const {
     uploadStatus,
     handleFileChange,
+    handleCameraButtonClick,
     uploadAllImages,
     isLoading,
     uploadIndividualFile,
@@ -41,7 +42,6 @@ const Price = () => {
     customerPhoto,
     ceirImage,
     isAadharVerified,
-    handleCameraButtonClick,
     prod,
     isBillRequired,
   } = formState

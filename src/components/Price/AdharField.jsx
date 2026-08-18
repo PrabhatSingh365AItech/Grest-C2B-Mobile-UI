@@ -38,7 +38,7 @@ const AdharField = ({
             style={{ display: 'none' }}
             ref={fileInputRef}
           />
-          <button onClick={() => handleCameraButtonClick(fileInputRef)}>
+          <button type='button' onClick={() => handleCameraButtonClick(setFile, 'adhaarFront', 'adhaarFront', fileInputRef)}>
             {!file ? (
               <FaCamera className='text-3xl text-gray-500' />
             ) : (
@@ -66,7 +66,7 @@ const AdharField = ({
             style={{ display: 'none' }}
             ref={idproofBackRef}
           />
-          <button onClick={() => handleCameraButtonClick(idproofBackRef)}>
+          <button type='button' onClick={() => handleCameraButtonClick(setIdProofBack, 'adhaarBack', 'adhaarBack', idproofBackRef)}>
             {!idProofBack ? (
               <FaCamera className='text-3xl text-gray-500' />
             ) : (

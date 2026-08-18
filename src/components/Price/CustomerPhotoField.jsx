@@ -39,7 +39,7 @@ const CustomerPhotoField = ({
             style={{ display: 'none' }}
             ref={fileInputRef}
           />
-          <button onClick={() => handleCameraButtonClick(fileInputRef)}>
+          <button type='button' onClick={() => handleCameraButtonClick(setCustomerPhoto, 'customerPhoto', 'customerPhoto', fileInputRef)}>
             {!customerPhoto ? (
               <FaCamera className='text-3xl text-gray-500' />
             ) : (

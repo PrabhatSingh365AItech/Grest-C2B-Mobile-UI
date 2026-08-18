@@ -4,6 +4,8 @@ import { submitFormData } from '../utils/formSubmissionUtils'
 import { retryFailedUploads } from '../utils/retryUtils'
 import toast from 'react-hot-toast'
 import { FILE_KEYS } from '../constants/priceConstants'
+import { pickImageFile, isNativeApp } from '../utils/pickImage'
+import { Camera } from '@capacitor/camera'
 
 export const usePriceUpload = (formState) => {
   const {
@@ -31,6 +33,36 @@ export const usePriceUpload = (formState) => {
 
   // Use file upload hook
   const { uploadStatus, uploadIndividualFile, handleFileChange } = useFileUpload(token, imeinumber)
+
+  const handleCameraButtonClick = async (setMethod, fileName, fileKey, fileRef) => {
+    try {
+      if (isNativeApp()) {
+        const permission = await Camera.checkPermissions()
+        if (permission.camera !== 'granted') {
+          await Camera.requestPermissions({ permissions: ['camera'] })
+        }
+
+        const file = await pickImageFile()
+        if (!file) {
+          return
+        }
+
+        handleFileChange(setMethod, { target: { files: [file] } }, fileName, fileKey)
+        return
+      }
+
+      if (fileRef?.current) {
+        fileRef.current.click()
+      }
+    } catch (err) {
+      const message = err?.message || ''
+      if (message.toLowerCase().includes('cancel')) {
+        return
+      }
+      console.error('Error picking image:', err)
+      toast.error('Could not select image. Please try again.')
+    }
+  }
 
   const uploadAllImages = async (navigate) => {
     setIsLoading(true)
@@ -129,6 +161,7 @@ export const usePriceUpload = (formState) => {
     uploadStatus,
     uploadIndividualFile,
     handleFileChange,
+    handleCameraButtonClick,
     uploadAllImages,
     isLoading
   }

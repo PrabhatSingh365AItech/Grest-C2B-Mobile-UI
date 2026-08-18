@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { Camera } from '@capacitor/camera'
 
 export const usePriceForm = () => {
   // Form state
@@ -49,25 +48,6 @@ export const usePriceForm = () => {
     }
   }, [])
 
-  const handleCameraButtonClick = async (ref) => {
-    if (ref && ref.current) {
-      try {
-        const permission = await Camera.checkPermissions()
-        if (permission.camera !== 'granted') {
-          const request = await Camera.requestPermissions()
-          if (request.camera !== 'granted') {
-            console.warn('Camera permission not granted, file picker may not show camera option')
-          }
-        }
-      } catch (err) {
-        console.error('Error requesting camera permission:', err)
-      }
-      ref.current.click()
-    } else {
-      console.error('Camera button click failed: ref is not valid', ref)
-    }
-  }
-
   return {
     // Form state
     file,
@@ -116,14 +96,9 @@ export const usePriceForm = () => {
     phoneBottomRef,
     customerPhotoRef,
     ceirImageRef,
-
-    // Session data
     leadsubmitDATA,
     savedOtpData,
     token,
     prod,
-
-    // Handlers
-    handleCameraButtonClick,
   }
 }
