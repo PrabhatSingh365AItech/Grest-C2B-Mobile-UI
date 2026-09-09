@@ -4,7 +4,7 @@ const API_BASE_URL = import.meta.env.VITE_REACT_APP_ENDPOINT
 
 export const createDigilockerKYCRequest = async (customerData) => {
   try {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('authToken')
 
     const response = await axios.post(
       `${API_BASE_URL}/api/digilocker/kyc`,
