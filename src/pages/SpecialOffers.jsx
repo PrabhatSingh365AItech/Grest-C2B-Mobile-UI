@@ -276,8 +276,8 @@ const SpecialOffers = () => {
       formData.append("couponDiscount", totalCouponDiscount);
     } else {
       formData.append("sellingPrice", Math.round(responseData.price) - (deviceType === 'CTG1' ? Number(responseData.conversionFee) : 0));
-      formData.append("bonusPrice", negotiatedAmount);
-      formData.append("negotiatedAmount", 0);
+      formData.append("bonusPrice", 0);
+      formData.append("negotiatedAmount", negotiatedAmount);
       formData.append("couponDiscount", totalCouponDiscount);
     }
     axios

@@ -21,13 +21,14 @@ const Price = () => {
   const navigate = useNavigate()
 
   const formState = usePriceForm()
+  const [aadharVerificationRequired, setAadharVerificationRequired] = useState(true)
   const {
     uploadStatus,
     handleFileChange,
     uploadAllImages,
     isLoading,
     uploadIndividualFile,
-  } = usePriceUpload(formState)
+  } = usePriceUpload(formState, aadharVerificationRequired)
 
   const {
     imeinumber,
@@ -48,9 +49,10 @@ const Price = () => {
 
   const isMobile = prod?.[0]?.categoryCode === 'CTG1'
 
+
+
   const [imei2, setImei2] = useState('')
-  const [imeiVerificationResult, setImeiVerificationResult] = useState(null)
-  const [aadharVerificationRequired, setAadharVerificationRequired] = useState(true)
+  
 
   useEffect(() => {
     const fetchAadharSetting = async () => {
@@ -127,7 +129,7 @@ const Price = () => {
       <div className='flex-shrink-0'>
         <PriceHeader navigate={navigate} />
       </div>
-      <div className='flex-1 overflow-y-auto overflow-x-hidden -webkit-overflow-scrolling-touch'>
+      <div className='flex-1 overflow-y-auto overflow-x-hidden' style={{ WebkitOverflowScrolling: 'touch', scrollPaddingBottom: '120px' }}>
         <div className='w-[90%] md:w-[90%] mx-auto pb-4 mb-2'>
           <div className='mt-3 text-center relative'>
             <h1 className='text-2xl font-semibold'>Upload Documents</h1>
@@ -145,7 +147,7 @@ const Price = () => {
             imei2={imei2}
             setImei2={setImei2}
             onImeiVerificationComplete={handleImeiVerificationComplete}
-            aadharVerificationRequired={aadharVerificationRequired}
+            aadharVerificationRequired={aadharVerificationRequired}         
           />
         </div>
       </div>
