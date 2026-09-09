@@ -7,20 +7,22 @@
 }
 
 @supports (-webkit-touch-callout: none) {
-  .page_wrap {
+  .contopt_page {
     min-height: -webkit-fill-available;
   }
 }
 
 .contopt_page {
-  position: fixed;
   width: 100vw;
-  height: 100dvh;
+  min-height: 100dvh;
   background-color: var(--quaternary-color);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
 }
 
 .optbox_wrap {
@@ -159,7 +161,7 @@
 
 @media screen and (max-width: 767px) {
   .contopt_page {
-    width: 100.1vw;
+    width: 100vw;
   }
 
   .optbox_wrap {
@@ -227,7 +229,7 @@
     width: 100vw;
     padding-top: 60px;
     padding-bottom: 60px;
-    height: 100dvh;
+    min-height: 100dvh;
   }
 
   .optbox_wrap {

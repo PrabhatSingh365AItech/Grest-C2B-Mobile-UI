@@ -169,9 +169,10 @@ const ContOTP = ({ setContinueOTPOpen }) => {
 
     // Add useEffect to handle body scroll
     useEffect(() => {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = '';
+      document.body.style.overflowX = 'hidden';
       return () => {
-        document.body.style.overflow = 'auto';
+        document.body.style.overflow = '';
       };
     }, []);
 
@@ -354,6 +355,21 @@ const OTPComp = ({
       setOtp("");
     };
     }, []);
+
+  // iOS Safari/WKWebView doesn't resize the layout viewport when the on-
+  // screen keyboard opens (unlike Android/desktop), and its native
+  // scroll-focused-input-into-view behavior is unreliable inside a nested
+  // overflow-y:auto container like .contopt_page - so the keyboard ends up
+  // covering whichever field is focused. Nudge it into view manually once
+  // the keyboard has finished animating in. No-op on platforms where the
+  // field is already visible.
+  const handleInputFocus = (e) => {
+    const target = e.currentTarget;
+    setTimeout(() => {
+      target.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 300);
+  };
+
   return (
     <React.Fragment>
       {otpBoxOpen ? (
@@ -383,6 +399,7 @@ const OTPComp = ({
               placeholder="Enter Name *"
               value={otpData?.name}
               onChange={handleChange}
+              onFocus={handleInputFocus}
               className="border-2 border-primary py-1 rounded-lg pl-[12px]"
             />
           </div>
@@ -394,6 +411,7 @@ const OTPComp = ({
               placeholder="Enter Email *"
               value={otpData?.email}
               onChange={handleChange}
+              onFocus={handleInputFocus}
               className="border-2 border-primary py-1 rounded-lg pl-[12px]"
             />
           </div>
@@ -414,6 +432,7 @@ const OTPComp = ({
                     ["phone"]: e.target.value,
                   });
                 }}
+                onFocus={handleInputFocus}
                 className=""
                 placeholder="Enter your Mobile *"
               />
