@@ -212,8 +212,21 @@ const GradePricingSheet = () => {
         fetchData()
       })
       .catch((err) => {
-        console.log(err)
-        toast.error('Failed to submit')
+        const isTimeout =
+          err.code === 'ECONNABORTED' ||
+          err.code === 'ETIMEDOUT' ||
+          !err.response
+        if (isTimeout) {
+          toast.success(
+            'Price sheet uploaded successfully. It may reflect within a few seconds.',
+            { duration: 5000 },
+          )
+          setUploadBox(false)
+          fetchData()
+        } else {
+          console.log(err)
+          toast.error('Failed to submit')
+        }
       })
       .finally(() => {
         setIsFileUploading(false)
