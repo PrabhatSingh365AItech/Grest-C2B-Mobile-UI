@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-hot-toast'
+import { Capacitor } from '@capacitor/core'
+import { Browser } from '@capacitor/browser'
+import { App as CapacitorApp } from '@capacitor/app'
 import {
   initiateDigiLockerSession,
   getDigiLockerAccessToken,
@@ -48,6 +51,22 @@ const getButtonClass = (
   return PINK
 }
 
+// Pulls refid off a callback URL's query string, whether it arrived as a plain
+// `refid` param (web) or wrapped in the `encdata` JWT (also sent on native's
+// deep-link return).
+const extractRefid = (searchParams) => {
+  const direct = searchParams.get('refid')
+  if (direct) {
+    return direct
+  }
+  const encdata = searchParams.get('encdata')
+  if (encdata) {
+    const decoded = decodeJwtPayload(encdata)
+    return decoded?.data?.refid
+  }
+  return null
+}
+
 const getButtonText = (isVerified, isProcessing, isInitiating) => {
   if (isVerified) {
     return 'Verified via DigiLocker'
@@ -81,21 +100,66 @@ const DigilockerAadhaarField = ({
     refidRef.current = value
   }
 
+  // Web: DigiLocker redirects the browser back to this same page with
+  // ?refid=... (or ?encdata=...) in the query string.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    let callbackRefid = params.get('refid')
-
-    if (!callbackRefid) {
-      const encdata = params.get('encdata')
-      if (encdata) {
-        const decoded = decodeJwtPayload(encdata)
-        callbackRefid = decoded?.data?.refid
-      }
+    if (Capacitor.isNativePlatform()) {
+      return
     }
+    const params = new URLSearchParams(window.location.search)
+    const callbackRefid = extractRefid(params)
 
     if (callbackRefid) {
       setRefid(callbackRefid)
       handleDigiLockerCallback(callbackRefid)
+    }
+  }, [])
+
+  // Native: the in-app browser opened for DigiLocker's auth page is a separate
+  // context from the app's WebView, so the callback can't arrive via
+  // window.location - DigiLocker instead redirects to our custom scheme
+  // (grestc2b://digilocker/callback?...), which the OS hands back to the app
+  // as an 'appUrlOpen' event.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      return
+    }
+
+    const listenerPromise = CapacitorApp.addListener('appUrlOpen', ({ url }) => {
+      let callbackRefid = null
+      try {
+        callbackRefid = extractRefid(new URL(url).searchParams)
+      } catch (e) {
+        console.error('Failed to parse DigiLocker deep link callback:', e)
+      }
+
+      if (callbackRefid) {
+        Browser.close().catch(() => {})
+        setIsInitiating(false)
+        setRefid(callbackRefid)
+        handleDigiLockerCallback(callbackRefid)
+      }
+    })
+
+    return () => {
+      listenerPromise.then((handle) => handle.remove())
+    }
+  }, [])
+
+  // Safety net: if the user closes the in-app browser manually (back button,
+  // cancel) without ever completing DigiLocker's flow, no appUrlOpen event
+  // fires - without this the button would stay stuck on "Redirecting...".
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      return
+    }
+
+    const listenerPromise = Browser.addListener('browserFinished', () => {
+      setIsInitiating(false)
+    })
+
+    return () => {
+      listenerPromise.then((handle) => handle.remove())
     }
   }, [])
 
@@ -176,7 +240,13 @@ const DigilockerAadhaarField = ({
 
       setStatusMessage('Redirecting to DigiLocker...')
 
-      window.location.href = sessionResult.authorization_url
+      if (Capacitor.isNativePlatform()) {
+        // Keep the app alive in the background; DigiLocker's redirect back to
+        // our custom scheme is caught by the appUrlOpen listener above.
+        await Browser.open({ url: sessionResult.authorization_url })
+      } else {
+        window.location.href = sessionResult.authorization_url
+      }
     } catch (err) {
       console.error('Initiate DigiLocker error:', err)
       const errorMessage =

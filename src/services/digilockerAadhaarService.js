@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { Capacitor } from '@capacitor/core'
 import {
   KYC_TEST_MODE,
 } from '../config/featureFlags'
@@ -114,4 +115,18 @@ export const verifyAadhaarViaDigiLocker = async (refid, uri) => {
   return response.data?.data
 }
 
-export const DIGILOCKER_REDIRECT_URL = 'https://main-temp.d1y8jgvhs28026.amplifyapp.com/pricepage'
+// Native (Capacitor) builds run from a local bundle (grestc2b://...), not from any
+// hosted web origin, so a hardcoded https redirect_url takes the WebView to a live
+// website instead of back into the app, and sessionStorage (set on the app's own
+// origin) is lost -> "No token provided" on the access-token call that follows.
+// On native we redirect to a custom-scheme deep link instead and catch it via
+// App.addListener('appUrlOpen', ...) in DigilockerAadhaarField. Host MUST be
+// exactly "digilocker" - AndroidManifest.xml's intent-filter matches on
+// scheme="grestc2b" AND host="digilocker" (already registered for the Digio
+// SDK flow in digilockerSDK.js); any other host silently fails to route back
+// to the app on Android (iOS's Info.plist only registers the bare scheme, so
+// it isn't host-sensitive, but we keep both platforms on the same URL).
+// On web, derive the origin dynamically instead of pinning to one deployed URL.
+export const DIGILOCKER_REDIRECT_URL = Capacitor.isNativePlatform()
+  ? 'grestc2b://digilocker/callback'
+  : `${window.location.origin}/pricepage`
