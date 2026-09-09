@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useSyncExternalStore } from 'react'
 import AdminNavbar from '../../components/Admin_Navbar'
 import SideMenu from '../../components/SideMenu'
 import { BeatLoader } from 'react-spinners'
-import * as XLSX from 'xlsx'
 import styles from '../CompanyListingDetails/CompanyListingDetails.module.css'
 import axios from 'axios'
 import LeadsCompletedTable from '../../components/LeadsCompletedTable/LeadsCompletedTable'
@@ -16,7 +15,7 @@ import ReactDOMServer from 'react-dom/server'
 import html2pdf from 'html2pdf.js'
 import PurchaseReceipt from '../../components/PurchaseReceipt'
 import { fetchSignatureAsBase64 } from '../../utils/fetchSignatureAsBase64'
-import { saveAs } from 'file-saver'
+import { leadDownloadManager } from '../../utils/leadDownloadManager'
 const pageLimit = 10
 const ALLstore = 'All Stores'
 const iniDate = '2023-01-01'
@@ -45,52 +44,6 @@ const getStore = async () => {
       console.log(error)
     })
   return storeNamesArray
-}
-
-// Extracted helper function to process QNA data
-const processQNAData = (qnaArray) => {
-  const questionData = {}
-  let index = 1
-
-  if (!qnaArray?.[0] || typeof qnaArray[0] !== 'object') {
-    return questionData
-  }
-
-  for (const group in qnaArray[0]) {
-    if (Array.isArray(qnaArray[0][group])) {
-      qnaArray[0][group].forEach((qna) => {
-        questionData[`Q${index}. ${qna?.quetion}`] = qna?.key
-        index++
-      })
-    }
-  }
-
-  return questionData
-}
-
-// Extracted helper function to process device report
-const processDeviceReport = (deviceReport) => {
-  if (!deviceReport || typeof deviceReport !== 'object') {
-    return 'N/A'
-  }
-
-  const selectedIssues = Object.entries(deviceReport)
-    .filter(
-      ([key, value]) => value === true || value === 'Yes' || value === 'true',
-    )
-    .map(([key]) => key)
-
-  return selectedIssues.length > 0 ? selectedIssues.join(', ') : 'No Issues'
-}
-
-// Extracted helper function to get variant info
-const getVariantInfo = (val) => {
-  if (val?.modelId?.type === 'CTG1') {
-    return `${
-      val?.storage && val?.ram ? `${val?.ram}/${val?.storage}` : val?.storage
-    }`
-  }
-  return '-'
 }
 
 const handleBulkDownloadReceipts = async (fromDate, toDate, tableData) => {
@@ -148,59 +101,16 @@ const handleBulkDownloadReceipts = async (fromDate, toDate, tableData) => {
   }
 }
 
-// Refactored main function with reduced complexity
-const downloadExcelLeadsompleted = (apiData) => {
-  const fileType =
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
-  const fileExtension = '.xlsx'
-
-  const formattedData = apiData.map((item) => {
-    const questionData = processQNAData(item?.QNA)
-    const deviceReportSummary = processDeviceReport(item.deviceReport)
-
-    return {
-      'Date Created': new Date(item?.updatedAt).toLocaleDateString('en-IN'),
-      'Company Name':
-        item.companyId?.name || item.store?.companyId?.name || 'N/A',
-      'Purchase Grade': item.purchaseGrade || 'N/A',
-      'Store Name.': item.store?.storeName || 'N/A',
-      'Store user Mobile No.': item.phoneNumber,
-      'User Email': item.userId?.email,
-      'Customer Mobile No.': item.phoneNumber,
-      'Customer Name': item.name,
-      Product: item.modelId?.name,
-      Variant: getVariantInfo(item),
-      'Device Issues': deviceReportSummary,
-      Price: item.actualPrice,
-      'Final Price Offered to Customer': item?.price,
-      'Order Id': item?.uniqueCode,
-      'IMEI No.': item.documentId?.IMEI,
-      ...questionData,
-    }
-  })
-
-  const wsLeadsCompleted = XLSX.utils.json_to_sheet(formattedData)
-  const wbLeadsCompleted = {
-    Sheets: { data: wsLeadsCompleted },
-    SheetNames: ['data'],
-  }
-  const excelBufferLeadsCompleted = XLSX.write(wbLeadsCompleted, {
-    bookType: 'xlsx',
-    type: 'array',
-  })
-
-  const dataFileLeadsCompleted = new Blob([excelBufferLeadsCompleted], {
-    type: fileType,
-  })
-  saveAs(dataFileLeadsCompleted, 'Leads_Completed' + fileExtension)
-}
-
 const LeadsCompleted = () => {
   const [deviceType, setDeviceType] = useState('CTG1')
   const userToken = sessionStorage.getItem('authToken')
   const [loading, setLoading] = useState(false)
-  const [downloading, setDownloading] = useState(false)
-  const [downloadProgress, setDownloadProgress] = useState('')
+  const downloadStatus = useSyncExternalStore(
+    leadDownloadManager.subscribe,
+    leadDownloadManager.getSnapshot,
+  )
+  const downloading = downloadStatus?.status === 'running'
+  const downloadProgress = downloadStatus?.progressText || ''
   const [sideMenu, setsideMenu] = useState(false)
   const [currentPage, setCurrentPage] = useState(0)
   const [tableData, setTableData] = useState([])
@@ -363,8 +273,6 @@ const LeadsCompleted = () => {
       loading={loading}
       downloading={downloading}
       downloadProgress={downloadProgress}
-      setDownloadProgress={setDownloadProgress}
-      setDownloading={setDownloading}
       setsideMenu={setsideMenu}
       sideMenu={sideMenu}
       totalCount={totalCount}
@@ -401,101 +309,10 @@ const LeadsCompleted = () => {
   )
 }
 
-const BATCH_SIZE = 25
-const MAX_RETRIES = 2
-const BATCH_DELAY_MS = 500
-
-const fetchPageWithRetry = async (url, headers, retries = MAX_RETRIES) => {
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      return await axios.get(url, { headers, timeout: 25000 })
-    } catch (err) {
-      if (attempt < retries) {
-        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
-      }
-    }
-  }
-  throw new Error('Max retries exceeded')
-}
-
-const fetchDownloadData = async (
-  totalCount,
-  deviceType,
-  Str,
-  fromDateDup,
-  toDateDup,
-  setDownloading,
-  setDownloadProgress,
-) => {
-  const userToken1 = sessionStorage.getItem('authToken')
-  const totalPages = Math.ceil(totalCount / BATCH_SIZE)
-  const allRecords = []
-  const skippedPages = []
-
-  if (!totalCount || totalCount <= 0) {
-    alert('No records found to download.')
-    return
-  }
-
-  setDownloading(true)
-  setDownloadProgress(`Preparing download... (0/${totalPages} pages)`)
-
-  try {
-    for (let page = 0; page < totalPages; page++) {
-      setDownloadProgress(
-        `Downloading page ${page + 1} of ${totalPages}...`,
-      )
-
-      try {
-        const res = await fetchPageWithRetry(
-          `${
-            import.meta.env.VITE_REACT_APP_ENDPOINT
-          }/api/prospects/findAllSelled?page=${page}&limit=${BATCH_SIZE}&deviceType=${deviceType}&startDate=${fromDateDup}&endDate=${toDateDup}&store=${Str}`,
-          { authorization: `${userToken1}` },
-        )
-
-        if (res.data?.data?.length > 0) {
-          allRecords.push(...res.data.data)
-        }
-      } catch (pageErr) {
-        console.error(`Page ${page + 1} failed after retries:`, pageErr)
-        skippedPages.push(page + 1)
-      }
-
-      if (page < totalPages - 1) {
-        await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY_MS))
-      }
-    }
-
-    if (allRecords.length === 0) {
-      alert('No data was downloaded. Please try again later.')
-      return
-    }
-
-    setDownloadProgress(`Generating Excel file...`)
-    downloadExcelLeadsompleted(allRecords)
-
-    if (skippedPages.length > 0) {
-      alert(
-        `Downloaded ${allRecords.length} records.\nNote: Pages ${skippedPages.join(', ')} failed due to timeout and were skipped.`,
-      )
-    }
-  } catch (err) {
-    console.error('Download failed:', err)
-    const msg = err?.response?.data?.message || err.message || 'Unknown error'
-    alert(`Download failed: ${msg}. Please try again.`)
-  } finally {
-    setDownloading(false)
-    setDownloadProgress('')
-  }
-}
-
 const SubLeadsCompleted = ({
   loading,
   downloading,
   downloadProgress,
-  setDownloadProgress,
-  setDownloading,
   setsideMenu,
   sideMenu,
   totalCount,
@@ -544,7 +361,7 @@ const SubLeadsCompleted = ({
       {downloading && (
         <div className='flex items-center gap-3 w-full px-5 py-2 bg-blue-50 border-b border-blue-200 text-sm'>
           <BeatLoader color='var(--primary-color)' size={8} />
-          <p className='font-medium text-blue-700'>Please wait, your file is downloading. This may take a few minutes. Do not close or refresh the page.</p>
+          <p className='font-medium text-blue-700'>Please wait, your file is downloading. This may take a few minutes. Do not  refresh the page.</p>
           {downloadProgress && (
             <span className='ml-auto font-medium text-blue-600 whitespace-nowrap'>{downloadProgress}</span>
           )}
@@ -574,10 +391,8 @@ const SubLeadsCompleted = ({
         categories={categories}
         tableData={tableData}
         storeData={storeData}
-        setDownloading={setDownloading}
         downloading={downloading}
         downloadProgress={downloadProgress}
-        setDownloadProgress={setDownloadProgress}
         fromDateDup={fromDateDup}
         toDateDup={toDateDup}
       />
@@ -653,29 +468,33 @@ const SubLeadsCompletedBtns = ({
   categories,
   tableData,
   storeData,
-  setDownloading,
   downloading,
   downloadProgress,
-  setDownloadProgress,
   fromDateDup,
   toDateDup,
 }) => {
+  const handleDownload = () => {
+    const result = leadDownloadManager.startDownload({
+      totalCount,
+      deviceType,
+      store: selStoreId,
+      fromDate: fromDateDup,
+      toDate: toDateDup,
+    })
+
+    if (result === 'empty') {
+      alert('No records found to download.')
+    } else if (result === 'duplicate') {
+      alert('A download is already in progress.')
+    }
+  }
+
   return (
     <div className='flex gap-2 items-center justify-center outline-none mt-5 w-[100%]'>
       <div className='flex gap-4'>
         <button
           className={`${styles.bulkdown_button}`}
-          onClick={() =>
-            fetchDownloadData(
-              totalCount,
-              deviceType,
-              selStoreId,
-              fromDateDup,
-              toDateDup,
-              setDownloading,
-              setDownloadProgress,
-            )
-          }
+          onClick={handleDownload}
           disabled={downloading}
         >
           {downloading ? (
@@ -695,7 +514,7 @@ const SubLeadsCompletedBtns = ({
             onClick={() => handleBulkDownloadReceipts(fromDate, toDate, tableData)}
           >
             <FaDownload /> Download Receipts
-        </button>
+          </button>
         </div>
       </div>
       <div className='[bg-[#F5F4F9]'>
