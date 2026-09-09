@@ -63,6 +63,7 @@ const TableHeader = () => (
       </th>
       <th className='p-2 text-sm md:p-3 md:text-base'>IMEI No.</th>
       <th className='p-2 text-sm md:p-3 md:text-base'>Unique Id</th>
+      <th className='p-2 text-sm md:p-3 md:text-base'>Reason</th>
       <th className='p-2 text-sm md:p-3 md:text-base'>Customer Name</th>
       <th className='p-2 text-sm md:p-3 md:text-base'>Customer Mobile</th>
       <th className='p-2 text-sm md:p-3 md:text-base'>Customer Email</th>
@@ -133,6 +134,9 @@ const TableRow = ({
     </td>
     <td className='p-2 text-sm text-center md:p-3 md:text-base'>
       {val?.uniqueCode}
+    </td>
+    <td className='p-2 text-sm min-w-[140px] text-center md:p-3 md:text-base'>
+      {val?.reason || 'N/A'}
     </td>
     <td className='p-2 text-sm min-w-[150px] text-center md:p-3 md:text-base'>
       {val?.name}

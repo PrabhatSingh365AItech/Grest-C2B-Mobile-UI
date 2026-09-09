@@ -167,7 +167,10 @@ const CompanyTable = ({
                     <td className='p-2 text-sm text-center md:p-3 md:text-base'>
                       {data.priceSheets && data.priceSheets.length > 0 ? (
                         <div className='flex flex-col gap-1'>
-                          {data.priceSheets.map((sheet, idx) => (
+                          {[...data.priceSheets]
+                            .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
+                            .slice(0, 2)
+                            .map((sheet, idx) => (
                             <a
                               key={idx}
                               href={sheet.fileUrl}

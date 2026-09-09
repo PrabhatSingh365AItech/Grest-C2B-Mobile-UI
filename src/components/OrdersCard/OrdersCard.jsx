@@ -142,6 +142,9 @@ async function buildPrintElement(item) {
       price={item.price}
       signatureUrl={signatureBase64 || signatureUrl}
       maskInfo={maskInfo}
+      companyName={item.companyInfo?.name}
+      companyGstin={item.companyInfo?.gstNumber}
+      companyAddress={item.companyInfo?.address}
     />,
   )
 }
@@ -245,6 +248,37 @@ async function tryDirectHtmlShare(htmlContent) {
   }
 }
 
+const formatDateTime = (dateTimeString) => {
+  const options = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true,
+  }
+
+  return new Intl.DateTimeFormat('en-IN', options).format(
+    new Date(dateTimeString),
+  )
+}
+
+const isExpired = (dateTime, title) => {
+  const createdDate = new Date(dateTime)
+  const currentDate = new Date()
+  const timeDiff = currentDate - createdDate
+  const oneDay = 24 * 60 * 60 * 1000
+  const fifteenDays = 15 * oneDay
+
+  if (title === quoteSaved) {
+    return timeDiff > fifteenDays
+  } else if (title === 'Order Saved') {
+    return timeDiff > fifteenDays
+  } else {
+    return false
+  }
+}
+
 const OrdersCard = ({
   allData,
   itemData,
@@ -267,43 +301,12 @@ const OrdersCard = ({
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const deviceSelected = sessionStorage.getItem('DeviceType')
 
-  const formatDateTime = (dateTimeString) => {
-    const options = {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: true,
-    }
-
-    return new Intl.DateTimeFormat('en-IN', options).format(
-      new Date(dateTimeString),
-    )
-  }
-
   useEffect(() => {
     console.log('card')
   }, [])
 
-  const isExpired = () => {
-    const createdDate = new Date(dateTime)
-    const currentDate = new Date()
-    const timeDiff = currentDate - createdDate
-    const oneDay = 24 * 60 * 60 * 1000 // 1 day in milliseconds
-    const fifteenDays = 15 * oneDay // 15 days in milliseconds
-
-    if (title === quoteSaved) {
-      return timeDiff > fifteenDays
-    } else if (title === 'Order Saved') {
-      return timeDiff > fifteenDays
-    } else {
-      return false
-    }
-  }
-
   const handleInitiate = () => {
-    if (isExpired()) {
+    if (isExpired(dateTime, title)) {
       return
     }
     if (title === quoteSaved) {
@@ -337,12 +340,26 @@ const OrdersCard = ({
         customerName: customerName,
       }
       sessionStorage.setItem('dataModel', JSON.stringify(detail))
+      const lead = itemData.lead || {}
+      const basePrice = Number(lead.price ?? lead.exactValue ?? price)
+      const savedBonus = Number(lead.negotiatedAmount) || Number(lead.bonusPrice) || 0
+      const isSlabApplied = Boolean(lead.slabApplied)
       const responseData = {
-        grade: '',
+        grade: lead.grade || '',
         id: itemData.lead_id,
-        price: Number(itemData.lead?.exactValue ?? itemData.lead?.price),
+        price: basePrice,
         uniqueCode: quoteId,
-        bonus: Number(itemData.lead?.bonusPrice),
+        bonus: savedBonus,
+        slabBonusAmount: Number(lead.slabBonusAmount) || 0,
+        slabApplied: lead.slabApplied || '',
+        isSlabApplied,
+        exactValue: basePrice,
+        quotedPrice: Number(lead.quotedPrice ?? lead.finalPrice ?? basePrice),
+        dynamicPricingEnabled:
+          isSlabApplied || Number(lead.slabBonusAmount) > 0,
+        couponDiscount: Number(lead.couponDiscount) || 0,
+        mode: 'bonus',
+        couponCode: '',
       }
 
       dispatch(setResponseData(responseData))
@@ -370,7 +387,7 @@ const OrdersCard = ({
 
   return (
     <div className='p-2 mx-2 bg-white rounded-lg relative'>
-      {isExpired() && (
+      {isExpired(dateTime, title) && (
         <div className='absolute inset-0 flex items-center justify-center bg-opacity-75 bg-white'>
           <div className='text-black text-2xl font-bold border-4 border-primary px-4 py-2 rounded-md'>
             Expired
@@ -438,7 +455,7 @@ const OrdersCard = ({
           onConfirm={handleDeleteConfirmed}
         />
       )}
-      {title !== 'Order Completed' && !isExpired() && (
+      {title !== 'Order Completed' && !isExpired(dateTime, title) && (
         <div className='flex items-center justify-between gap-2 p-2 font-medium'>
           <div
             onClick={handleDeleteConfirmation}

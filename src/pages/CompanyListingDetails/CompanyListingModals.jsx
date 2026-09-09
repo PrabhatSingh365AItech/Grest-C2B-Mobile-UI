@@ -13,6 +13,93 @@ import StatusModal from './StatusModal'
 const getTextColorClass = (isSuccess) =>
   isSuccess ? 'text-green-500' : 'text-primary'
 
+const handlePriceSheetUpload = (
+  file,
+  category,
+  {
+    token,
+    selectedCompanyForPricing,
+    setUploadPriceModalOpen,
+    setIsFileUploading,
+    setUploadProgress,
+    fetchTableData,
+  },
+) => {
+  setIsFileUploading(true)
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('companyId', selectedCompanyForPricing._id)
+  formData.append('category', category)
+
+  axios
+    .post(
+      `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/grades/company/upload`,
+      formData,
+      {
+        headers: { Authorization: token },
+        onUploadProgress: (e) =>
+          setUploadProgress(Math.round((e.loaded * 100) / e.total)),
+      },
+    )
+    .then(() => {
+      toast.success(`Price sheet uploaded successfully`)
+      setUploadPriceModalOpen(false)
+    })
+    .catch((err) => {
+      const isTimeout =
+        err.code === 'ECONNABORTED' ||
+        err.code === 'ETIMEDOUT' ||
+        !err.response
+      if (isTimeout) {
+        toast.success(
+          'Price sheet uploaded successfully. It may reflect within a few seconds.',
+          { duration: 5000 },
+        )
+        setUploadPriceModalOpen(false)
+      } else {
+        toast.error(err.response?.data?.message || 'Upload failed')
+      }
+    })
+    .finally(() => {
+      setIsFileUploading(false)
+      setUploadProgress(0)
+      fetchTableData()
+    })
+}
+
+const deleteHandler = (
+  companyId,
+  {
+    token,
+    searchValue,
+    getDataBySearch,
+    fetchTableData,
+    setErrMsg,
+    setSucBox,
+    setFailBox,
+    setIsTableLoading,
+    setConfBox,
+  },
+) => {
+  setIsTableLoading(true)
+  setConfBox(false)
+  axios
+    .delete(
+      `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/company/deleteById?id=${companyId}`,
+      { headers: { Authorization: token } },
+    )
+    .then((res) => {
+      searchValue ? getDataBySearch() : fetchTableData()
+      setErrMsg(`Successfully deleted company`)
+      setSucBox(true)
+    })
+    .catch(() => {
+      setErrMsg('Failed to delete company')
+      setFailBox(true)
+    })
+    .finally(() => setIsTableLoading(false))
+}
+
 const CompanyListingModals = ({
   editBoxOpen,
   setEditBoxOpen,
@@ -45,55 +132,25 @@ const CompanyListingModals = ({
   const [isFileUploading, setIsFileUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
 
-  const handlePriceSheetUpload = (file, category) => {
-    setIsFileUploading(true)
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('companyId', selectedCompanyForPricing._id)
-    formData.append('category', category)
-
-    axios
-      .post(
-        `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/grades/company/upload`,
-        formData,
-        {
-          headers: { Authorization: token },
-          onUploadProgress: (e) =>
-            setUploadProgress(Math.round((e.loaded * 100) / e.total)),
-        },
-      )
-      .then(() => {
-        toast.success(`Price sheet uploaded successfully`)
-        setUploadPriceModalOpen(false)
-      })
-      .catch((err) =>
-        toast.error(err.response?.data?.message || 'Upload failed'),
-      )
-      .finally(() => {
-        setIsFileUploading(false)
-        setUploadProgress(0)
-        fetchTableData()
-      })
+  const priceSheetUploadDeps = {
+    token,
+    selectedCompanyForPricing,
+    setUploadPriceModalOpen,
+    setIsFileUploading,
+    setUploadProgress,
+    fetchTableData,
   }
 
-  const deleteHandler = (companyId) => {
-    setIsTableLoading(true)
-    setConfBox(false)
-    axios
-      .delete(
-        `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/company/deleteById?id=${companyId}`,
-        { headers: { Authorization: token } },
-      )
-      .then((res) => {
-        searchValue ? getDataBySearch() : fetchTableData()
-        setErrMsg(`Successfully deleted company`)
-        setSucBox(true)
-      })
-      .catch(() => {
-        setErrMsg('Failed to delete company')
-        setFailBox(true)
-      })
-      .finally(() => setIsTableLoading(false))
+  const deleteDeps = {
+    token,
+    searchValue,
+    getDataBySearch,
+    fetchTableData,
+    setErrMsg,
+    setSucBox,
+    setFailBox,
+    setIsTableLoading,
+    setConfBox,
   }
 
   const handleCloseUploadModal = () => {
@@ -151,7 +208,7 @@ const CompanyListingModals = ({
             </p>
             <div className='flex flex-row gap-2'>
               <button
-                onClick={() => deleteHandler(selectedCompany?._id)}
+                onClick={() => deleteHandler(selectedCompany?._id, deleteDeps)}
                 className={'bg-primary text-white'}
               >
                 Okay
@@ -202,7 +259,9 @@ const CompanyListingModals = ({
       <PriceSheetUploadModal
         isOpen={uploadPriceModalOpen}
         onClose={handleCloseUploadModal}
-        onSubmit={handlePriceSheetUpload}
+        onSubmit={(file, category) =>
+          handlePriceSheetUpload(file, category, priceSheetUploadDeps)
+        }
         categories={categories}
         title='Company Price Sheet Upload'
         description={`Upload price sheet for ${selectedCompanyForPricing?.name}. Download the sample template to ensure your data is in the correct format.`}

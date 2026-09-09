@@ -2,18 +2,39 @@ import toast from 'react-hot-toast'
 import { AADHAR_LENGTH, FILE_KEYS, UPLOAD_STATUS } from '../constants/priceConstants'
 
 export const validateFormData = (formData) => {
-  const { aadharNumber, imeinumber, phoneFront, phoneBack, phoneLeft, phoneRight, phoneTop, phoneBottom, phoneBill, isBillRequired } = formData
+  const {
+    aadharNumber,
+    imeinumber,
+    phoneFront,
+    phoneBack,
+    phoneLeft,
+    phoneRight,
+    phoneTop,
+    phoneBottom,
+    phoneBill,
+    isBillRequired,
+    // Driven by the company's backend setting (Price.jsx fetches it from
+    // /api/company/findById), not a frontend-only toggle. Defaults to true
+    // so callers that don't pass it keep the previous (required) behavior.
+    isAadharRequired = true,
+  } = formData
 
-  // Validate Aadhar number length
-  if (aadharNumber.length !== AADHAR_LENGTH) {
-    toast.error(`Aadhar number must be exactly ${AADHAR_LENGTH} digits.`)
-    return false
+  // Validate Aadhar number: accept either a full 12-digit Aadhaar or a
+  // DigiLocker-masked format (e.g. xxxxxxx3257) - only when the company
+  // actually requires Aadhaar verification.
+  if (isAadharRequired) {
+    const isFullAadhar = aadharNumber.length === AADHAR_LENGTH
+    const isDigiLockerMasked = /^[xX]{7,}\d{4}$/.test(aadharNumber)
+    if (!isFullAadhar && !isDigiLockerMasked) {
+      toast.error(`Aadhar number must be exactly ${AADHAR_LENGTH} digits.`)
+      return false
+    }
   }
 
   // Validate required fields
   if (
     !imeinumber ||
-    !aadharNumber ||
+    (isAadharRequired && !aadharNumber) ||
     !phoneFront ||
     !phoneBack ||
     !phoneLeft ||

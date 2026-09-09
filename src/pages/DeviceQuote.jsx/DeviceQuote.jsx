@@ -134,6 +134,76 @@ const computeQuotedPrice = (dynamicPricingEnabled, apiQuotedPrice, isSlabApplied
   return Math.round(Number(Price) + Number(finalBonus))
 }
 
+const applyDynamicPricingResult = (data, setters, initialDpFetchDone) => {
+  const { setMaxNegotiation, setSlabBonusAmount, setSlabApplied, setExactValue, setApiQuotedPrice, setDynamicPricingEnabled, setIsSlabApplied } = setters
+  if (!data?.success || !data?.data) {
+    return
+  }
+  const pricing = data.data
+  setMaxNegotiation(Number(pricing.maxNegotiationAmount) || 10000)
+  if (!pricing.isDynamicPricingEnabled) {
+    return
+  }
+  setSlabBonusAmount(pricing.slabBonusAmount)
+  setSlabApplied(pricing.slabApplied || '')
+  setExactValue(pricing.exactValue)
+  setApiQuotedPrice(pricing.quotedPrice)
+  setDynamicPricingEnabled(true)
+  if (!initialDpFetchDone.current) {
+    setIsSlabApplied(true)
+    initialDpFetchDone.current = true
+  }
+}
+
+const fetchDynamicPricing = async ({ Price, leadId, token, setters, initialDpFetchDone }) => {
+  const profile = JSON.parse(sessionStorage.getItem('profile'))
+  const companyId = profile?.companyId
+  if (!companyId || !leadId) {
+    return
+  }
+  try {
+    // Do NOT add ResponseData.bonus here: every fresh-lead entry point into
+    // this page already dispatches bonus:0, so this only ever matters when
+    // resuming a previously-saved order (OrdersCard "Initiate Order"), which
+    // seeds the order's real negotiated bonus. That bonus is applied once,
+    // later, as `finalBonus` in computeQuotedPrice - folding it into the
+    // exactValue sent here too would double-count it in the final total.
+    const initialEV = Number(Price)
+    const res = await axios.post(
+      `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/dynamic-pricing/calculate-bonus`,
+      { companyId, exactValue: initialEV, applyNegotiatedAmount: false, negotiatedAmount: 0, couponDiscount: 0 },
+      { headers: { Authorization: token } }
+    )
+    applyDynamicPricingResult(res.data, setters, initialDpFetchDone)
+  } catch (err) {
+    console.log('Dynamic pricing not available')
+  }
+}
+
+const useDynamicPricing = ({ Price, ResponseData, leadId, token }) => {
+  const [slabBonusAmount, setSlabBonusAmount] = useState(0)
+  const [slabApplied, setSlabApplied] = useState('')
+  const [dynamicPricingEnabled, setDynamicPricingEnabled] = useState(false)
+  const [isSlabApplied, setIsSlabApplied] = useState(false)
+  const [exactValue, setExactValue] = useState(Number(Price))
+  const [apiQuotedPrice, setApiQuotedPrice] = useState(Number(Price))
+  const [maxNegotiation, setMaxNegotiation] = useState(10000)
+  const initialDpFetchDone = useRef(false)
+
+  useEffect(() => {
+    const setters = {
+      setMaxNegotiation, setSlabBonusAmount, setSlabApplied, setExactValue,
+      setApiQuotedPrice, setDynamicPricingEnabled, setIsSlabApplied
+    }
+    fetchDynamicPricing({ Price, ResponseData, leadId, token, setters, initialDpFetchDone })
+  }, [Price, ResponseData, leadId, token])
+
+  return {
+    slabBonusAmount, slabApplied, dynamicPricingEnabled, isSlabApplied,
+    exactValue, apiQuotedPrice, maxNegotiation, setIsSlabApplied
+  }
+}
+
 const DeviceQuote = () => {
   const quoteData = useDeviceQuoteData()
   const { dispatch, DummyImg, phoneFrontPhoto, exactQuoteValue, deviceModalInfo, leadId, token, ResponseData, Price, uniqueCode, savedBonus } = quoteData
@@ -148,20 +218,16 @@ const DeviceQuote = () => {
   const [termsChecked, setTermsChecked] = useState(false)
   const hasShownError = useRef(false)
 
-  const [slabBonusAmount, setSlabBonusAmount] = useState(0)
-  const [slabApplied, setSlabApplied] = useState('')
-  const [dynamicPricingEnabled, setDynamicPricingEnabled] = useState(false)
-  const [isSlabApplied, setIsSlabApplied] = useState(false)
-  const [exactValue, setExactValue] = useState(Number(Price))
-  const [apiQuotedPrice, setApiQuotedPrice] = useState(Number(Price))
-
   const [mode, setMode] = useState('bonus')
   const [eligibleCoupons, setEligibleCoupons] = useState([])
   const [selectedCoupon, setSelectedCoupon] = useState(null)
   const [isCouponApplied, setIsCouponApplied] = useState(false)
   const [isLoadingCoupon, setIsLoadingCoupon] = useState(true)
-  const [maxNegotiation, setMaxNegotiation] = useState(10000)
-  const initialDpFetchDone = useRef(false)
+
+  const {
+    slabBonusAmount, slabApplied, dynamicPricingEnabled, isSlabApplied,
+    exactValue, apiQuotedPrice, maxNegotiation, setIsSlabApplied,
+  } = useDynamicPricing({ Price, ResponseData, leadId, token })
 
   useEffect(() => {
     setQuoteId(uniqueCode)
@@ -223,40 +289,6 @@ const DeviceQuote = () => {
   }
 
   const couponHandlers = useCouponHandlers(setMode, setIsCouponApplied, setBonus, setSelectedCoupon, setIsSlabApplied, isSlabApplied)
-
-  useEffect(() => {
-    (async () => {
-      const profile = JSON.parse(sessionStorage.getItem('profile'))
-      const companyId = profile?.companyId
-      if (!companyId || !leadId) {
-        return
-      }
-      try {
-        const initialEV = Number(Price) + (ResponseData.bonus || 0)
-        const res = await axios.post(
-          `${import.meta.env.VITE_REACT_APP_ENDPOINT}/api/dynamic-pricing/calculate-bonus`,
-          { companyId, exactValue: initialEV, applyNegotiatedAmount: false, negotiatedAmount: 0, couponDiscount: 0 },
-          { headers: { Authorization: token } }
-        )
-        if (res.data.success && res.data.data) {
-          setMaxNegotiation(Number(res.data.data.maxNegotiationAmount) || 10000)
-          if (res.data.data.isDynamicPricingEnabled) {
-            setSlabBonusAmount(res.data.data.slabBonusAmount)
-            setSlabApplied(res.data.data.slabApplied || '')
-            setExactValue(res.data.data.exactValue)
-            setApiQuotedPrice(res.data.data.quotedPrice)
-            setDynamicPricingEnabled(true)
-            if (!initialDpFetchDone.current) {
-              setIsSlabApplied(true)
-              initialDpFetchDone.current = true
-            }
-          }
-        }
-      } catch (err) {
-        console.log('Dynamic pricing not available')
-      }
-    })()
-  }, [Price, ResponseData, leadId, token])
 
   useEffect(() => {
     const shouldShowError = !hasShownError.current && quoteSaved === false && exactQuoteValue === 'true' && currentDomain !== buyback

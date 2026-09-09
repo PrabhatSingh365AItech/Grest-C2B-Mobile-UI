@@ -5,7 +5,7 @@ import { retryFailedUploads } from '../utils/retryUtils'
 import toast from 'react-hot-toast'
 import { FILE_KEYS } from '../constants/priceConstants'
 
-export const usePriceUpload = (formState) => {
+export const usePriceUpload = (formState, aadharVerificationRequired = true) => {
   const {
     file,
     idProofBack,
@@ -16,8 +16,8 @@ export const usePriceUpload = (formState) => {
     phoneRight,
     phoneTop,
     phoneBottom,
-    signatureFile,  // new signature state
-    customerPhoto,  // new customer photo state
+    signatureFile,
+    customerPhoto,  // new signature state
     ceirImage,  // new CEIR image state
     aadharNumber,
     imeinumber,
@@ -47,9 +47,10 @@ export const usePriceUpload = (formState) => {
       phoneBottom,
       phoneBill,
       isBillRequired,
-      signatureFile, // add signature state to validation
-      customerPhoto, // add customer photo state to validation
+      signatureFile,
+      customerPhoto, // add signature state to validation
       ceirImage, // add CEIR image state to validation
+      isAadharRequired: aadharVerificationRequired,
     }
 
     if (!validateFormData(formData)) {
@@ -57,7 +58,7 @@ export const usePriceUpload = (formState) => {
       return
     }
 
-    // Get required files and check upload status
+   // Get required files and check upload status
     const requiredFiles = getRequiredFiles(isBillRequired)
     requiredFiles.push(FILE_KEYS.SIGNATURE); // Add signature to required files
     requiredFiles.push(FILE_KEYS.CUSTOMER_PHOTO); // Add customer photo to required files
@@ -67,7 +68,7 @@ export const usePriceUpload = (formState) => {
 
     if (failedUploads.length > 0) {
       // Try to retry failed uploads
-      const fileStates = {
+        const fileStates = {
         file,
         idProofBack,
         phoneBill,

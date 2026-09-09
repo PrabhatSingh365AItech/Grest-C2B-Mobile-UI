@@ -65,6 +65,7 @@ import ThankYou from './pages/ThankYou'
 import CreateCoupon from './pages/CreateCoupon'
 import CouponDetails from './pages/CouponDetails'
 import SessionTimeoutWarning from './components/SessionTimeoutWarning'
+import BackgroundDownloadStatus from './components/BackgroundDownloadStatus'
 import DeleteMyData from './pages/DeleteMyData'
 
 function App() {
@@ -239,6 +240,7 @@ function App() {
               </Routes>
               <SessionTimeoutWarning />
             </Router>
+            <BackgroundDownloadStatus />
             <Toaster
               position='top-center'
               toastOptions={{
