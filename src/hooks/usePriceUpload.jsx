@@ -20,6 +20,8 @@ export const usePriceUpload = (formState, aadharVerificationRequired = true) => 
     customerPhoto,  // new signature state
     ceirImage,  // new CEIR image state
     aadharNumber,
+    aadharVerificationReason,
+    isAadharVerified,
     imeinumber,
     isBillRequired,
     isLoading,
@@ -51,6 +53,7 @@ export const usePriceUpload = (formState, aadharVerificationRequired = true) => 
       customerPhoto, // add signature state to validation
       ceirImage, // add CEIR image state to validation
       isAadharRequired: aadharVerificationRequired,
+      isAadharVerified,
     }
 
     if (!validateFormData(formData)) {
@@ -119,10 +122,17 @@ export const usePriceUpload = (formState, aadharVerificationRequired = true) => 
       imeinumber,
       leadsubmitDATA,
       savedOtpData,
-      aadharNumber
+      aadharNumber,
+      aadharVerificationReason
     }
 
-    await submitFormData(submissionData, token, navigate)
+    const submitted = await submitFormData(submissionData, token, navigate)
+    if (submitted) {
+      // Lead is done - clear the "DigiLocker already attempted" marker so
+      // the next lead's Aadhaar step starts fresh, without the manual
+      // fallback showing up before it's actually needed for that new sale.
+      sessionStorage.removeItem('digilockerAttempted')
+    }
     setIsLoading(false)
   }
 
