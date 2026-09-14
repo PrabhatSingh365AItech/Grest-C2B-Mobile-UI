@@ -406,6 +406,27 @@ const createBfcacheResetEffect = (setters) => () => {
   return () => window.removeEventListener('pageshow', handlePageShow)
 }
 
+// Whenever the user comes back to this screen/app from the DigiLocker
+// browser/overlay - by any means, not just an explicit close button
+// (browserFinished) or the browser's native Back (pageshow/bfcache, web
+// only) - and we're still stuck showing "Redirecting..." because nothing
+// ever called back to confirm success or failure, treat it as "came back
+// without completing" so the button un-sticks and the manual fallback
+// (already unlocked via hasAttemptedBefore) becomes available instead of
+// leaving the user with nothing clickable. This matters most on native,
+// where the WebView never remounts and closing the in-app browser via the
+// system back gesture instead of its own close button doesn't always fire
+// browserFinished.
+const createVisibilityResetEffect = (isInitiating, setIsInitiating) => () => {
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible' && isInitiating) {
+      setIsInitiating(false)
+    }
+  }
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+  return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+}
+
 // All state, effects and handlers for the field live here, so the
 // component itself only has to worry about rendering.
 const useDigilockerAadhaarField = ({
@@ -499,6 +520,11 @@ const useDigilockerAadhaarField = ({
       setIsProcessing,
     }),
     [],
+  )
+
+  useEffect(
+    createVisibilityResetEffect(isInitiating, setIsInitiating),
+    [isInitiating],
   )
 
   const handleInitiateDigiLocker = createHandleInitiateDigiLocker({
