@@ -17,12 +17,14 @@ export const validateFormData = (formData) => {
     // /api/company/findById), not a frontend-only toggle. Defaults to true
     // so callers that don't pass it keep the previous (required) behavior.
     isAadharRequired = true,
+    isAadharVerified = false,
   } = formData
 
   // Validate Aadhar number: accept either a full 12-digit Aadhaar or a
   // DigiLocker-masked format (e.g. xxxxxxx3257) - only when the company
-  // actually requires Aadhaar verification.
-  if (isAadharRequired) {
+  // actually requires Aadhaar verification and it hasn't already been
+  // confirmed verified.
+  if (isAadharRequired && !isAadharVerified) {
     const isFullAadhar = aadharNumber.length === AADHAR_LENGTH
     const isDigiLockerMasked = /^[xX]{7,}\d{4}$/.test(aadharNumber)
     if (!isFullAadhar && !isDigiLockerMasked) {

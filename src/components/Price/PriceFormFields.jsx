@@ -52,6 +52,8 @@ const PriceFormFields = ({
     isBillRequired,
     isAadharVerified,
     setIsAadharVerified,
+    aadharVerificationReason,
+    setAadharVerificationReason,
     prod,
     fileInputRef,
     idproofBackRef,
@@ -81,6 +83,8 @@ const PriceFormFields = ({
         aadharNumber={aadharNumber}
         isVerified={isAadharVerified}
         setIsVerified={setIsAadharVerified}
+        aadharVerificationReason={aadharVerificationReason}
+        setAadharVerificationReason={setAadharVerificationReason}
         isVerificationRequired={
         !isDevelopmentMode && aadharVerificationRequired
         }
