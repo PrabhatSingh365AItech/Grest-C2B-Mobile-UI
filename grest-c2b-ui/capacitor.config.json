@@ -1,0 +1,12 @@
+{
+  "appId": "com.grest.ti.app",
+  "appName": "Grest",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "never"
+  }
+
+}

@@ -1,0 +1,118 @@
+import toast from 'react-hot-toast'
+import { AADHAR_LENGTH, FILE_KEYS, UPLOAD_STATUS } from '../constants/priceConstants'
+
+export const validateFormData = (formData) => {
+  const {
+    aadharNumber,
+    imeinumber,
+    phoneFront,
+    phoneBack,
+    phoneLeft,
+    phoneRight,
+    phoneTop,
+    phoneBottom,
+    phoneBill,
+    isBillRequired,
+    // Driven by the company's backend setting (Price.jsx fetches it from
+    // /api/company/findById), not a frontend-only toggle. Defaults to true
+    // so callers that don't pass it keep the previous (required) behavior.
+    isAadharRequired = true,
+    // True once DigilockerAadhaarField has already confirmed verification
+    // (real DigiLocker success, or a manual entry + reason). Skips the
+    // format re-check below: a real DigiLocker success can legitimately
+    // leave aadharNumber as the literal fallback 'DigiLocker Verified'
+    // string (when the provider's XML has no plain/masked uid to show),
+    // which would otherwise fail this check and wrongly block submission
+    // even though verification genuinely succeeded.
+    isAadharVerified = false,
+  } = formData
+
+  // Validate Aadhar number: accept either a full 12-digit Aadhaar or a
+  // DigiLocker-masked format (e.g. xxxxxxx3257) - only when the company
+  // actually requires Aadhaar verification and it hasn't already been
+  // confirmed verified.
+  if (isAadharRequired && !isAadharVerified) {
+    const isFullAadhar = aadharNumber.length === AADHAR_LENGTH
+    const isDigiLockerMasked = /^[xX]{7,}\d{4}$/.test(aadharNumber)
+    if (!isFullAadhar && !isDigiLockerMasked) {
+      toast.error(`Aadhar number must be exactly ${AADHAR_LENGTH} digits.`)
+      return false
+    }
+  }
+
+  // Validate required fields
+  if (
+    !imeinumber ||
+    (isAadharRequired && !aadharNumber) ||
+    !phoneFront ||
+    !phoneBack ||
+    !phoneLeft ||
+    !phoneRight ||
+    !phoneTop ||
+    !phoneBottom ||
+    (isBillRequired && !phoneBill)
+  ) {
+    toast.error(
+      'Please fill in all mandatory fields (IMEI/Serial number and device images).'
+    )
+    return false
+  }
+
+  return true
+}
+
+export const getRequiredFiles = (isBillRequired) => {
+  const requiredFiles = [
+    FILE_KEYS.ADHAAR_FRONT,
+    FILE_KEYS.ADHAAR_BACK,
+    FILE_KEYS.PHONE_FRONT,
+    FILE_KEYS.PHONE_BACK,
+    FILE_KEYS.PHONE_LEFT,
+    FILE_KEYS.PHONE_RIGHT,
+    FILE_KEYS.PHONE_TOP,
+    FILE_KEYS.PHONE_BOTTOM,
+  ]
+
+  if (isBillRequired) {
+    requiredFiles.push(FILE_KEYS.PHONE_BILL)
+  }
+
+  return requiredFiles
+}
+
+export const getFailedUploads = (requiredFiles, uploadStatus) => {
+  return requiredFiles.filter(
+    (fileKey) => uploadStatus[fileKey]?.status !== UPLOAD_STATUS.SUCCESS
+  )
+}
+
+const FILE_KEY_LABELS = {
+  [FILE_KEYS.ADHAAR_FRONT]: 'Aadhaar Front',
+  [FILE_KEYS.ADHAAR_BACK]: 'Aadhaar Back',
+  [FILE_KEYS.PHONE_BILL]: 'Phone Bill',
+  [FILE_KEYS.PHONE_FRONT]: 'Phone Front',
+  [FILE_KEYS.PHONE_BACK]: 'Phone Back',
+  [FILE_KEYS.PHONE_LEFT]: 'Phone Left',
+  [FILE_KEYS.PHONE_RIGHT]: 'Phone Right',
+  [FILE_KEYS.PHONE_TOP]: 'Phone Top',
+  [FILE_KEYS.PHONE_BOTTOM]: 'Phone Bottom',
+  [FILE_KEYS.SIGNATURE]: 'Signature',
+  [FILE_KEYS.CEIR]: 'CEIR Image',
+  [FILE_KEYS.CUSTOMER_PHOTO]: 'Customer Photo',
+}
+
+export const getIncompleteUploadDetails = (requiredFiles, uploadStatus) => {
+  return requiredFiles
+    .filter((fileKey) => uploadStatus[fileKey]?.status !== UPLOAD_STATUS.SUCCESS)
+    .map((fileKey) => ({
+      key: fileKey,
+      label: FILE_KEY_LABELS[fileKey] || fileKey,
+      status: uploadStatus[fileKey]?.status || UPLOAD_STATUS.PENDING,
+    }))
+}
+
+export const isAllUploadsSuccessful = (requiredFiles, uploadStatus) => {
+  return requiredFiles.every(
+    (fileKey) => uploadStatus[fileKey]?.status === UPLOAD_STATUS.SUCCESS
+  )
+}

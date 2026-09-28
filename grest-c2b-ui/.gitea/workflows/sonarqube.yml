@@ -1,0 +1,23 @@
+name: SonarQube
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  sonar:
+    uses: agbeindia/platform-workflows/.gitea/workflows/sonarqube.yml@main
+    with:
+      project_key: com.agbe:grestc2b-ui
+      project_name: "Grest C2B UI"
+      sources: "src"
+      exclusions: "coverage-reports/**/*,xunit-reports/**/*,static,fonts,certificates,**/*.nosql"
+    secrets: inherit

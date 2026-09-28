@@ -1,0 +1,17 @@
+/* Theme the filter multi-selects to match the app's inputs. */
+.bo-multiselect .rmsc {
+  --rmsc-main: var(--primary-color);
+  --rmsc-hover: #f3f4f6;
+  --rmsc-selected: #fdecef;
+  --rmsc-border: #d1d5db;
+  --rmsc-gray: #6b7280;
+  --rmsc-bg: #ffffff;
+  --rmsc-radius: 6px;
+  --rmsc-h: 38px;
+}
+.bo-multiselect .rmsc .dropdown-content {
+  z-index: 30;
+}
+.bo-multiselect .rmsc .dropdown-heading-value {
+  font-size: 14px;
+}
