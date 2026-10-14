@@ -18,6 +18,7 @@ const PriceFormFields = ({
   setImei2,
   onImeiVerificationComplete,
   aadharVerificationRequired,
+  isDiagnosisFlow,
   isDevelopmentMode,
 }) => {
   const {
@@ -70,15 +71,17 @@ const PriceFormFields = ({
 
   return (
     <div className='flex flex-col'>
-     <ImeiField
-        setImeiNumber={setImeiNumber}
-        imeinumber={imeinumber}
-        prod={prod}
-        imei2={imei2}
-        setImei2={setImei2}
-        onImeiVerificationComplete={onImeiVerificationComplete}
-      />
-     <DigilockerAadhaarField
+      {!isDiagnosisFlow && (
+        <ImeiField
+          setImeiNumber={setImeiNumber}
+          imeinumber={imeinumber}
+          prod={prod}
+          imei2={imei2}
+          setImei2={setImei2}
+          onImeiVerificationComplete={onImeiVerificationComplete}
+        />
+      )}
+      <DigilockerAadhaarField
         setAadharNumber={setAadharNumber}
         aadharNumber={aadharNumber}
         isVerified={isAadharVerified}
@@ -89,6 +92,7 @@ const PriceFormFields = ({
         !isDevelopmentMode && aadharVerificationRequired
         }
         isDevelopmentMode={isDevelopmentMode}
+        leadId={formState?.leadsubmitDATA?.id}
       />
       <AdharField
         handleChange={handleFileChange}

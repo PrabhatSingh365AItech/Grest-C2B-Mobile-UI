@@ -79,10 +79,10 @@ export function ConsentCheckbox({
   consentType,
   onConsentChange,
   required = true,
-  initialValue = false,
   className = '',
 }) {
-  const [isChecked, setIsChecked] = useState(initialValue)
+  // Always starts unticked - consent must be given by the user, never pre-filled.
+  const [isChecked, setIsChecked] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
 
   const template = CONSENT_TEMPLATES[consentType]
@@ -182,7 +182,6 @@ ConsentCheckbox.propTypes = {
   ]).isRequired,
   onConsentChange: PropTypes.func,
   required: PropTypes.bool,
-  initialValue: PropTypes.bool,
   className: PropTypes.string,
 }
 

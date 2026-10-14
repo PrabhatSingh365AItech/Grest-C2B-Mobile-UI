@@ -17,6 +17,13 @@ export const validateFormData = (formData) => {
     // /api/company/findById), not a frontend-only toggle. Defaults to true
     // so callers that don't pass it keep the previous (required) behavior.
     isAadharRequired = true,
+    // True once DigilockerAadhaarField has already confirmed verification
+    // (real DigiLocker success, or a manual entry + reason). Skips the
+    // format re-check below: a real DigiLocker success can legitimately
+    // leave aadharNumber as the literal fallback 'Aadhaar Verified'
+    // string (when the provider's XML has no plain/masked uid to show),
+    // which would otherwise fail this check and wrongly block submission
+    // even though verification genuinely succeeded.
     isAadharVerified = false,
   } = formData
 
