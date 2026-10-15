@@ -15,13 +15,16 @@ const getSurepassHeaders = () => {
 // Where Surepass sends the user after the DigiLocker consent page (passed to
 // Surepass as `redirect_url` by the backend's /api/aadhaar/initiate).
 // Web: back to this same page; the AWAITING_CALLBACK marker resumes the flow.
-// Native: a custom-scheme deep link caught by appUrlOpen in
-// DigilockerAadhaarField - same reasoning as DIGILOCKER_REDIRECT_URL. Host
-// MUST be "digilocker" to match AndroidManifest.xml's intent-filter; the
-// path is what tells the listener this is the Surepass return.
+// Native: Surepass only accepts an https redirect_url (a grestc2b:// URL is
+// rejected at initialize), so the app sends the backend's public return page
+// instead. That page forwards the in-app browser to the deep link
+// grestc2b://digilocker/surepass, caught by appUrlOpen in
+// DigilockerAadhaarField. The deep link's host MUST stay "digilocker" to
+// match AndroidManifest.xml's intent-filter; SUREPASS_CALLBACK_PATH is what
+// tells the listener this is the Surepass return.
 export const SUREPASS_CALLBACK_PATH = '/surepass'
 export const SUREPASS_REDIRECT_URL = Capacitor.isNativePlatform()
-  ? `grestc2b://digilocker${SUREPASS_CALLBACK_PATH}`
+  ? `${API_BASE_URL}/api/aadhaar/surepass/return`
   : `${window.location.origin}/pricepage`
 
 // Backend Aadhaar (Surepass) endpoints:

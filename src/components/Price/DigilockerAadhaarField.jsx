@@ -498,9 +498,13 @@ const createNativeAppUrlOpenEffect = ({
 // Safety net: if the user closes the in-app browser manually (back button,
 // cancel) without completing the provider's flow, no appUrlOpen event fires -
 // without this the button would stay stuck on "Redirecting...".
+// For Surepass it also checks the session status, so a verification the user
+// actually finished still completes even if the jump back to the app via the
+// deep link never happened (browser blocked it, user closed the tab instead).
 const createBrowserFinishedSafetyEffect = (
   setIsInitiating,
   setIsSurepassInitiating,
+  checkSurepassAfterBrowserClose,
 ) => () => {
   if (!Capacitor.isNativePlatform()) {
     return undefined
@@ -513,6 +517,7 @@ const createBrowserFinishedSafetyEffect = (
     // the marker so a later remount doesn't try to complete an abandoned
     // session. client_id is kept in case appUrlOpen is still on its way.
     sessionStorage.removeItem(SUREPASS_SESSION_KEYS.AWAITING_CALLBACK)
+    checkSurepassAfterBrowserClose()
   })
 
   return () => {
@@ -856,18 +861,46 @@ const useAadhaarFieldHandlers = (
   // while the in-app browser was open, the resume-on-mount effect below may
   // have already picked up the Surepass session - the shared ref stops the
   // appUrlOpen event from completing it a second time.
+  const completeSurepassOnce = () => {
+    if (surepassResumedRef.current) {
+      return
+    }
+    surepassResumedRef.current = true
+    handleSurepassComplete().finally(() => {
+      surepassResumedRef.current = false
+    })
+  }
+
+  // In-app browser closed without the deep link: quietly ask for the status
+  // and only complete when Surepass says it is done - a user who simply
+  // cancelled gets no error toast, just the reset button.
+  const checkSurepassAfterBrowserClose = async () => {
+    const clientId = sessionStorage.getItem(SUREPASS_SESSION_KEYS.CLIENT_ID)
+    const verificationId = sessionStorage.getItem(
+      SUREPASS_SESSION_KEYS.VERIFICATION_ID,
+    )
+    if ((!clientId && !verificationId) || surepassResumedRef.current) {
+      return
+    }
+    try {
+      const status = await completeSurepass({
+        verificationId,
+        clientId,
+        step: 'status',
+      })
+      if (status?.completed) {
+        completeSurepassOnce()
+      }
+    } catch {
+      // Not finished on Surepass's side (user cancelled) - nothing to do,
+      // the button has already been reset by the browserFinished handler.
+    }
+  }
+
   useEffect(
     createNativeAppUrlOpenEffect({
       handleDigiLockerCallback,
-      handleSurepassComplete: () => {
-        if (surepassResumedRef.current) {
-          return
-        }
-        surepassResumedRef.current = true
-        handleSurepassComplete().finally(() => {
-          surepassResumedRef.current = false
-        })
-      },
+      handleSurepassComplete: completeSurepassOnce,
       setIsInitiating,
       setIsSurepassInitiating,
       setRefid,
@@ -876,7 +909,11 @@ const useAadhaarFieldHandlers = (
   )
 
   useEffect(
-    createBrowserFinishedSafetyEffect(setIsInitiating, setIsSurepassInitiating),
+    createBrowserFinishedSafetyEffect(
+      setIsInitiating,
+      setIsSurepassInitiating,
+      checkSurepassAfterBrowserClose,
+    ),
     [],
   )
 
