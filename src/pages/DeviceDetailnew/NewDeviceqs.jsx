@@ -1,4 +1,5 @@
 import React, { useEffect, useReducer, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import './newDeviceqs.scss'
 import { useQuestionContext } from '../../components/QuestionContext'
 import axios from 'axios'
@@ -18,6 +19,7 @@ import { setGroupAnswers, setRawQuestions } from '../../store/slices/QNAslice'
 import useUserProfile from '../../utils/useUserProfile'
 import styless from '../QuickQuote/QuickQuote.module.css'
 import { initialState, qnaReducer } from '../../utils/qnaReducer'
+import useDiagnosisAutoFill from '../../hooks/useDiagnosisAutoFill'
 
 const GROUPS = [
   'Core',
@@ -43,6 +45,9 @@ const createAnswer = (questionData, answer) => {
       answer,
       key: 'no',
       group,
+      yes,
+      no,
+      options,
       selected: createDefaultSelected(options.length, false),
     }
   }
@@ -56,6 +61,9 @@ const createAnswer = (questionData, answer) => {
         answer: no,
         key: 'no',
         group,
+        yes,
+        no,
+        options,
         selected: createDefaultSelected(options.length, false),
       }
     }
@@ -69,7 +77,7 @@ const createAnswer = (questionData, answer) => {
       if (outOfWarrantyIndex !== -1) {
         selected[outOfWarrantyIndex] = true
       }
-      return { quetion, answer, key: 'yes', group, selected }
+      return { quetion, answer, key: 'yes', group, yes, no, options, selected }
     }
 
     // Default for other groups
@@ -78,6 +86,9 @@ const createAnswer = (questionData, answer) => {
       answer,
       key: 'yes',
       group,
+      yes,
+      no,
+      options,
       selected: createDefaultSelected(options.length, true),
     }
   }
@@ -88,6 +99,9 @@ const createAnswer = (questionData, answer) => {
     answer,
     group,
     key: 'no',
+    yes,
+    no,
+    options,
     selected: createDefaultSelected(options.length, false),
   }
 }
@@ -111,6 +125,27 @@ const NewDeviceqs = () => {
   const [showPopup, setShowPopup] = useState(true)
   const [NDstate, dispatch] = useReducer(qnaReducer, initialState)
   const qna = useSelector((state) => state.qna)
+
+  const location = useLocation()
+
+  // Read diagnosisResults lazily ONCE on mount so it survives re-renders
+  const [diagnosisResults] = useState(() => {
+    const stored = sessionStorage.getItem('diagnosisResults')
+    if (stored) {
+      try {
+        return JSON.parse(stored)
+      } catch {
+        return null
+      }
+    }
+    return location.state?.diagnosisResults || null
+  })
+
+  // Clear from session storage after reading it, so normal flow isn't affected later
+  useEffect(() => {
+    sessionStorage.removeItem('diagnosisResults')
+    sessionStorage.removeItem('diagnosisImei')
+  }, [])
 
   const fetchData = async () => {
     try {
@@ -165,28 +200,47 @@ const NewDeviceqs = () => {
     }
   }
 
-  const parts = [
-    { component: FirstPart, data: NDstate.Core, slice: core },
+  const diagnosisParts = [
+    // Diagnosis flow: Functional first
     { component: SixthPart, data: NDstate.Functional, slice: Functional },
-    { component: SecondPart, data: NDstate.Cosmetics, slice: Cosmetics },
+    { component: FourthPart, data: NDstate.Functional_major, slice: FunctionalMajor },
+    { component: FifthPart, data: NDstate.Functional_minor, slice: FunctionalMinor },
+    // Physical / Cosmetics — Display before Basic Condition
     { component: ThirdPart, data: NDstate.Display, slice: Display },
-    {
-      component: FourthPart,
-      data: NDstate.Functional_major,
-      slice: FunctionalMajor,
-    },
-    {
-      component: FifthPart,
-      data: NDstate.Functional_minor,
-      slice: FunctionalMinor,
-    },
+    { component: FirstPart, data: NDstate.Core, slice: core },
+    { component: SecondPart, data: NDstate.Cosmetics, slice: Cosmetics },
+    // Accessories & Warranty
     { component: SeventhPart, data: NDstate.Accessories, slice: Accessories },
     { component: EighthPart, data: NDstate.Warranty, slice: Warranty },
   ]
 
+  const normalParts = [
+    // Normal flow: Original order (Physical first)
+    { component: FirstPart, data: NDstate.Core, slice: core },
+    { component: SixthPart, data: NDstate.Functional, slice: Functional },
+    { component: SecondPart, data: NDstate.Cosmetics, slice: Cosmetics },
+    { component: ThirdPart, data: NDstate.Display, slice: Display },
+    { component: FourthPart, data: NDstate.Functional_major, slice: FunctionalMajor },
+    { component: FifthPart, data: NDstate.Functional_minor, slice: FunctionalMinor },
+    { component: SeventhPart, data: NDstate.Accessories, slice: Accessories },
+    { component: EighthPart, data: NDstate.Warranty, slice: Warranty },
+  ]
+
+  const parts = diagnosisResults ? diagnosisParts : normalParts
+
   const availableParts = parts.filter(
     (part) => part.data && part.data.length > 0,
   )
+
+  // Auto-tick the questions mapped to failed Blancco diagnosis tests
+  useDiagnosisAutoFill(diagnosisResults, {
+    Core: core,
+    Cosmetics,
+    Functional,
+    FunctionalMajor,
+    FunctionalMinor,
+    Display,
+  })
 
   return (
     <>
