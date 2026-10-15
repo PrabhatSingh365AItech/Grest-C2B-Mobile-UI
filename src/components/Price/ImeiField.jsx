@@ -8,7 +8,6 @@ const ImeiField = ({ imeinumber, setImeiNumber, prod, imei2, setImei2, onImeiVer
   const [error, setError] = useState('')
   const [imei2Error, setImei2Error] = useState('')
   const [isScanOpen, setIsScanOpen] = useState(false)
-  const [deviceModelInput, setDeviceModelInput] = useState('')
 
   const isMobile = prod?.[0]?.categoryCode === 'CTG1'
 
@@ -108,37 +107,12 @@ const ImeiField = ({ imeinumber, setImeiNumber, prod, imei2, setImei2, onImeiVer
         </div>
       )}
 
-      {isMobile && (
-        <div className='flex flex-col eminumber mt-[4px]'>
-          <div className='flex gap-1 two'>
-            <p className='text-base font-medium'>1c.</p>
-            <p className='text-base font-medium three'>
-              Device Model Name
-              <span className='text-gray-400 text-sm ml-1'>(optional)</span>
-            </p>
-          </div>
-
-          <div className='flex items-center gap-4 mt-2 ml-[19px]'>
-            <div className='flex items-center p-2 border-2 border-gray-300 rounded'>
-              <input
-                type='text'
-                className='w-auto outline-none'
-                value={deviceModelInput}
-                placeholder='e.g. iPhone 14, '
-                onChange={(e) => setDeviceModelInput(e.target.value)}
-                maxLength={200}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
       {isMobile && canVerify && (
         <div className='ml-[19px]'>
           <ImeiVerificationResult
             imei1={imeinumber}
             imei2={imei2 || ''}
-            deviceModel={deviceModelInput || prod?.[0]?.categoryName || ''}
+            deviceModel={prod?.[0]?.categoryName || ''}
             storeId={storeId}
             agentId={agentId}
             leadId={leadId}
