@@ -67,6 +67,9 @@ import CouponDetails from './pages/CouponDetails'
 import SessionTimeoutWarning from './components/SessionTimeoutWarning'
 import BackgroundDownloadStatus from './components/BackgroundDownloadStatus'
 import DeleteMyData from './pages/DeleteMyData'
+import DiagnosisEntry from './pages/Diagnosis/DiagnosisEntry'
+import DiagnosisQR from './pages/Diagnosis/DiagnosisQR'
+import DiagnosisReport from './pages/Diagnosis/DiagnosisReport'
 
 function App() {
   // Setup global axios interceptors on app mount
@@ -93,6 +96,10 @@ function App() {
                 <Route path='/thankyou' element={<ThankYou />} />
 
                 <Route path='/' element={<Login />}></Route>
+
+                <Route path='/diagnosis-entry' element={<DiagnosisEntry />}></Route>
+                <Route path='/diagnosis/qr' element={<DiagnosisQR />}></Route>
+                <Route path='/diagnosis/report' element={<DiagnosisReport />}></Route>
 
                 <Route path='/register' element={<Register />}></Route>
                 <Route path='/adminlogin' element={<AdminLogin />}></Route>

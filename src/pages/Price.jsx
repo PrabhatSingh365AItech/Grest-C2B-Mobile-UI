@@ -49,10 +49,27 @@ const Price = () => {
 
   const isMobile = prod?.[0]?.categoryCode === 'CTG1'
 
-
+  // Detect the diagnosis flow: the IMEI was already captured during diagnosis
+  // and stored on the dataModel object, so we don't need to re-verify it here.
+  const isDiagnosisFlow = (() => {
+    try {
+      const dataModel = JSON.parse(sessionStorage.getItem('dataModel'))
+      return Boolean(dataModel?.models?.imei)
+    } catch {
+      return false
+    }
+  })()
 
   const [imei2, setImei2] = useState('')
-  const [imeiVerificationResult, setImeiVerificationResult] = useState(null)
+  const [imeiVerificationResult, setImeiVerificationResult] = useState(() =>
+    isDiagnosisFlow
+      ? {
+          imei1Status: 'UNKNOWN',
+          allowTransaction: true,
+          message: 'IMEI verified during diagnosis',
+        }
+      : null,
+  )
 
   useEffect(() => {
     const fetchAadharSetting = async () => {
@@ -147,7 +164,8 @@ const Price = () => {
             imei2={imei2}
             setImei2={setImei2}
             onImeiVerificationComplete={handleImeiVerificationComplete}
-            aadharVerificationRequired={aadharVerificationRequired}         
+            aadharVerificationRequired={aadharVerificationRequired}
+            isDiagnosisFlow={isDiagnosisFlow}
           />
         </div>
       </div>

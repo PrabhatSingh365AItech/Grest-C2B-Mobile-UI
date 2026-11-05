@@ -145,7 +145,7 @@ const SelectDevice = () => {
     }
     sessionStorage.setItem('dataModel', JSON.stringify(updatedData))
     sessionStorage.setItem('dataModelConfig', JSON.stringify(model))
-    navigate('/selectmodel')
+    navigate('/diagnosis-entry')
   }
   const isArray = Array.isArray(modelInfo)
 
