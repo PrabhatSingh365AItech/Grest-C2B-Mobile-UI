@@ -60,6 +60,7 @@ import Categories from './pages/Categories/Categories'
 import Watchqs from './pages/Watch_Exact_qs/Watch_qs'
 import Orders from './pages/Orders/Orders'
 import BulkUploadHistory from './pages/BulkUploadHistory'
+import Logistics from './pages/Logistics/Logistics'
 import QuoteTrackingDashboard from './pages/QuoteTrackingDashboard'
 import ThankYou from './pages/ThankYou'
 import CreateCoupon from './pages/CreateCoupon'
@@ -236,6 +237,7 @@ function App() {
                   path='/bulkuploadhistory'
                   element={<BulkUploadHistory />}
                 ></Route>
+                <Route path='/logistics' element={<Logistics />}></Route>
                 <Route
                   path='/quotetrackingdashboard'
                   element={<QuoteTrackingDashboard />}
