@@ -62,7 +62,10 @@ export const usePriceUpload = (formState, aadharVerificationRequired = true) => 
     // Get required files and check upload status
     const requiredFiles = getRequiredFiles(isBillRequired)
     requiredFiles.push(FILE_KEYS.SIGNATURE); // Add signature to required files
-    requiredFiles.push(FILE_KEYS.CEIR); // Add CEIR to required files
+    // CEIR is optional - only required to finish uploading if one was picked
+    if (ceirImage) {
+      requiredFiles.push(FILE_KEYS.CEIR)
+    }
 
     const failedUploads = getFailedUploads(requiredFiles, uploadStatus)
 

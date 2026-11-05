@@ -112,9 +112,12 @@ const Price = () => {
   const requiredFileKeys = getRequiredFiles(isBillRequired)
   requiredFileKeys.push(
     FILE_KEYS.SIGNATURE,
-    FILE_KEYS.CEIR,
     FILE_KEYS.CUSTOMER_PHOTO
   )
+  // CEIR is optional - only wait on its upload once an image was picked
+  if (ceirImage) {
+    requiredFileKeys.push(FILE_KEYS.CEIR)
+  }
 
   const allUploadsSuccessful = isAllUploadsSuccessful(
     requiredFileKeys,
@@ -132,7 +135,6 @@ const Price = () => {
     allUploadsSuccessful &&
     signatureFile &&
     customerPhoto &&
-    ceirImage &&
     imeiVerified &&
     !isImeiBlocked &&
     (aadharVerificationRequired ? isAadharVerified : true)
