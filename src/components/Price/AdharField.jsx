@@ -12,11 +12,12 @@ const AdharField = ({
   idProofBack,
   idproofBackRef,
   uploadStatus,
+  stepNumber = 3,
 }) => {
   return (
     <div className='flex flex-col adharcard mt-[10px]'>
       <div className='flex gap-1 two'>
-        <p className='text-base font-medium'>3.</p>
+        <p className='text-base font-medium'>{stepNumber}.</p>
         <div className='flex items-center'>
           <p className='text-base font-medium three'>
             {'Upload your Aadhar Card'} <span className='text-red-500'>*</span>

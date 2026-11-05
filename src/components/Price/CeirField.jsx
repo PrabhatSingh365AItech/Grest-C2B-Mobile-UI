@@ -9,14 +9,16 @@ const CeirField = ({
   ceirImageRef,
   ceirImage,
   uploadStatus,
+  stepNumber = 5,
 }) => {
   return (
     <div className='flex flex-col adharcard mt-[10px]'>
       <div className='flex gap-1 two'>
-        <p className='text-base font-medium'>5.</p>
+        <p className='text-base font-medium'>{stepNumber}.</p>
         <div className='flex items-center'>
           <p className='text-base font-medium three'>
-            Upload your CEIR image <span className='text-red-500'>*</span>
+            Upload your CEIR image{' '}
+            <span className='text-gray-400 text-sm'>(optional)</span>
           </p>
         </div>
       </div>
