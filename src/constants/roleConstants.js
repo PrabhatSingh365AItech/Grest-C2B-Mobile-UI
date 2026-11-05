@@ -2,6 +2,7 @@
 export const USER_ROLES = {
   SUPER_ADMIN: 'Super Admin',
   COMPANY_ADMIN: 'Company Admin',
+  LOGISTICS_ADMIN: 'Logistics Admin',
   ADMIN_MANAGER: 'Admin Manager',
   TECHNICIAN: 'Technician',
   SALE_USER: 'Sale User',
