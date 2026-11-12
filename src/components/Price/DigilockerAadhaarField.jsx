@@ -305,6 +305,7 @@ const createHandleInitiateSurepass = ({
   setIsVerified,
   setAadharNumber,
   setVerifiedByProvider,
+  setHasAttemptedBefore,
   setStatusMessage,
 }) => async () => {
   if (!aadhaarConsent) {
@@ -312,9 +313,9 @@ const createHandleInitiateSurepass = ({
     return false
   }
 
-  // Deliberately doesn't mark digilockerAttempted: a Surepass failure should
-  // only offer DigiLocker next - manual entry unlocks once DigiLocker itself
-  // has been tried.
+  sessionStorage.setItem('digilockerAttempted', 'true')
+  setHasAttemptedBefore(true)
+
   setIsSurepassInitiating(true)
   setError('')
   setHasFailed(false)
@@ -432,23 +433,13 @@ const createHandleOpenReasonModal = ({
 
 // Reads a refid/encdata straight off the URL on mount - this is how
 // DigiLocker's redirect back to this same page (web) delivers its result.
-// A refid can only be exchanged for an access token once, so this must run
-// exactly once per redirect: the ref stops StrictMode's double-run, and
-// stripping the params off the URL straight away stops a refresh or a
-// Back/Forward to this URL from replaying an already-used refid (which
-// fails with "User authentication incomplete...").
-const createCallbackMountEffect = (handleDigiLockerCallback, setRefid, handledRef) => () => {
-  if (handledRef.current) {
-    return
-  }
+const createCallbackMountEffect = (handleDigiLockerCallback, setRefid) => () => {
   if (Capacitor.isNativePlatform()) {
     return
   }
   const callbackRefid = extractRefid(new URLSearchParams(window.location.search))
 
   if (callbackRefid) {
-    handledRef.current = true
-    window.history.replaceState({}, '', window.location.pathname)
     setRefid(callbackRefid)
     handleDigiLockerCallback(callbackRefid)
   }
@@ -657,10 +648,9 @@ const useAadhaarFieldState = ({ isVerified, isVerificationRequired }) => {
   )
 
   // True whenever the manual fallback is in play - verification off for
-  // this company, or DigiLocker (the second provider) has been tried and
-  // failed, was cancelled, or this is a repeat attempt (the user already went
-  // through "Verify via DigiLocker" at least once before). hasFailed alone
-  // isn't enough: a Surepass failure must only offer DigiLocker, not manual.
+  // this company, DigiLocker failed/errored, or this is a repeat attempt
+  // (the user already went through "Verify via DigiLocker" at least once
+  // before, e.g. navigated back and came here again).
   // hasAttemptedBefore only counts once the current attempt is actually
   // settled (not while isInitiating/isProcessing): it's set the instant
   // the button is clicked, before the redirect even happens, and stays
@@ -669,6 +659,7 @@ const useAadhaarFieldState = ({ isVerified, isVerificationRequired }) => {
   // even on a click that's still in flight or about to succeed.
   const isManualFlow =
     !isVerificationRequired ||
+    hasFailed ||
     (hasAttemptedBefore &&
       !isInitiating &&
       !isProcessing &&
@@ -678,7 +669,7 @@ const useAadhaarFieldState = ({ isVerified, isVerificationRequired }) => {
   // entry doesn't turn either button green/"submitted" or disable it; it's
   // left exactly as it looked before the manual submit.
   const displayVerified = isVerified && !isManualEntry
-  // hasAttemptedBefore flips true the instant the DigiLocker button is clicked -
+  // hasAttemptedBefore flips true the instant a provider button is clicked -
   // including on a click that goes on to succeed. So a genuine, just-
   // completed verification can have isManualFlow true too by the time the
   // page reloads with the result. The read-only verified display must win in
@@ -757,7 +748,6 @@ const useAadhaarFieldHandlers = (
     refidRef.current = value
   }
   const surepassResumedRef = useRef(false)
-  const digiLockerCallbackHandledRef = useRef(false)
 
   const handleDigiLockerCallback = createHandleDigiLockerCallback({
     setIsProcessing,
@@ -771,11 +761,7 @@ const useAadhaarFieldHandlers = (
   })
 
   useEffect(
-    createCallbackMountEffect(
-      handleDigiLockerCallback,
-      setRefid,
-      digiLockerCallbackHandledRef,
-    ),
+    createCallbackMountEffect(handleDigiLockerCallback, setRefid),
     [],
   )
 
@@ -855,6 +841,7 @@ const useAadhaarFieldHandlers = (
     setIsVerified,
     setAadharNumber,
     setVerifiedByProvider,
+    setHasAttemptedBefore,
     setStatusMessage,
   })
 

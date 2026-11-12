@@ -69,10 +69,6 @@ const PriceFormFields = ({
     ceirImageRef,
   } = formState
 
-  // The IMEI section is step 1; when it's hidden (diagnosis flow already
-  // captured the IMEI) every later step moves up one so numbering starts at 1.
-  const stepOffset = isDiagnosisFlow ? 1 : 0
-
   return (
     <div className='flex flex-col'>
       {!isDiagnosisFlow && (
@@ -97,7 +93,6 @@ const PriceFormFields = ({
         }
         isDevelopmentMode={isDevelopmentMode}
         leadId={formState?.leadsubmitDATA?.id}
-        stepNumber={2 - stepOffset}
       />
       <AdharField
         handleChange={handleFileChange}
@@ -110,7 +105,6 @@ const PriceFormFields = ({
         idproofBackRef={idproofBackRef}
         prod={prod}
         uploadStatus={uploadStatus}
-        stepNumber={3 - stepOffset}
       />
       <div className='grid grid-cols-2 gap-3'>
         <PhoneBill
@@ -123,7 +117,6 @@ const PriceFormFields = ({
           isBillRequired={isBillRequired}
           prod={prod}
           uploadStatus={uploadStatus}
-          stepNumber={4 - stepOffset}
         />
         <CeirField
           handleChange={handleFileChange}
@@ -132,7 +125,6 @@ const PriceFormFields = ({
           ceirImageRef={ceirImageRef}
           ceirImage={ceirImage}
           uploadStatus={uploadStatus}
-          stepNumber={5 - stepOffset}
         />
       </div>
       <PhonePhotos1
@@ -158,7 +150,6 @@ const PriceFormFields = ({
         phoneLeftRef={phoneLeftRef}
         prod={prod}
         uploadStatus={uploadStatus}
-        stepNumber={6 - stepOffset}
       />
       <DigitalSignatureField
         signatureFile={signatureFile}

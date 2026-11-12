@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { verifyIMEI } from '../../services/ivsService'
+import { toast } from 'react-hot-toast'
 import DiagnosisLayout from '../../components/DiagnosisLayout'
 import apple_watch from '../../assets/apple_watch.png'
 import { IoArrowBack } from 'react-icons/io5'
@@ -161,18 +162,9 @@ const InitialStep = ({ modelData, phoneFrontPhoto, DummyImg, configs, selectedCo
   </div>
 )
 
-const ImeiErrorBox = ({ message }) => (
-  <div role="alert" className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 animate-fade-in">
-    <p className="text-xs text-red-600 font-semibold uppercase tracking-wider mb-1">
-      &#10007; IMEI Verification Failed
-    </p>
-    <p className="text-sm text-red-700">{message}</p>
-  </div>
-)
-
 const ImeiStep = ({
-  imei, imei2, isLoading, isVerified, imeiStatus, errorMessage, verifyMessage,
-  onChangeImei1, onChangeImei2, onEditStart, onEditEnd,
+  imei, imei2, isLoading, isVerified,
+  onChangeImei1, onChangeImei2,
   onBack, onVerify, onDiagnoseNow, onScan
 }) => (
   <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 border border-gray-100 animate-fade-in">
@@ -188,36 +180,24 @@ const ImeiStep = ({
       Enter Device IMEI
     </h2>
 
-    {/* Focus anywhere in the IMEI fields puts the form back in edit mode;
-        leaving them only ends it when focus moves outside this group */}
-    <div
-      onFocus={onEditStart}
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) {
-          onEditEnd()
-        }
-      }}
-    >
-      <ImeiInput
-        label="IMEI 1"
-        value={imei}
-        onChange={onChangeImei1}
-        scanTarget="imei1"
-        onScan={onScan}
-      />
-      <ImeiInput
-        label="IMEI 2"
-        sublabel="(for dual-SIM devices, optional)"
-        value={imei2}
-        onChange={onChangeImei2}
-        scanTarget="imei2"
-        onScan={onScan}
-      />
-    </div>
+    <ImeiInput
+      label="IMEI 1"
+      value={imei}
+      onChange={onChangeImei1}
+      scanTarget="imei1"
+      onScan={onScan}
+    />
+    <ImeiInput
+      label="IMEI 2"
+      sublabel="(for dual-SIM devices, optional)"
+      value={imei2}
+      onChange={onChangeImei2}
+      scanTarget="imei2"
+      onScan={onScan}
+    />
 
     {!isVerified ? (
       <div className="flex flex-col gap-3">
-        {errorMessage && <ImeiErrorBox message={errorMessage} />}
         <button
           onClick={onVerify}
           disabled={isLoading || imei.length !== 15}
@@ -241,11 +221,8 @@ const ImeiStep = ({
             </p>
           )}
           <p className="text-xs text-green-600 mt-1">
-            Status: {imeiStatus || 'Clean'} &mdash; Ready for diagnosis
+            Status: Clean &mdash; Ready for diagnosis
           </p>
-          {verifyMessage && (
-            <p className="text-sm text-green-700 mt-2">{verifyMessage}</p>
-          )}
         </div>
         <button
           onClick={onDiagnoseNow}
@@ -277,10 +254,7 @@ const DiagnosisEntry = () => {
   const [imei2, setImei2] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [detectedModel, setDetectedModel] = useState(null)
-  // Snapshot of the last successful verification: { imei, imei2, status, message }
-  const [verified, setVerified] = useState(null)
-  const [isEditing, setIsEditing] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')
+  const [isVerified, setIsVerified] = useState(false)
   const [scanTarget, setScanTarget] = useState(null)
   const [step, setStep] = useState('initial')
 
@@ -342,25 +316,16 @@ const DiagnosisEntry = () => {
     navigate('/selectmodel')
   }
 
-  // Verified only while the fields still hold the exact IMEIs that were
-  // verified and the user isn't editing them; otherwise Verify shows again
-  const isVerified =
-    !!verified &&
-    !isEditing &&
-    verified.imei === imei &&
-    verified.imei2 === imei2
-
   const handleVerifyImei = async () => {
     if (!imei || imei.length !== 15) {
-      setErrorMessage('Please enter a valid 15-digit IMEI')
+      toast.error('Please enter a valid 15-digit IMEI')
       return
     }
     if (imei2 && imei2.length !== 15) {
-      setErrorMessage('IMEI 2 must be exactly 15 digits')
+      toast.error('IMEI 2 must be exactly 15 digits')
       return
     }
 
-    setErrorMessage('')
     setIsLoading(true)
     try {
       const profileStr = sessionStorage.getItem('profile')
@@ -374,28 +339,15 @@ const DiagnosisEntry = () => {
       })
 
       if (result && result.allowTransaction) {
+        setIsVerified(true)
         setDetectedModel(null)
-        setIsEditing(false)
-        setVerified({
-          imei,
-          imei2,
-          status: result.imei1Status || 'CLEAN',
-          message: result.message || '',
-        })
+        toast.success('IMEI Verified \u2014 Status: ' + (result.imei1Status || 'CLEAN'))
       } else {
-        setVerified(null)
-        setErrorMessage(
-          result?.message || `IMEI Status: ${result?.imei1Status || 'Unknown'}. Cannot proceed.`
-        )
+        toast.error(`IMEI Status: ${result?.imei1Status || 'Unknown'}. Cannot proceed.`)
       }
     } catch (error) {
       console.error(error)
-      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout')
-      setErrorMessage(
-        isTimeout
-          ? 'IMEI verification timed out after 30 seconds. Please try again.'
-          : error.response?.data?.message || error.message || 'Verification failed'
-      )
+      toast.error('Failed to verify IMEI. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -406,7 +358,6 @@ const DiagnosisEntry = () => {
   }
 
   const handleImeiScan = (target, cleaned) => {
-    setErrorMessage('')
     if (target === 'imei1') {
       setImei(cleaned)
     } else {
@@ -438,26 +389,9 @@ const DiagnosisEntry = () => {
             imei2={imei2}
             isLoading={isLoading}
             isVerified={isVerified}
-            imeiStatus={verified?.status}
-            errorMessage={errorMessage}
-            verifyMessage={verified?.message}
-            onChangeImei1={(e) => {
-              setErrorMessage('')
-              setImei(e.target.value.replace(/\D/g, '').slice(0, 15))
-            }}
-            onChangeImei2={(e) => {
-              setErrorMessage('')
-              setImei2(e.target.value.replace(/\D/g, '').slice(0, 15))
-            }}
-            onEditStart={() => {
-              setIsEditing(true)
-              setErrorMessage('')
-            }}
-            onEditEnd={() => setIsEditing(false)}
-            onBack={() => {
-              setErrorMessage('')
-              setStep('initial')
-            }}
+            onChangeImei1={(e) => setImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
+            onChangeImei2={(e) => setImei2(e.target.value.replace(/\D/g, '').slice(0, 15))}
+            onBack={() => setStep('initial')}
             onVerify={handleVerifyImei}
             onDiagnoseNow={handleDiagnoseNow}
             onScan={setScanTarget}
