@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Camera } from '@capacitor/camera'
 
-
 export const usePriceForm = () => {
   // Form state
   const [file, setFile] = useState(null)
@@ -19,18 +18,7 @@ export const usePriceForm = () => {
   const [aadharNumber, setAadharNumber] = useState('')
   const [isAadharVerified, setIsAadharVerified] = useState(false) // Aadhar verification status
   const [aadharVerificationReason, setAadharVerificationReason] = useState('') // Reason when Aadhar is entered manually (verification off or DigiLocker failed)
-  // If the user came through the diagnosis flow, the IMEI was already captured
-  // during diagnosis and stored on the dataModel object. Pre-fill it so the
-  // price/upload page doesn't ask for it again.
-  const diagnosisImei = (() => {
-    try {
-      const dataModel = JSON.parse(sessionStorage.getItem('dataModel'))
-      return dataModel?.models?.imei || ''
-    } catch {
-      return ''
-    }
-  })()
-  const [imeinumber, setImeiNumber] = useState(diagnosisImei)
+  const [imeinumber, setImeiNumber] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isBillRequired, setIsBillRequired] = useState(false)
 
@@ -62,7 +50,7 @@ export const usePriceForm = () => {
     }
   }, [])
 
-   const handleCameraButtonClick = async (ref) => {
+  const handleCameraButtonClick = async (ref) => {
     if (ref && ref.current) {
       try {
         const permission = await Camera.checkPermissions()
