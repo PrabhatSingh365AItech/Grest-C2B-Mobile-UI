@@ -74,8 +74,7 @@ const SelectModel = () => {
     }
 
     setConfigData(modelConfigData)
-    // Default to the highest RAM/storage variant (last after sorting)
-    setSelectedConfig(modelConfigData?.config?.at(-1))
+    setSelectedConfig(modelConfigData?.config[0])
   }, [])
 
   const handleConfigClick = (configItem) => {

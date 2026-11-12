@@ -1,8 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-// Authentication (IMEI verification) fee deducted from the mobile price.
-const DEFAULT_CONVERSION_FEE = 12;
-
 const DEFAULT_RESPONSE_DATA = {
   id: "",
   price: 0,
@@ -14,7 +11,7 @@ const DEFAULT_RESPONSE_DATA = {
   exactValue: 0,
   dynamicPricingEnabled: false,
   isSlabApplied: true,
-  conversionFee: DEFAULT_CONVERSION_FEE,
+  conversionFee: 10,
   mode: 'bonus',
   couponCode: '',
   couponDiscount: 0,
@@ -63,7 +60,7 @@ const responseSlice = createSlice({
       state.exactValue = exactValue ?? price ?? 0;
       state.dynamicPricingEnabled = dynamicPricingEnabled ?? false;
       state.isSlabApplied = isSlabApplied ?? true;
-      state.conversionFee = conversionFee ?? DEFAULT_CONVERSION_FEE;
+      state.conversionFee = conversionFee ?? 10;
       state.mode = mode ?? 'bonus';
       state.couponCode = couponCode ?? '';
       state.couponDiscount = couponDiscount ?? 0;
