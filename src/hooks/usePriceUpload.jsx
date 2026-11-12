@@ -16,7 +16,8 @@ export const usePriceUpload = (formState, aadharVerificationRequired = true) => 
     phoneRight,
     phoneTop,
     phoneBottom,
-    signatureFile,  // new signature state
+    signatureFile,
+    customerPhoto,  // new signature state
     ceirImage,  // new CEIR image state
     aadharNumber,
     aadharVerificationReason,
@@ -48,7 +49,8 @@ export const usePriceUpload = (formState, aadharVerificationRequired = true) => 
       phoneBottom,
       phoneBill,
       isBillRequired,
-      signatureFile, // add signature state to validation
+      signatureFile,
+      customerPhoto, // add signature state to validation
       ceirImage, // add CEIR image state to validation
       isAadharRequired: aadharVerificationRequired,
       isAadharVerified,
@@ -59,16 +61,17 @@ export const usePriceUpload = (formState, aadharVerificationRequired = true) => 
       return
     }
 
-    // Get required files and check upload status
+   // Get required files and check upload status
     const requiredFiles = getRequiredFiles(isBillRequired)
     requiredFiles.push(FILE_KEYS.SIGNATURE); // Add signature to required files
+    requiredFiles.push(FILE_KEYS.CUSTOMER_PHOTO); // Add customer photo to required files
     requiredFiles.push(FILE_KEYS.CEIR); // Add CEIR to required files
 
     const failedUploads = getFailedUploads(requiredFiles, uploadStatus)
 
     if (failedUploads.length > 0) {
       // Try to retry failed uploads
-      const fileStates = {
+        const fileStates = {
         file,
         idProofBack,
         phoneBill,
@@ -79,6 +82,7 @@ export const usePriceUpload = (formState, aadharVerificationRequired = true) => 
         phoneTop,
         phoneBottom,
         signatureFile, // add signature state for retry
+        customerPhoto, // add customer photo state for retry
         ceirImage // add CEIR image state for retry
       }
 
@@ -124,11 +128,10 @@ export const usePriceUpload = (formState, aadharVerificationRequired = true) => 
 
     const submitted = await submitFormData(submissionData, token, navigate)
     if (submitted) {
-      // Lead is done - clear the "DigiLocker already attempted" + consent
-      // markers so the next lead's Aadhaar step starts fresh, without the
-      // manual fallback (or persisted consent) carrying over to a new sale.
+      // Lead is done - clear the "DigiLocker already attempted" marker so
+      // the next lead's Aadhaar step starts fresh, without the manual
+      // fallback showing up before it's actually needed for that new sale.
       sessionStorage.removeItem('digilockerAttempted')
-      sessionStorage.removeItem('aadhaarConsentGranted')
     }
     setIsLoading(false)
   }
