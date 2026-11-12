@@ -13,7 +13,7 @@ export const errorMessage = (error, fallback) =>
 // True when a request was cancelled on purpose (a newer one replaced it).
 export const isCancelled = (error) => axios.isCancel(error) || error?.name === 'CanceledError'
 
-export const fetchPaidLeads = async (params, signal) => {
+const toQueryString = (params) => {
   const query = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
     const empty = value === '' || value === null || value === undefined ||
@@ -22,8 +22,35 @@ export const fetchPaidLeads = async (params, signal) => {
       query.set(key, Array.isArray(value) ? value.join(',') : String(value))
     }
   })
-  const { data } = await axios.get(`${BASE}/paid-leads?${query}`, { ...authHeaders(), signal })
+  return query.toString()
+}
+
+export const fetchPaidLeads = async (params, signal) => {
+  const { data } = await axios.get(`${BASE}/paid-leads?${toQueryString(params)}`, {
+    ...authHeaders(),
+    signal,
+  })
   return data
+}
+
+// Every row matching the filters, page by page: the list endpoint caps limit at
+// 100, so export walks the pages instead of asking for an unbounded result.
+const EXPORT_PAGE_SIZE = 100
+
+export const fetchAllPaidLeads = async (params, signal) => {
+  const rows = []
+  let page = 0
+  let totalPages = 0
+  do {
+    const { data } = await axios.get(
+      `${BASE}/paid-leads?${toQueryString({ ...params, page, limit: EXPORT_PAGE_SIZE })}`,
+      { ...authHeaders(), signal }
+    )
+    rows.push(...(data.data || []))
+    totalPages = data.pagination?.totalPages || 0
+    page += 1
+  } while (page < totalPages)
+  return rows
 }
 
 export const fetchFilterOptions = async () => {

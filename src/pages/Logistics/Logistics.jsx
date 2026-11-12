@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import { BeatLoader } from 'react-spinners'
 import { IoRefresh } from 'react-icons/io5'
+import { FaDownload } from 'react-icons/fa6'
 import AdminNavbar from '../../components/Admin_Navbar'
 import SideMenu from '../../components/SideMenu'
 import WarehouseFilters from './WarehouseFilters'
@@ -18,7 +19,14 @@ import {
 } from './WarehouseModals'
 import { BluedartBookingModal, BulkBluedartModal, openLabel } from './BluedartModals'
 import { PAGE_SIZE, SHADOW } from './constants'
-import { errorMessage, fetchFilterOptions, fetchPaidLeads, isCancelled } from './warehouseApi'
+import {
+  errorMessage,
+  fetchAllPaidLeads,
+  fetchFilterOptions,
+  fetchPaidLeads,
+  isCancelled,
+} from './warehouseApi'
+import { exportLogisticsToExcel } from './logisticsExport'
 
 const EMPTY_FILTERS = {
   search: '',
@@ -238,6 +246,7 @@ const Logistics = () => {
   const [error, setError] = useState('')
   const [modal, setModal] = useState(null)
   const [notice, setNotice] = useState({ text: '', tone: 'green' })
+  const [exporting, setExporting] = useState(false)
   // Bulk actions apply only to the rows ticked on the current page.
   const [selectedIds, setSelectedIds] = useState([])
 
@@ -346,6 +355,30 @@ const Logistics = () => {
     setModal({ type, lead })
   }
 
+  // Exports every row matching the current filters, not just the open page.
+  const exportRows = async () => {
+    if (exporting) {
+      return
+    }
+    setExporting(true)
+    try {
+      const rows = await fetchAllPaidLeads(effectiveFilters(filters))
+      if (rows.length === 0) {
+        setNotice({ text: 'Nothing to export for the selected filters.', tone: 'red' })
+        return
+      }
+      const count = exportLogisticsToExcel(rows)
+      setNotice({
+        text: `Exported ${count} item${count === 1 ? '' : 's'} to Excel.`,
+        tone: 'green',
+      })
+    } catch (err) {
+      setNotice({ text: errorMessage(err, 'Export failed. Please try again.'), tone: 'red' })
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const selectedLeads = leads.filter((l) => selectedIds.includes(l._id))
   const ActiveModal = modal && MODALS[modal.type] ? MODALS[modal.type] : null
 
@@ -389,14 +422,27 @@ const Logistics = () => {
               {pagination.total ? ` · ${pagination.total} items` : ''}
             </p>
           </div>
-          <button
-            type='button'
-            onClick={refresh}
-            aria-label='Refresh'
-            className={`bg-primary text-white rounded-[0.55rem] p-1.5 ${SHADOW}`}
-          >
-            <IoRefresh size={22} />
-          </button>
+          <div className='flex items-center gap-2'>
+            <button
+              type='button'
+              onClick={exportRows}
+              disabled={exporting}
+              aria-label='Export warehouse items to Excel'
+              title='Download every item matching the current filters as an Excel file'
+              className={`flex items-center gap-2 bg-primary text-white rounded-[0.55rem] px-3 py-1.5 text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed ${SHADOW}`}
+            >
+              {exporting ? <BeatLoader color='white' size={6} /> : <FaDownload size={16} />}
+              {exporting ? 'Exporting…' : 'Export'}
+            </button>
+            <button
+              type='button'
+              onClick={refresh}
+              aria-label='Refresh'
+              className={`bg-primary text-white rounded-[0.55rem] p-1.5 ${SHADOW}`}
+            >
+              <IoRefresh size={22} />
+            </button>
+          </div>
         </div>
 
         <WarehouseFilters
